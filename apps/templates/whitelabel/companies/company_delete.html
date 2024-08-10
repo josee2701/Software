@@ -7,7 +7,7 @@
       <div class="col" >
         <div class="card align-items-center">
           <div class="card-body">
-            <form hx-post="{{ request.path }}">
+            <form hx-post="{{ request.path }}" hx-target="#modal-content">
               {% csrf_token %}
               <p>
                 {% trans '¿Are you sure you want to delete the Company' %} "{{ object }}" ?

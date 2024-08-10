@@ -1,0 +1,58 @@
+.image-container {
+    width: 60%;
+    height: 250px; /* Altura fija para los contenedores de las imágenes */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    border: 1px solid #ddd;
+    margin-top: 10px;
+    background-color: white;
+}
+
+.image-container img {
+    max-width: 100%;
+    max-height: 100%;
+    display: block;
+}
+
+.card-equal {
+    height: 100%; /* Asegurar que ambas tarjetas tengan la misma altura */
+    width: 100%;
+
+}
+
+.btn-primary {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.90rem;
+    line-height: 1.5;
+    border-radius: 0.25rem;
+}
+
+/* Estilos adicionales para Cropper.js */
+.cropper-container {
+    background-color: white !important;  /* Fondo blanco para el contenedor */
+}
+
+.cropper-view-box,
+.cropper-face {
+    border-radius: 0;
+}
+
+.cropper-view-box {
+    box-shadow: 0 0 0 1px #39f;
+    outline: 0;
+}
+
+.cropper-face {
+    background-color: transparent;
+}
+
+.cropper-modal {
+    background-color: white;  /* Cambia el fondo modal a blanco */
+    opacity: 0 !important;  /* Hace el modal completamente transparente */
+}
+
+.cropper-bg {
+    background-image: none !important;  /* Elimina el patrón de fondo */
+}

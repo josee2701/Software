@@ -9,7 +9,7 @@
                 <button type="button" id="cerrarVenta" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="card-body">
-                <form hx-post="{{ request.path }}"> {% csrf_token %}
+                <form hx-post="{{ request.path }}" hx-target="#modal-content"> {% csrf_token %}
                         <div class=row>
                             <p class="mb-0" align="justify">
                                 {% trans "In the Minimum score and Maximum score fields, please indicate the score range with which you wish to rate your drivers. The maximum score is assigned to the best driver." %}
@@ -132,46 +132,43 @@
 
 {% block scripts %}
 <script>
-    function activate(id_item)
-    {
+    function activate(id_item) {
         var index = id_item.id
-        var it = index[index.length -1]
-        var ddl = document.getElementById("id_itemscoresetup_set-"+it+"-points_item_score");
-        var ddl_2 = document.getElementById("id_itemscoresetup_set-"+it+"-maximum_infractions");
-        var ddl_3 = document.getElementById("id_itemscoresetup_set-"+it+"-subtract_points");
+        var it = index[index.length - 1]
+        var ddl = document.getElementById("id_itemscoresetup_set-" + it + "-points_item_score");
+        var ddl_2 = document.getElementById("id_itemscoresetup_set-" + it + "-maximum_infractions");
+        var ddl_3 = document.getElementById("id_itemscoresetup_set-" + it + "-subtract_points");
 
-        if(id_item.checked == true){
-            ddl.disabled= false;
-            ddl_2.disabled= false;
-            ddl_3.disabled= false;
-
-        }else {
-            ddl.disabled= true;
+        if (id_item.checked) {
+            ddl.disabled = false;
+            ddl_2.disabled = false;
+            ddl_3.disabled = false;
+        } else {
+            ddl.disabled = true;
             ddl.value = 0;
-            ddl_2.disabled= true;
+            ddl_2.disabled = true;
             ddl_2.value = 0;
-            ddl_3.disabled= true;
+            ddl_3.disabled = true;
             ddl_3.value = 0;
         }
     }
 
-    function update_fields()
-    {
-        for (let it=0; it<6; it++){
-            var item = document.getElementById("id_item "+it);
-            var ddl = document.getElementById("id_itemscoresetup_set-"+it+"-points_item_score");
-            var ddl_2 = document.getElementById("id_itemscoresetup_set-"+it+"-maximum_infractions");
-            var ddl_3 = document.getElementById("id_itemscoresetup_set-"+it+"-subtract_points");
+    function update_fields() {
+        for (let it = 0; it < 6; it++) {
+            var item = document.getElementById("id_item " + it);
+            var ddl = document.getElementById("id_itemscoresetup_set-" + it + "-points_item_score");
+            var ddl_2 = document.getElementById("id_itemscoresetup_set-" + it + "-maximum_infractions");
+            var ddl_3 = document.getElementById("id_itemscoresetup_set-" + it + "-subtract_points");
 
-            if(ddl.value != 0 & ddl_2.value != 0){
+            if (ddl.value != 0 || ddl_2.value != 0) {
                 item.checked = true;
                 ddl.disabled = false;
-                ddl_2.disabled= false;
-                ddl_3.disabled= false;
-
+                ddl_2.disabled = false;
+                ddl_3.disabled = false;
             }
         }
     }
-    update_fields()
+    update_fields();
+
 </script>
 {% endblock scripts %}

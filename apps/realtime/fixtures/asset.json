@@ -1,0 +1,121 @@
+[
+    {
+      "model": "realtime.Types_assets",
+      "pk": 1,
+      "fields": {
+        "asset_name": "Automovil"
+      }
+    },
+    {
+      "model": "realtime.Types_assets",
+      "pk": 2,
+      "fields": {
+        "asset_name": "Bicicletas"
+      }
+    },
+    {
+      "model": "realtime.Types_assets",
+      "pk": 3,
+      "fields": {
+        "asset_name": "Bus"
+      }
+    },
+    {
+      "model": "realtime.Types_assets",
+      "pk": 4,
+      "fields": {
+        "asset_name": "Buseta"
+      }
+    },
+    {
+      "model": "realtime.Types_assets",
+      "pk": 5,
+      "fields": {
+        "asset_name": "Camiones"
+      }
+    },
+    {
+      "model": "realtime.Types_assets",
+      "pk": 6,
+      "fields": {
+        "asset_name": "Camionetas"
+      }
+    },
+    {
+      "model": "realtime.Types_assets",
+      "pk": 7,
+      "fields": {
+        "asset_name": "Camperos"
+      }
+    },
+    {
+      "model": "realtime.Types_assets",
+      "pk": 8,
+      "fields": {
+        "asset_name": "Carga"
+      }
+    },
+    {
+      "model": "realtime.Types_assets",
+      "pk": 9,
+      "fields": {
+        "asset_name": "Carroza"
+      }
+    },
+    {
+      "model": "realtime.Types_assets",
+      "pk": 10,
+      "fields": {
+        "asset_name": "Maquinaria Amarilla"
+      }
+    },
+    {
+      "model": "realtime.Types_assets",
+      "pk": 11,
+      "fields": {
+        "asset_name": "Microbus"
+      }
+    },
+    {
+      "model": "realtime.Types_assets",
+      "pk": 12,
+      "fields": {
+        "asset_name": "Motocicleta"
+      }
+    },
+    {
+      "model": "realtime.Types_assets",
+      "pk": 13,
+      "fields": {
+        "asset_name": "Pasajero"
+      }
+    },
+    {
+      "model": "realtime.Types_assets",
+      "pk": 14,
+      "fields": {
+        "asset_name": "PickUps"
+      }
+    },
+    {
+      "model": "realtime.Types_assets",
+      "pk": 15,
+      "fields": {
+        "asset_name": "Taxi"
+      }
+    },
+    {
+      "model": "realtime.Types_assets",
+      "pk": 16,
+      "fields": {
+        "asset_name": "Tractocamion"
+      }
+    },
+    {
+      "model": "realtime.Types_assets",
+      "pk": 17,
+      "fields": {
+        "asset_name": "Vans"
+      }
+    }
+  ]

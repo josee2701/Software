@@ -2,74 +2,292 @@
 
 {% load i18n static %}
 
-{% block title %}{% trans 'Historic_Tickets' %}{% endblock %}
+{% block title %}{% trans 'Historic Tickets' %}{% endblock %}
 
 {% block content %}
-
-<div class="container-fluid py-4">
+<div class="container-fluid py-4 custom-padding-container" style="overflow: hidden;">
     <div class="row">
         <div class="col-12">
-            <div class="card my-4">
+            <div class="card my-4 custom-padding-card-my-4">
                 <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
                     <div class="bg-gradient-primary shadow-primary border-radius-lg pt-4 pb-3">
                         <div class="col">
-                            <h5 class="text-white text-capitalize ps-3"> {% trans "Closed Tickets" %} </h5>
+                            <h5 class="text-white text-capitalize ps-3"> {% trans "Historic Tickets" %} </h5>
                         </div>
                     </div>
                 </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col d-flex">
-                            <!-- Es la opción del buscador de la plantilla de Ticket -->
-                            <form id="search-form" method="GET" onsubmit="return false">
-                                <div class="input-group input-group-outline">
-                                    <label class="form-label">{% trans "Search..." %}</label>
-                                    <input id="search-input" type="text" class="form-control" onfocus="focused(this)" onfocusout="defocused(this)" name="q" autocomplete="off">
-                                </div>
-                            </form>
+                <div class="card-body custom-padding-body">
+                    <div class="row align-items-center mb-3">
+                        <div class="col-12 d-flex flex-column flex-md-row align-items-start justify-content-between">
+                            <div class="d-flex flex-wrap align-items-center mb-2 mb-md-0">
+                                <form method="POST" action="{% url 'companies:closed_tickets' %}" class="d-flex align-items-center">
+                                    {% csrf_token %}
+                                    <label class="me-2" style="padding-top: 4px;">{% trans "Show" %}</label>
+                                    <select name="paginate_by" onchange="this.form.submit()" class="form-select form-select-sm me-2">
+                                        <option value="15" {% if paginate_by == '15' or paginate_by == 15 %} selected {% endif %}>15</option>
+                                        <option value="25" {% if paginate_by == '25' or paginate_by == 25 %} selected {% endif %}>25</option>
+                                        <option value="50" {% if paginate_by == '50' or paginate_by == 50 %} selected {% endif %}>50</option>
+                                        <option value="100" {% if paginate_by == '100' or paginate_by == 100 %} selected {% endif %}>100</option>
+                                    </select>
+                                    <label class="mt-1">{% trans "results" %}</label>
+                                    <input type="hidden" name="q" value="{{ request.POST.q }}">
+                                    <input type="hidden" name="date_from" value="{{ request.GET.date_from }}">
+                                    <input type="hidden" name="date_to" value="{{ request.GET.date_to }}">
+                                    <input type="hidden" name="company" value="{{ request.GET.company }}">
+                                    <input type="hidden" name="assignment" value="{{ request.GET.assignment }}">
+                                    <input type="hidden" name="filter" value="{{ request.GET.filter }}">
+                                    <input type="hidden" name="status" value="{{ request.GET.status }}">
+                                    <input type="hidden" name="page" value="1">
+                                </form>
+                            </div>
+                            <div class="d-flex justify-content-end align-items-center flex-wrap">
+                                <form id="search-form" method="post" action="" class="d-flex flex-wrap w-100">
+                                    {% csrf_token %}
+                                    <div class="form-group me-2">
+                                        <label for="company" class="d-block no-padding-margin" style="margin-bottom: 0.2rem;">{% trans "Company:" %}</label>
+                                        <select id="company-select" name="company" class="form-control select2" style="border: 1px solid #ced4da; height: 30px; padding: 0.25rem; max-width: 45%;">
+                                            <option value="" {% if combined_params.company == '' %}selected{% endif %}>{% trans "All" %}</option>
+                                            {% for id, name in companies %}
+                                                <option value="{{ id }}" {% if combined_params.company == id|stringformat:"s" %}selected{% endif %}>{{ name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="form-group me-2" style="flex: 1; max-width: 13vh;">
+                                        <label for="status" class="d-block no-padding-margin" style="margin-bottom: 0.2rem;">{% trans "Status:" %}</label>
+                                        <select id="status" name="status" class="form-control select2" style="border: 1px solid #ced4da; height: 30px; padding: 0.25rem; max-width: 100%;">
+                                            <option value="" {% if combined_params.status == '' %}selected{% endif %}>{% trans "All" %}</option>
+                                            <option value="open" {% if combined_params.status == 'open' %}selected{% endif %}>{% trans "Open" %}</option>
+                                            <option value="closed" {% if combined_params.status == 'closed' %}selected{% endif %}>{% trans "Closed" %}</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group me-2" style="flex: 1; max-width: 13vh;">
+                                        <label for="assignment" class="d-block no-padding-margin" style="margin-bottom: 0.2rem;">{% trans "Assignment:" %}</label>
+                                        <select id="assignment" name="assignment" class="form-control select2" style="border: 1px solid #ced4da; height: 30px; padding: 0.25rem; max-width: 100%;">
+                                            <option value="" {% if combined_params.assignment == '' %}selected{% endif %}>{% trans "All" %}</option>
+                                            <option value="assigned" {% if combined_params.assignment == 'assigned' %}selected{% endif %}>{% trans "Assigned" %}</option>
+                                            <option value="unassigned" {% if combined_params.assignment == 'unassigned' %}selected{% endif %}>{% trans "Unassigned" %}</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group me-2" style="max-width: 15%">
+                                        <label for="date_from" style="margin-bottom: 0; padding-bottom: 0;">{% trans "Start Date:" %}</label>
+                                        <input type="datetime-local" id="date_from" name="date_from" class="form-control" value="{{ combined_params.date_from|default_if_none:'' }}" style="height: 30px; max-width: 100%;">
+                                    </div>
+                                    <div class="form-group me-2" style="max-width: 15%">
+                                        <label for="date_to" style="margin-bottom: 0; padding-bottom: 0;">{% trans "Ending Date:" %}</label>
+                                        <input type="datetime-local" id="date_to" name="date_to" class="form-control" value="{{ combined_params.date_to|default_if_none:'' }}" style="height: 30px; max-width: 100%;">
+                                    </div>
+                                    <div class="col-auto">
+                                        <button id="filter-button" type="submit" name="filter" value="1" class="btn btn-primary mx-2" style="padding: 9px 12px; margin: 0 0 0 -1px;">{% trans "Filter" %}</button>
+                                        {% if object_list %}
+                                        <a class="btn btn-primary" id="exportExcelBtn" type="button" style="padding: 9px 12px; margin-right: 8px !important; margin: 0 0 0 -1px; max-width: 70%;">
+                                            <i class="fa-solid fa-file-excel mx-2"></i> {% trans "Export to Excel" %}
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="ms-auto justify-content-center" style="flex: 1; max-width: 20vh;">
+                                        <div class="input-group input-group-sm input-group-outline">
+                                            <label class="form-label">{% trans "Search..." %}</label>
+                                            <input id="search-input" type="text" class="form-control" onfocus="focused(this)" onfocusout="defocused(this)" name="q"
+                                            value="{% if combined_params.q %}{{ combined_params.q }}{% elif combined_params.query %}{{ combined_params.query }}{% else %}{% endif %}"
+                                            autocomplete="off">
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
                         </div>
                     </div>
                     <p><p>
-                    <div class="scrollable-content" id="dynamic-scrollable-content" style="overflow-y: auto;">
-                        <div class="table-responsive p-0">
-                            <!-- Se realiza la tabla en la cual se estipulan los nombres de cada columna -->
-                            <table class="table align-items-center mb-0">
+                    {% if closed_tickets %}
+                    <div >
+                        <div style="overflow-x: auto;">
+                            <div class="table-responsive">
+                              <table class="table align-items-center mb-0 table-sm">
                                 <thead>
                                     <tr>
                                         <th></th>
-                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Ticket" %}</th>
-                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Created by" %}</th>
-                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Subject" %}</th>
-                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Priority" %}</th>
-                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Process" %}</th>
-                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Assigned To" %}</th>
-                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Status" %}</th>
-                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Created At" %}</th>
-                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Last Comment" %}</th>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                            <form id="sort-form-id" method="post" style="display: none;" action="{% url 'companies:closed_tickets' %}">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="order_by" value="id">
+                                                <input type="hidden" name="direction" value="{% if order_by == 'id' and direction == 'asc' %}desc{% else %}asc{% endif %}">
+                                            </form>
+                                            <a href="#" onclick="document.getElementById('sort-form-id').submit(); return false;">
+                                                {% trans "Ticket" %}
+                                                <span class="sort-indicator">
+                                                    <span class="sort-arrow sort-arrow-up {% if order_by == 'id' and direction == 'asc' %}active{% else %}inactive{% endif %}">↑</span>
+                                                    <span class="sort-arrow sort-arrow-down {% if order_by == 'id' and direction == 'desc' %}active{% else %}inactive{% endif %}">↓</span>
+                                                </span>
+                                            </a>
+                                        </th>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                            <form id="sort-form-created_by" method="post" style="display: none;" action="{% url 'companies:closed_tickets' %}">
+                                                <input type="hidden" name="order_by" value="created_by">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="direction" value="{% if order_by == 'created_by' and direction == 'asc' %}desc{% else %}asc{% endif %}">
+                                            </form>
+                                            <a href="#" onclick="document.getElementById('sort-form-created_by').submit(); return false;">
+                                                {% trans "Created by" %}
+                                                <span class="sort-indicator">
+                                                    <span class="sort-arrow sort-arrow-up {% if order_by == 'created_by' and direction == 'asc' %}active{% else %}inactive{% endif %}">↑</span>
+                                                    <span class="sort-arrow sort-arrow-down {% if order_by == 'created_by' and direction == 'desc' %}active{% else %}inactive{% endif %}">↓</span>
+                                                </span>
+                                            </a>
+                                        </th>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                            <form id="sort-form-subject" method="post" style="display: none;" action="{% url 'companies:closed_tickets' %}">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="order_by" value="subject">
+                                                <input type="hidden" name="direction" value="{% if order_by == 'subject' and direction == 'asc' %}desc{% else %}asc{% endif %}">
+                                            </form>
+                                            <a href="#" onclick="document.getElementById('sort-form-subject').submit(); return false;">
+                                                {% trans "Subject" %}
+                                                <span class="sort-indicator">
+                                                    <span class="sort-arrow sort-arrow-up {% if order_by == 'subject' and direction == 'asc' %}active{% else %}inactive{% endif %}">↑</span>
+                                                    <span class="sort-arrow sort-arrow-down {% if order_by == 'subject' and direction == 'desc' %}active{% else %}inactive{% endif %}">↓</span>
+                                                </span>
+                                            </a>
+                                        </th>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                            <form id="sort-form-priority" method="post" style="display: none;" action="{% url 'companies:closed_tickets' %}">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="order_by" value="priority">
+                                                <input type="hidden" name="direction" value="{% if order_by == 'priority' and direction == 'asc' %}desc{% else %}asc{% endif %}">
+                                            </form>
+                                            <a href="#" onclick="document.getElementById('sort-form-priority').submit(); return false;">
+                                                {% trans "Priority" %}
+                                                <span class="sort-indicator">
+                                                    <span class="sort-arrow sort-arrow-up {% if order_by == 'priority' and direction == 'asc' %}active{% else %}inactive{% endif %}">↑</span>
+                                                    <span class="sort-arrow sort-arrow-down {% if order_by == 'priority' and direction == 'desc' %}active{% else %}inactive{% endif %}">↓</span>
+                                                </span>
+                                            </a>
+                                        </th>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                            <form id="sort-form-process_type" method="post" style="display: none;" action="{% url 'companies:closed_tickets' %}">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="order_by" value="process_type">
+                                                <input type="hidden" name="direction" value="{% if order_by == 'process_type' and direction == 'asc' %}desc{% else %}asc{% endif %}">
+                                            </form>
+                                            <a href="#" onclick="document.getElementById('sort-form-process_type').submit(); return false;">
+                                                {% trans "Process" %}
+                                                <span class="sort-indicator">
+                                                    <span class="sort-arrow sort-arrow-up {% if order_by == 'process_type' and direction == 'asc' %}active{% else %}inactive{% endif %}">↑</span>
+                                                    <span class="sort-arrow sort-arrow-down {% if order_by == 'process_type' and direction == 'desc' %}active{% else %}inactive{% endif %}">↓</span>
+                                                </span>
+                                            </a>
+                                        </th>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                            <form id="sort-form-assign_to" method="post" style="display: none;" action="{% url 'companies:closed_tickets' %}">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="order_by" value="assign_to">
+                                                <input type="hidden" name="direction" value="{% if order_by == 'assign_to' and direction == 'asc' %}desc{% else %}asc{% endif %}">
+                                            </form>
+                                            <a href="#" onclick="document.getElementById('sort-form-assign_to').submit(); return false;">
+                                                {% trans "Assigned To" %}
+                                                <span class="sort-indicator">
+                                                    <span class="sort-arrow sort-arrow-up {% if order_by == 'assign_to' and direction == 'asc' %}active{% else %}inactive{% endif %}">↑</span>
+                                                    <span class="sort-arrow sort-arrow-down {% if order_by == 'assign_to' and direction == 'desc' %}active{% else %}inactive{% endif %}">↓</span>
+                                                </span>
+                                            </a>
+                                        </th>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                            <form id="sort-form-status" method="post" style="display: none;" action="{% url 'companies:closed_tickets' %}">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="order_by" value="status">
+                                                <input type="hidden" name="direction" value="{% if order_by == 'status' and direction == 'asc' %}desc{% else %}asc{% endif %}">
+                                            </form>
+                                            <a href="#" onclick="document.getElementById('sort-form-status').submit(); return false;">
+                                                {% trans "Status" %}
+                                                <span class="sort-indicator">
+                                                    <span class="sort-arrow sort-arrow-up {% if order_by == 'status' and direction == 'asc' %}active{% else %}inactive{% endif %}">↑</span>
+                                                    <span class="sort-arrow sort-arrow-down {% if order_by == 'status' and direction == 'desc' %}active{% else %}inactive{% endif %}">↓</span>
+                                                </span>
+                                            </a>
+                                        </th>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                            <form id="sort-form-created_at" method="post" style="display: none;" action="{% url 'companies:closed_tickets' %}">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="order_by" value="created_at">
+                                                <input type="hidden" name="direction" value="{% if order_by == 'created_at' and direction == 'asc' %}desc{% else %}asc{% endif %}">
+                                            </form>
+                                            <a href="#" onclick="document.getElementById('sort-form-created_at').submit(); return false;">
+                                                {% trans "Created At" %}
+                                                <span class="sort-indicator">
+                                                    <span class="sort-arrow sort-arrow-up {% if order_by == 'created_at' and direction == 'asc' %}active{% else %}inactive{% endif %}">↑</span>
+                                                    <span class="sort-arrow sort-arrow-down {% if order_by == 'created_at' and direction == 'desc' %}active{% else %}inactive{% endif %}">↓</span>
+                                                </span>
+                                            </a>
+                                        </th>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                            <form id="sort-form-last_comment" method="post" style="display: none;" action="{% url 'companies:closed_tickets' %}">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="order_by" value="last_comment">
+                                                <input type="hidden" name="direction" value="{% if order_by == 'last_comment' and direction == 'asc' %}desc{% else %}asc{% endif %}">
+                                            </form>
+                                            <a href="#" onclick="document.getElementById('sort-form-last_comment').submit(); return false;">
+                                                {% trans "Last Comment" %}
+                                                <span class="sort-indicator">
+                                                    <span class="sort-arrow sort-arrow-up {% if order_by == 'last_comment' and direction == 'asc' %}active{% else %}inactive{% endif %}">↑</span>
+                                                    <span class="sort-arrow sort-arrow-down {% if order_by == 'last_comment' and direction == 'desc' %}active{% else %}inactive{% endif %}">↓</span>
+                                                </span>
+                                            </a>
+                                        </th>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                            <form id="sort-form-duration" method="post" style="display: none;" action="{% url 'companies:closed_tickets' %}">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="order_by" value="duration">
+                                                <input type="hidden" name="direction" value="{% if order_by == 'duration' and direction == 'asc' %}desc{% else %}asc{% endif %}">
+                                            </form>
+                                            <a href="#" onclick="document.getElementById('sort-form-duration').submit(); return false;">
+                                                {% trans "Duration" %}
+                                                <span class="sort-indicator">
+                                                    <span class="sort-arrow sort-arrow-up {% if order_by == 'duration' and direction == 'asc' %}active{% else %}inactive{% endif %}">↑</span>
+                                                    <span class="sort-arrow sort-arrow-down {% if order_by == 'duration' and direction == 'desc' %}active{% else %}inactive{% endif %}">↓</span>
+                                                </span>
+                                            </a>
+                                        </th>
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody id="ticket-tbody">
                                     {% for ticket in closed_tickets %}
                                     <tr>
                                         <td>
-                                            <!-- Aquí puedes agregar botones u acciones para el ticket si es necesario -->
-                                            <!-- Botón para ver el ticket -->
-                                            <button type="button" hx-get="{% url 'companies:view_ticket' ticket.id %}" class="btn btn-primary" hx-target="#dialog">
+                                            <button type="button" hx-get="{% url 'companies:view_ticket' ticket.id %}" class="btn btn-primary btn-sm" hx-target="#modal .modal-content">
                                                 <i class="fa-solid fa-eye"></i>
                                             </button>
+                                            {% if not ticket.status and ticket.user_created == 1 %}
+                                                {% if ticket.rating %}
+                                                    <button type="button" class="btn btn-secondary rate-ticket-btn rated" data-ticket-id="{{ ticket.id }}" data-ticket-rating="{{ ticket.rating }}" style="background-color:white; width: 100px; padding: 6px;">
+                                                        <div class="stars">
+                                                            {% for i in "12345" %}
+                                                                <i class="fa-solid fa-star star-rating" data-rating="{{ i }}"></i>
+                                                            {% endfor %}
+                                                        </div>
+                                                    </button>
+                                                {% else %}
+                                                    <button type="button" class="btn btn-secondary rate-ticket-btn" style="width: 100px; padding: 6px; display: inline-block; text-align: center;" data-ticket-id="{{ ticket.id }}" data-ticket-rating="{{ ticket.rating }}">
+                                                        <i class="fa-solid fa-star"></i> {% trans "Qualify" %}
+                                                    </button>
+                                                {% endif %}
+                                            {% endif %}
                                         </td>
-                                        <!-- Columnas de información del ticket -->
                                         <td class="align-middle text-center text-sm">
                                             <span class="font-weight-normal mb-0">{{ ticket.id }}</span>
                                         </td>
                                         <td class="align-middle text-center text-sm">
-                                            <span class="font-weight-normal mb-0">{{ ticket.created_by.username }}</span>
+                                            <span class="font-weight-normal mb-0">{{ ticket.created_by }}</span>
                                         </td>
                                         <td class="align-middle text-center text-sm">
                                             <span class="font-weight-normal mb-0">{{ ticket.subject }}</span>
                                         </td>
                                         <td class="align-middle text-center text-sm">
-                                            <span class="font-weight-normal mb-0">{{ ticket.get_priority_display }}</span>
+                                            {% if ticket.priority == "Low"%}
+                                            <span class="text-secondary mb-0">{% trans "Low" %}</span>
+                                            {% elif ticket.priority == "Medium"%}
+                                            <span class="text-secondary mb-0">{% trans "Medium" %}</span>
+                                            {% elif ticket.priority == "High"%}
+                                            <span class="text-secondary mb-0">{% trans "High" %}</span>
+                                            {% endif %}
                                         </td>
                                         <td class="align-middle text-center text-sm">
                                             <span class="font-weight-normal mb-0">{{ ticket.process_type }}</span>
@@ -89,10 +307,19 @@
                                             {% endif %}
                                         </td>
                                         <td class="align-middle text-center text-sm">
-                                            <span class="text-secondary mb-0">{{ ticket.created_at|date:"d/m/Y h:i:s A" }}</span>
+                                            <span class="utc-date-5s">{{ ticket.created_at|date:"Y-m-d H:i" }}</span>
                                         </td>
                                         <td class="align-middle text-center text-sm">
-                                            <span class="text-secondary mb-0">{{ ticket.last_comment|date:"d/m/Y h:i:s A" }}</span>
+                                            <span class="utc-date-5s">{{ ticket.last_comment|date:"Y-m-d H:i" }}</span>
+                                        </td>
+                                        <td class="align-middle text-center text-sm">
+                                            <span class="text-secondary mb-0">
+                                                {% if ticket.duration %}
+                                                    {{ ticket.days }} {% trans "Days" %},
+                                                    {{ ticket.hours }} {{ "Hrs" }},
+                                                    {{ ticket.minutes }} {{ "Min" }}
+                                                {% endif %}
+                                            </span>
                                         </td>
                                     </tr>
                                     {% endfor %}
@@ -100,32 +327,219 @@
                             </table>
                         </div>
                     </div>
+                    {% else %}
+                        <p style="color: red; font-weight: bold;">
+                            {% if request.GET.date_from or request.GET.date_to or request.GET.company or request.GET.assignment or request.GET.status %}
+                                {% if request.GET.company %}
+                                        {% trans "No results found for the selected company." %}
+                                {% elif request.GET.assignment or request.GET.status %}
+                                    {% trans "No results found for the selected Assignment Status." %}
+                                {% elif request.GET.date_from and request.GET.date_to %}
+                                    {% trans "No results found for the selected date." %}
+                                {% else %}
+                                    {% trans "No results found. Please adjust the filters and try again." %}
+                                {% endif %}
+                            {% endif %}
+                        </p>
+                    {% endif %}
+                    <form id="pagination-form" method="post" action="">
+                        {% csrf_token %}
+                        <input type="hidden" name="paginate_by" value="{{ request.POST.paginate_by }}">
+                        <input type="hidden" name="q" value="{{ request.GET.q }}">
+                        <input type="hidden" name="page" id="page-input" value="{{ page_obj.number }}">
+                        <input type="hidden" name="query_string" value="{{ query_string }}">
+                    </form>
+                    <div class="row mt-2 custom-row">
+                        <div class="col-6 d-flex justify-content-start align-items-center">
+                            <div class="pagination-info">
+                                {% trans 'Displaying' %} {{ page_obj.start_index }} {% trans 'to' %} {{ page_obj.end_index }} {% trans 'of' %} {{ page_obj.paginator.count }} {% trans 'items.' %}
+                            </div>
+                        </div>
+                        <div class="col-6 d-flex justify-content-end">
+                            <nav aria-label="Page navigation" id="pagination-container">
+                                <ul class="pagination">
+                                    {% if page_obj.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="#" onclick="setPageAndSubmit(1, '{{ query_string }}'); return false;">
+                                                {% trans 'Home' %}
+                                            </a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="#" onclick="setPageAndSubmit({{ page_obj.previous_page_number }}, '{{ query_string }}'); return false;">
+                                                &laquo;
+                                            </a>
+                                        </li>
+                                    {% endif %}
+                                    {% if page_obj.number|add:"-4" > 1 %}
+                                        <li class="page-item"><span class="page-link">...</span></li>
+                                    {% endif %}
+                                    {% for num in page_obj.paginator.page_range %}
+                                        {% if num > page_obj.number|add:"-4" and num < page_obj.number|add:"4" %}
+                                            <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                                                <a class="page-link" href="#" onclick="setPageAndSubmit({{ num }}, '{{ query_string }}'); return false;">
+                                                    {{ num }}
+                                                </a>
+                                            </li>
+                                        {% endif %}
+                                    {% endfor %}
+                                    {% if page_obj.number|add:"3" < page_obj.paginator.num_pages %}
+                                        <li class="page-item"><span class="page-link">...</span></li>
+                                    {% endif %}
+                                    {% if page_obj.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="#" onclick="setPageAndSubmit({{ page_obj.next_page_number }}, '{{ query_string }}'); return false;">
+                                                &raquo;
+                                            </a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="#" onclick="setPageAndSubmit({{ page_obj.paginator.num_pages }}, '{{ query_string }}'); return false;">
+                                                {% trans 'End' %}
+                                            </a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-<script src="{% static 'assets/js/dynamic-scrollable-content.js' %}"></script>
-<!-- Script para implementar el search en el modulo de tickets -->
+<!-- Modal de Calificación -->
+<div class="modal fade custom-rating-modal" id="rateModal" tabindex="-1" role="dialog" aria-labelledby="rateModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="rateModalLabel">{% trans "Qualification " %} Ticket: <span id="modalTicketId"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="rating-stars">
+                    <span class="star" data-value="1">&#9733;</span>
+                    <span class="star" data-value="2">&#9733;</span>
+                    <span class="star" data-value="3">&#9733;</span>
+                    <span class="star" data-value="4">&#9733;</span>
+                    <span class="star" data-value="5">&#9733;</span>
+                </div>
+            </div>
+            <div class="modal-footer d-flex justify-content-between">
+                <button type="button" class="btn btn-danger" id="cancelRating" style="margin-right: 10px;" data-bs-dismiss="modal">{% trans "Cancel" %}</button>
+                <button type="button" class="btn btn-primary" id="submitRating">{% trans "Submit Rating" %}</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Overlay para bloquear la pantalla y mostrar el spinner -->
+<div id="overlay" class="overlay d-none">
+    <div class="d-flex justify-content-center align-items-center vh-100">
+        <div>
+            <div class="spinner-border" role="status"></div>
+            <span class="visually-hidden">{% trans 'Loading...' %}</span>
+        </div>
+        <strong role="status" class="ms-2">{% trans 'Loading...' %}</strong>
+    </div>
+</div>
+<div class="modal fade" id="downloadModal" tabindex="-1" aria-labelledby="downloadModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-start modal-dialog-scrollable" style="max-width: 25%;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="downloadModalLabel">{% trans "Download Progress" %}</h5>
+                <button type="button" id="cerrarVenta" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="progress">
+                    <div id="downloadProgressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar">0%</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'assets/css/select2.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/estilos_templates.css' %}" />
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/report/report_today.css' %}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
+    <link rel="stylesheet" href="{% static 'assets/css/tickets/rate_tickets.css' %}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/style_main_list.css' %}" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.3/xlsx.full.min.js"></script>
+    <script src="{% static 'assets/js/utc_local.js' %}"></script>
+</head>
+<style>
+    .select2-container--default .select2-results__option--highlighted.select2-results__option--selectable {
+        background-color: {{ user.company.theme_set.all.0.button_color }};
+        color: white;
+    }
+</style>
+
+{% block scripts %}
+<!-- Incluir jQuery primero -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Incluir Select2 después de jQuery -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
-    const input = document.getElementById("search-input");
+    var csrfToken = "{{ csrf_token }}";
+    const ticketViewUrlTemplate = "{% url 'companies:view_ticket' 0 %}";
+    const rateButtonTemplateSuccess = `
+        <button type="button" class="btn btn-secondary rate-ticket-btn" data-ticket-id="__ticketId__" data-ticket-rating="__ticketRating__" style="background-color:transparent; width: 100px; padding: 6px;">
+            <div class="stars">
+                {% for i in "12345" %}
+                 <i class="fa-solid fa-star star-rating" data-rating="{{ i }}"></i>
+                {% endfor %}
+            </div>
+        </button>
+    `;
+    const rateButtonTemplateSecondary = `
+        <button type="button" class="btn btn-secondary rate-ticket-btn" style="width: 100px; padding: 6px; display: inline-block; text-align: center;" data-ticket-id="__ticketId__" data-ticket-rating="__ticketRating__">
+        <i class="fa-solid fa-star"></i> {% trans "Qualify" %}
+        </button>
+    `;
+    var buttonColor = '{{ user.company.theme_set.all.0.button_color }}'
+    var translations = {
+        confirmFilter: "{% trans 'Please select at least one filter before applying.' %}",
+        confirmDateEnd: "{% trans 'Ending Date cannot be earlier than Start Date.' %}",
+        confirmDateBoth: "{% trans 'Please select both Start and End date.' %}",
+        low: "{% trans 'Low' %}",
+        medium: "{% trans 'Medium' %}",
+        high: "{% trans 'High' %}",
+        end: "{% trans 'End' %}",
+        home: "{% trans 'Home' %}",
+        open: "{% trans 'Open' %}",
+        closed: "{% trans 'Closed' %}",
+        to: "{% trans 'to' %}",
+        of: "{% trans 'of' %}",
+        days: "{% trans 'Days' %}",
+        distributor : "{% trans 'Distributor' %}",
+        ticketHistoric : "{% trans 'Cases_Historic' %}",
+        unassigned : "{% trans 'Unassigned' %}",
+        noResultsFound: "{% trans 'No results found' %}",
+        displaying: "{% trans 'Displaying' %}",
+        file: "{% trans 'The archive ' %}",
+        isNotAllowed: "{% trans ' is not allowed. Allowed formats are: ' %}",
+        alertFilesExceedsSize: "{% trans 'The total size of the selected files exceeds the maximum allowed size of ' %}",
+        alertFileExceedSize: "{% trans ' exceeds the maximum allowed size of ' %}"
+    };
+    $(document).ready(function() {
+        $('#company-select').select2();
+        $('#status').select2();
+        $('#assignment').select2();
 
-    input.addEventListener("keyup", (e) => {
-        const value = e.target.value.toLowerCase();
-        // Obtener todas las filas de la tabla
-        const rows = document.querySelector("tbody").querySelectorAll("tr");
-
-        rows.forEach((row) => {
-            // Obtener el texto de todas las celdas en la fila
-            const cellTexts = Array.from(row.querySelectorAll("td")).map(cell => cell.textContent.toLowerCase());
-
-            // Si alguna de las celdas contiene el valor buscado, mostrar la fila
-            if (cellTexts.some(text => text.includes(value))) {
-                row.hidden = false;
-            } else {
-                row.hidden = true;
-            }
+        // Añadir evento de clic para los botones de calificación
+        $(document).on('click', '.rate-ticket-btn', function() {
+            var ticketId = $(this).data('ticket-id');
+            openRatingModal(ticketId);
         });
     });
 </script>
+<script src="{% static 'assets/js/whitelabel/tickets/search_tickets.js' %}"></script>
+<script src="{% static 'assets/js/whitelabel/tickets/filter_ticket_closed.js' %}"></script>
+<script src="{% static 'assets/js/whitelabel/tickets/adjuntos.js' %}"></script>
+<script src="{% static 'assets/js/whitelabel/tickets/rate_tickets.js' %}"></script>
+<script src="{% static 'assets/js/asc_desc.js' %}"></script>
+<script src="{% static 'assets/js/whitelabel/tickets/export_excel_ticket_historic.js' %}"></script>
+
+{% endblock %}
+
 {% endblock %}

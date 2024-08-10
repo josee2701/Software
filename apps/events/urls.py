@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/4.0/ref/urls/
 from django.urls import include, path
 
 from . import views  # Importación de las vistas del mismo módulo
+from .apis import SearchEventPredefined, SearchEventUser, ExportDataEvents, ExportDataEventsusers
 
 app_name = "events"  # Nombre de la aplicación para el espacio de nombres de URL
 
@@ -48,6 +49,35 @@ urlpatterns = [
                     views.DeleteUserEventsView.as_view(),
                     name="delete_user_events",
                 ),
+            ]
+        ),
+    ),
+    path(
+        "predefined/",
+        include(
+            [
+                # API para traer info de planes de comandos enviados + search
+                path(
+                    "event-predefined",
+                    SearchEventPredefined.as_view(),
+                    name="event_predefined",
+                ),
+                path(
+                    "export-events",
+                    ExportDataEvents.as_view(),
+                    name="export_events",
+                ),
+                
+            ]
+        ),
+    ),
+    path(
+        "user/",
+        include(
+            [
+                # API para traer info de planes de comandos enviados + search
+                path("event-user", SearchEventUser.as_view(), name="user_event"),
+                path("export-eventsusers", ExportDataEventsusers.as_view(), name="export_eventsusers"),
             ]
         ),
     ),

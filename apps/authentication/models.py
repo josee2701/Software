@@ -18,8 +18,8 @@ from django.utils.translation import gettext_lazy as _
 
 class User(AbstractUser):
     """
-    Define el modelo de usuario personalizado para la aplicación. Si se añaden campos que deben
-    ser rellenados al momento del registro del usuario.
+    Define el modelo de usuario personalizado para la aplicación. 
+    Permite añadir campos personalizados necesarios al momento del registro del usuario.
     """
 
     class Alam(models.TextChoices):
@@ -105,15 +105,21 @@ class User(AbstractUser):
         "whitelabel.Process",
         on_delete=models.CASCADE,
         verbose_name=_("process_type"),
-        null=True,
+        null=False,
         blank=False,
     )
-    visible = models.BooleanField(_("visible"), default=True)
+
+    rol = models.BooleanField(null=True, verbose_name=_("rol"))
+
+    visible = models.BooleanField(verbose_name=_("visible"), default=True)
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
 
     def deactivate_user(self):
+        """
+        Desactiva el usuario cambiando su estado y modificando su nombre de usuario.
+        """
         if not self.is_active:
             # Si ya está desactivado, no hacer nada
             return

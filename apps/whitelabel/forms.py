@@ -7,7 +7,7 @@ from django.utils.translation import gettext_lazy as _
 
 from apps.whitelabel.models import Company, CompanyTypeMap, MapType, Module, Theme
 
-from .models import Attachment, Comment, Message, Process, Ticket
+from .models import Attachment, Comment, Message, Process, Theme, Ticket
 
 # Import the list of countries from pycountry
 countries = list(map(Company.from_pycountry, pycountry.countries))
@@ -23,21 +23,22 @@ class MyCheckboxSelectMultiple(forms.CheckboxSelectMultiple):
 
 class DistributionCompanyForm(forms.ModelForm):
     """
-    # Un formulario que se utiliza para crear una nueva empresa.
-
+    Un formulario que se utiliza para crear o actualizar una empresa.
     """
 
     modules = forms.ModelMultipleChoiceField(
         queryset=Group.objects.all(),
         widget=MyCheckboxSelectMultiple(),
+        label=_("Modules"),
     )
 
     type_map = forms.ModelMultipleChoiceField(
         queryset=MapType.objects.all(),
         widget=MyCheckboxSelectMultiple(),
+        label=_("Type Map"),
     )
 
-    key_map = forms.CharField(required=False)
+    key_map = forms.CharField(required=False, label=_("Key Map"))
 
     class Meta:
         model = Company
@@ -76,55 +77,40 @@ class DistributionCompanyForm(forms.ModelForm):
             "coin": _("Coin"),
         }
         widgets = {
-            "nit": forms.TextInput(attrs={
-                "class": "form-control",
-                "autocomplete": "off"
-            }),
-            "company_name": forms.TextInput(attrs={
-                "class": "form-control",
-                "autocomplete": "off"
-            }),
-            "legal_representative": forms.TextInput(attrs={
-                "class": "form-control",
-                "autocomplete": "off"
-            }),
-            "address": forms.TextInput(attrs={
-                "class": "form-control",
-                "autocomplete": "off"
-            }),
-            "country": forms.Select(choices=countries, attrs={
-                "class": "form-control",
-                "autocomplete": "off"
-            }),
-            "city": forms.TextInput(attrs={
-                "class": "form-control",
-                "autocomplete": "off"
-            }),
-            "phone_number": forms.NumberInput(attrs={
-                "class": "form-control",
-                "min": 10,
-                "autocomplete": "off"
-            }),
-            "signed_contract": forms.CheckboxInput(attrs={
-                "class": "form-check-input"
-            }),
-            "consultant": forms.TextInput(attrs={
-                "class": "form-control",
-                "autocomplete": "off"
-            }),
-            "seller": forms.TextInput(attrs={
-                "class": "form-control",
-                "autocomplete": "off"
-            }),
-            "actived": forms.CheckboxInput(attrs={
-                "class": "form-check-input"
-            }),
-            "coin": forms.Select(attrs={
-                "class": "form-control",
-                "autocomplete": "off"
-            }),
+            "nit": forms.TextInput(
+                attrs={"class": "form-control", "autocomplete": "off"}
+            ),
+            "company_name": forms.TextInput(
+                attrs={"class": "form-control", "autocomplete": "off"}
+            ),
+            "legal_representative": forms.TextInput(
+                attrs={"class": "form-control", "autocomplete": "off"}
+            ),
+            "address": forms.TextInput(
+                attrs={"class": "form-control", "autocomplete": "off"}
+            ),
+            "country": forms.Select(
+                choices=countries,
+                attrs={"class": "form-control", "autocomplete": "off"},
+            ),
+            "city": forms.TextInput(
+                attrs={"class": "form-control", "autocomplete": "off"}
+            ),
+            "phone_number": forms.NumberInput(
+                attrs={"class": "form-control", "min": 10, "autocomplete": "off"}
+            ),
+            "signed_contract": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+            "consultant": forms.TextInput(
+                attrs={"class": "form-control", "autocomplete": "off"}
+            ),
+            "seller": forms.TextInput(
+                attrs={"class": "form-control", "autocomplete": "off"}
+            ),
+            "actived": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+            "coin": forms.Select(
+                attrs={"class": "form-control", "autocomplete": "off"}
+            ),
         }
-
 
     def __init__(self, *args, **kwargs):
         self.provider_id = kwargs.pop(
@@ -162,14 +148,16 @@ class CompanyCustomerForm(forms.ModelForm):
     modules = forms.ModelMultipleChoiceField(
         queryset=Group.objects.none(),  # Inicialmente vacío, se establecerá según el usuario
         widget=MyCheckboxSelectMultiple(),  # Asume que tienes un widget personalizado o usa el predeterminado
+        label=_("Modules"),
     )
 
     type_map = forms.ModelMultipleChoiceField(
         queryset=MapType.objects.none(),  # Inicialmente vacío, se establecerá según el usuario
         widget=MyCheckboxSelectMultiple(),  # Asume que tienes un widget personalizado o usa el predeterminado
+        label=_("Type Map"),
     )
 
-    key_map = forms.CharField(required=False)
+    key_map = forms.CharField(required=False, label=_("Key Map"))
 
     class Meta:
         model = Company
@@ -206,45 +194,32 @@ class CompanyCustomerForm(forms.ModelForm):
             "coin": _("Coin"),
         }
         widgets = {
-            "nit": forms.TextInput(attrs={
-                "class": "form-control",
-                "autocomplete": "off"
-            }),
-            "company_name": forms.TextInput(attrs={
-                "class": "form-control",
-                "autocomplete": "off"
-            }),
-            "legal_representative": forms.TextInput(attrs={
-                "class": "form-control",
-                "autocomplete": "off"
-            }),
-            "address": forms.TextInput(attrs={
-                "class": "form-control",
-                "autocomplete": "off"
-            }),
-            "country": forms.Select(attrs={
-                "class": "form-control",
-                "autocomplete": "off"
-            }),
-            "city": forms.TextInput(attrs={
-                "class": "form-control",
-                "autocomplete": "off"
-            }),
-            "phone_number": forms.NumberInput(attrs={
-                "class": "form-control",
-                "min": 10,
-                "autocomplete": "off"
-            }),
-            "signed_contract": forms.CheckboxInput(attrs={
-                "class": "form-check-input"
-            }),
-            "actived": forms.CheckboxInput(attrs={
-                "class": "form-check-input"
-            }),
-            "coin": forms.Select(attrs={
-                "class": "form-control",
-                "autocomplete": "off"
-            }),
+            "nit": forms.TextInput(
+                attrs={"class": "form-control", "autocomplete": "off"}
+            ),
+            "company_name": forms.TextInput(
+                attrs={"class": "form-control", "autocomplete": "off"}
+            ),
+            "legal_representative": forms.TextInput(
+                attrs={"class": "form-control", "autocomplete": "off"}
+            ),
+            "address": forms.TextInput(
+                attrs={"class": "form-control", "autocomplete": "off"}
+            ),
+            "country": forms.Select(
+                attrs={"class": "form-control", "autocomplete": "off"}
+            ),
+            "city": forms.TextInput(
+                attrs={"class": "form-control", "autocomplete": "off"}
+            ),
+            "phone_number": forms.NumberInput(
+                attrs={"class": "form-control", "min": 10, "autocomplete": "off"}
+            ),
+            "signed_contract": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+            "actived": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+            "coin": forms.Select(
+                attrs={"class": "form-control", "autocomplete": "off"}
+            ),
         }
 
     def __init__(self, *args, **kwargs):
@@ -306,17 +281,32 @@ class CompanyLogoForm(forms.ModelForm):
 
 
 class KeyMapForm(forms.ModelForm):
+    obscured_key_map = forms.CharField(
+        max_length=60,
+        required=False,
+        label="Key Map",
+        widget=forms.TextInput(attrs={"class": "form-control", "readonly": "readonly"}),
+    )
+
     class Meta:
         model = CompanyTypeMap
-        fields = ["id", "key_map", "map_type"]
+        fields = ["id", "key_map", "map_type", "obscured_key_map"]
         widgets = {
             "id": forms.HiddenInput(),
             "map_type": forms.HiddenInput(),
-            "key_map": forms.TextInput(attrs={
-                "class": "form-control",
-                "autocomplete": "off"
-            }),
+            "key_map": forms.TextInput(
+                attrs={"class": "form-control", "autocomplete": "off", "value": ""}
+            ),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["obscured_key_map"].initial = self.instance.get_obscured_key()
+        self.fields[
+            "key_map"
+        ].initial = ""  # Aseguramos que el campo key_map esté vacío
+        self.fields["key_map"].widget.attrs["placeholder"] = ""
+        self.fields["key_map"].required = False
 
 
 class CompanyDeleteForm(forms.ModelForm):
@@ -337,7 +327,7 @@ class ThemeForm(forms.ModelForm):
                 "name": "Background",
                 "id": "color-picker-button",
                 "style": "width: 100px; height: 100px;",
-                "autocomplete": "off"
+                "autocomplete": "off",
             }
         )
     )
@@ -350,9 +340,12 @@ class ThemeForm(forms.ModelForm):
                 "name": "sidebar_color",
                 "id": "color_sidebar",
                 "style": "width: 100px; height: 100px;",
-                "autocomplete": "off"
+                "autocomplete": "off",
             }
         )
+    )
+    opacity = forms.CharField(
+        widget=forms.HiddenInput(attrs={"maxlength": "3"})
     )
 
     class Meta:
@@ -371,6 +364,10 @@ class ThemeForm(forms.ModelForm):
             "sidebar_image": _("Sidebar Image"),
             "lock_screen_image": _("Lock Screen Image"),
         }
+        widgets = {
+            "sidebar_image": forms.FileInput(attrs={"class": "form-control-file"}),
+            "lock_screen_image": forms.FileInput(attrs={"class": "form-control-file"}),
+        }
 
 
 class Moduleform(forms.ModelForm):
@@ -386,10 +383,9 @@ class Moduleform(forms.ModelForm):
         widgets = {
             "id": forms.HiddenInput(),
             "group": forms.HiddenInput(),
-            "price": forms.NumberInput(attrs={
-                "class": "form-control",
-                "autocomplete": "off"
-            }),
+            "price": forms.NumberInput(
+                attrs={"class": "form-control", "autocomplete": "off"}
+            ),
         }
 
 
@@ -401,15 +397,96 @@ class ProcessForm(forms.ModelForm):
             "company",
         ]
         widgets = {
-            "process_type": forms.TextInput(attrs={
-                "class": "form-control",
-                "autocomplete": "off"  
-            }),
-            "company": forms.Select(attrs={
-                "class": "form-control",
-                "autocomplete": "off"  
-            }),
+            "process_type": forms.TextInput(
+                attrs={"class": "form-control", "autocomplete": "off"}
+            ),
+            "company": forms.Select(
+                attrs={"class": "form-control", "autocomplete": "off"}
+            ),
         }
+
+
+class TicketCrearte(forms.ModelForm):
+    class Meta:
+        model = Ticket
+        fields = [
+            "subject",
+            "priority",
+            "process_type",
+        ]
+
+        widgets = {
+            "subject": forms.TextInput(
+                attrs={"class": "form-control", "autocomplete": "off"}
+            ),
+            "priority": forms.Select(
+                attrs={"class": "form-control", "autocomplete": "off"}
+            ),
+            "process_type": forms.Select(
+                attrs={"class": "form-control", "autocomplete": "off"}
+            ),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["process_type"].required = True
+
+
+class TicketForm(forms.ModelForm):
+    class Meta:
+        model = Ticket
+        fields = [
+            "subject",
+            "priority",
+            "process_type",
+            "provider_company",
+            "customer_company",
+            "assign_to",
+        ]
+
+        widgets = {
+            "subject": forms.TextInput(
+                attrs={"class": "form-control", "autocomplete": "off"}
+            ),
+            "priority": forms.Select(
+                attrs={"class": "form-control", "autocomplete": "off"}
+            ),
+            "process_type": forms.Select(
+                attrs={"class": "form-control", "autocomplete": "off"}
+            ),
+            "provider_company": forms.Select(
+                attrs={"class": "form-control", "autocomplete": "off"}
+            ),
+            "customer_company": forms.Select(
+                attrs={"class": "form-control", "autocomplete": "off"}
+            ),
+            "assign_to": forms.Select(
+                attrs={"class": "form-control", "autocomplete": "off"}
+            ),
+        }
+
+    def __init__(self, *args, **kwargs):
+        company = kwargs.pop("company", None)
+        company_tk = kwargs.pop("company_tk", None)
+        process = kwargs.pop("process", None)
+
+        super().__init__(*args, **kwargs)
+
+        if company:
+            self.fields["process_type"].queryset = Process.objects.filter(
+                company=company_tk, visible=True
+            )
+
+        if company_tk and process:
+            self.fields["assign_to"].queryset = process.user_set.filter(
+                company=company_tk, visible=True
+            )
+
+    def clean_process_type(self):
+        process_type = self.cleaned_data.get("process_type")
+        if not process_type:
+            raise forms.ValidationError("Please select a process type.")
+        return process_type
 
 
 class MessageForm(forms.ModelForm):
@@ -423,7 +500,7 @@ class MessageForm(forms.ModelForm):
                     "rows": 3,
                     "placeholder": "Escribe tu comentario aquí...",  # Un ejemplo de placeholder
                     "style": "border: 1px solid #ced4da; border-radius: 0.25rem;",  # CSS personalizado
-                    "autocomplete": "off"
+                    "autocomplete": "off",
                 }
             ),
         }
@@ -439,89 +516,6 @@ class AttachmentForm(forms.ModelForm):
         fields = ["file"]
 
 
-class TicketForm(forms.ModelForm):
-    priority = forms.ChoiceField(
-        choices=[("High", "High"), ("Medium", "Medium"), ("Low", "Low")],
-        widget=forms.Select(attrs={
-            "class": "form-control",
-            "autocomplete": "off"
-        }),
-    )
-    provider_company = forms.ModelChoiceField(
-        queryset=Company.objects.filter(visible = True, actived = True),
-        required=False,
-        label=_("Provider Company"),
-        widget=forms.Select(attrs={
-            "class": "form-control",
-            "autocomplete": "off"
-        }),
-    )
-
-    customer_company = forms.ModelChoiceField(
-        queryset=Company.objects.filter(visible = True, actived = True),
-        required=False,
-        label=_("Customer Company"),
-        widget=forms.Select(attrs={
-            "class": "form-control",
-            "autocomplete": "off"
-        }),
-    )
-    process_type = forms.ModelChoiceField(
-        queryset=Process.objects.none(),
-        required=False,
-        label=_("process_type"),
-        widget=forms.Select(attrs={
-            "class": "form-control",
-            "autocomplete": "off"
-        }),
-    )
-
-    class Meta:
-        model = Ticket
-        fields = [
-            "subject",
-            "priority",
-            "process_type",
-            "assign_to",
-            "provider_company",
-            "customer_company",
-        ]
-
-        widgets = {
-            "subject": forms.TextInput(attrs={
-                "class": "form-control",
-                "autocomplete": "off"
-            }),
-            "assign_to": forms.Select(attrs={
-                "class": "form-control",
-                "autocomplete": "off"
-            }),
-        }
-
-    def __init__(self, *args, **kwargs):
-        company = kwargs.pop("company", None)
-        company_tk = kwargs.pop("company_tk", None)
-        process = kwargs.pop("process", None)
-
-        super().__init__(*args, **kwargs)
-
-        if company:
-            self.fields["process_type"].queryset = Process.objects.filter(
-                company=company
-            )
-
-        if company_tk and process:
-            self.fields["assign_to"].queryset = process.user_set.filter(
-                company=company_tk
-            )
-
-    def clean_process_type(self):
-        process_type = self.cleaned_data.get("process_type")
-        if not process_type:
-            raise forms.ValidationError("Please select a process type.")
-        return process_type
-
-
 class CommentForm(forms.ModelForm):
     attachment = forms.FileField(required=False)  # Agrega un campo para cargar archivos
 
@@ -529,11 +523,9 @@ class CommentForm(forms.ModelForm):
         model = Comment  # Asegúrate de tener un modelo llamado Comment en tu aplicación
         fields = ["text"]  # Ajusta los campos según tus necesidades
         widgets = {
-            "text": forms.Textarea(attrs={
-                "class": "form-control", 
-                "rows": 3,
-                "autocomplete": "off"
-            }),
+            "text": forms.Textarea(
+                attrs={"class": "form-control", "rows": 3, "autocomplete": "off"}
+            ),
         }
 
 

@@ -1,12 +1,44 @@
+import re
+from datetime import datetime
+
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db import DatabaseError, connection
+from django.db.models import F, Q, Value
+from django.db.models.functions import Concat
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
+from django.utils import translation
 from django.utils.decorators import method_decorator
+from django.utils.translation import gettext as _
 from django.views import View
+from django.views.decorators.csrf import csrf_exempt
 
-from .models import DataPlan, Device, FamilyModelUEC, SimCard, Vehicle
+from apps.whitelabel.models import Company
 
+from .models import (Brands_assets, DataPlan, Device, FamilyModelUEC,
+                     Line_assets, Manufacture, SimCard, Vehicle)
+from .sql import (ListDeviceByCompany, ListVehicleByUserAndCompany,
+                  ListVehicleGroupsByCompany, fetch_all_dataplan,
+                  fetch_all_geozones, fetch_all_response_commands,
+                  fetch_all_sending_commands, fetch_all_simcards)
+
+
+def list_family_model(request, manufacture_id):
+    family_model = FamilyModelUEC.objects.filter(manufacture_id=manufacture_id).annotate(
+        model_name=Concat(F('model__name'), Value(' '), F('model__network_type'))
+    ).values('id', 'model', 'model_name')
+    return JsonResponse(list(family_model), safe=False)
+
+def list_manufacture(request,family_model_id):
+    try:
+        family_model = FamilyModelUEC.objects.get(id=family_model_id)
+        return JsonResponse({
+            'manufacture_id': family_model.manufacture.id,
+            'manufacture_name': family_model.manufacture.name
+        })
+    except FamilyModelUEC.DoesNotExist:
+        return JsonResponse({'error': 'Family model not found'}, status=404)
 
 def get_data_plans(request, company_id):
     """
@@ -21,9 +53,15 @@ def get_data_plans(request, company_id):
     """
     # Asegúrate de que los usuarios puedan ver planes de otras compañías si es necesario
     # Puedes agregar controles adicionales aquí si hay restricciones en quien puede ver qué
-    data_plans = DataPlan.objects.filter(company_id=company_id).values(
-        "id", "name", "operator"
+    data_plans = (
+        DataPlan.objects.filter(company_id=company_id)
+        .annotate(operator_name=F("operator__name"))
+        .values("id", "name", "operator_name")
     )
+    # Modifica el nombre del plan
+    data_plans = list(data_plans)
+    for plan in data_plans:
+        plan["name"] = plan["name"].lower()
     return JsonResponse(list(data_plans), safe=False)
 
 
@@ -273,3 +311,1046 @@ WHERE
             return dict(zip(columns, row))
         else:
             return None
+
+
+def get_brands(request):
+    vehicle_type_id = request.GET.get("vehicle_type_id")
+    if vehicle_type_id:
+        type_brand_assets = Brands_assets.objects.filter(type_asset_id=vehicle_type_id)
+        brands = [
+            {
+                "brand_id": t.id,
+                "brand": t.brand,
+            }
+            for t in type_brand_assets
+        ]
+        return JsonResponse({"brands": brands})
+    return JsonResponse({"error": "Invalid vehicle type ID"}, status=400)
+
+
+def get_lines(request):
+    brand_id = request.GET.get("brand_id")
+    if brand_id:
+        lines = Line_assets.objects.filter(brand_asset_id=brand_id)
+        lines_data = [
+            {
+                "line_id": line.id,
+                "line": line.line,
+            }
+            for line in lines
+        ]
+        return JsonResponse({"lines": lines_data})
+    return JsonResponse({"error": "Invalid brand ID"}, status=400)
+
+
+def get_user_companies(user):
+    if user.company_id == 1:
+        companies = Company.objects.filter(visible=True, actived=True)
+    elif user.companies_to_monitor.exists():
+        companies = user.companies_to_monitor.filter(visible=True, actived=True)
+    else:
+        companies = Company.objects.filter(
+            Q(id=user.company_id) | Q(provider_id=user.company_id),
+            visible=True,
+            actived=True,
+        )
+    companies = companies.order_by("company_name")
+
+    if user.company_id == 1:
+        modified_companies = []
+        for company in companies:
+            if company.provider_id:
+                provider_company = Company.objects.get(id=company.provider_id)
+                modified_name = (
+                    f"{company.company_name} -- {provider_company.company_name}"
+                )
+            else:
+                modified_name = company.company_name
+            modified_companies.append((company.id, modified_name))
+        return modified_companies
+    else:
+        return companies
+
+
+@method_decorator(csrf_exempt, name="dispatch")
+class SearchVehicles(View):
+    def get(self, request):
+        company = request.user.company_id
+        user_id = request.user.id
+        session_filters = request.session.get(f'filters_sorted_vehicle_{user_id}', {})
+        search_query = request.GET.get("query", None)
+        page_number = request.GET.get('page', session_filters.get('page', [1]))[0]
+
+        if not company or not user_id:
+            return JsonResponse({"error": "Faltan parámetros"}, status=400)
+        paginate_by = request.POST.get(
+            "paginate_by", None
+        )  # Obtener paginate_by de los parámetros GET
+        if paginate_by is None:
+            paginate_by = session_filters.get("paginate_by", 15)
+        # Convertir a entero si es una lista
+        try:
+            paginate_by = int(
+                paginate_by[0]
+            )  # Convertir el primer elemento de la lista a entero
+        except (TypeError, ValueError):
+            paginate_by = int(paginate_by) if paginate_by else 15
+        vehicles = ListVehicleByUserAndCompany(company, user_id, search_query)
+        order_by = session_filters.get('order_by', [None])[0]
+        direction = session_filters.get('direction', [None])[0]
+        page_size = paginate_by # Número de elementos por página.
+        # Obtener la función de clave para ordenar
+        key_function = sort_key(order_by)
+        # Determinar si es orden descendente
+        reverse = direction == 'desc'
+        try:
+            vehicles = sorted(vehicles, key=key_function, reverse=reverse)
+        except KeyError:
+            # Ordenamiento por defecto si la clave no existe
+            vehicles = sorted(vehicles, key=lambda x: x['company'].lower(), reverse=reverse)
+        page_size = paginate_by  # Número de elementos por página.
+        paginator = Paginator(vehicles, page_size)
+
+        try:
+            page = paginator.page(page_number)
+        except PageNotAnInteger:
+            page = paginator.page(1)
+        except EmptyPage:
+            page = paginator.page(paginator.num_pages)
+        current_language = translation.get_language()
+
+        formatted_results = []
+        for vehicle in page.object_list:
+            installation_date = vehicle["installation_date"]
+            month_name = installation_date.strftime("%B")
+            month_name = _(month_name)
+            if installation_date:
+                if current_language == "es":
+                    # Formato en español
+                    formatted_date = installation_date.strftime(
+                        f'%d {_("de")} {month_name} {_("de")} %Y'
+                    )
+                else:
+                    # Formato en inglés u otros idiomas
+                    formatted_date = installation_date.strftime("%B %d, %Y")
+            formatted_results.append(
+                {
+                    "id": vehicle["id"],
+                    "device": vehicle["device"],
+                    "company": vehicle["company"] or "",
+                    "license": vehicle["license"] or "",
+                    "vehicle_type": vehicle["vehicle_type"] or "",
+                    "n_interno": vehicle["n_interno"] or "",
+                    "is_active": vehicle["is_active"] or False,
+                    "icon": vehicle["icon"] or "",
+                    "installation_date": formatted_date,
+                }
+            )
+
+        response_data = {
+            "results": formatted_results,
+            "page": {
+                "has_next": page.has_next(),
+                "has_previous": page.has_previous(),
+                "number": page.number,
+                "num_pages": paginator.num_pages,
+                "start_index": page.start_index(),
+                "end_index": page.end_index(),
+                "total_items": paginator.count,
+            },
+            "query_string": request.GET.urlencode(),
+        }
+        return JsonResponse(response_data, safe=False)
+
+
+@method_decorator(csrf_exempt, name="dispatch")
+class SearchDevices(View):
+    def get(self, request):
+        company = request.user.company_id
+        user_id = request.user.id
+        session_filters = request.session.get(f'filters_sorted_device_{user_id}', {})
+        search_query = request.GET.get("query", None)
+        page_number = request.GET.get('page', session_filters.get('page', [1]))[0]
+
+        if not company or not user_id:
+            return JsonResponse({"error": "Faltan parámetros"}, status=400)
+        paginate_by = request.POST.get(
+            "paginate_by", None
+        )  # Obtener paginate_by de los parámetros GET
+        if paginate_by is None:
+            paginate_by = session_filters.get("paginate_by", 15)
+        # Convertir a entero si es una lista
+        try:
+            paginate_by = int(
+                paginate_by[0]
+            )  # Convertir el primer elemento de la lista a entero
+        except (TypeError, ValueError):
+            paginate_by = int(paginate_by) if paginate_by else 15
+        devices = ListDeviceByCompany(company, user_id, search_query)
+        order_by = session_filters.get('order_by', [None])[0]
+        direction = session_filters.get('direction', [None])[0]
+        # Obtener la función de clave para ordenar
+        key_function = sort_key(order_by)
+        # Determinar si es orden descendente
+        reverse = direction == 'desc'
+        try:
+            devices = sorted(devices, key=key_function, reverse=reverse)
+        except KeyError:
+            # Ordenamiento por defecto si la clave no existe
+            devices = sorted(devices, key=lambda x: x['company'].lower(), reverse=reverse)
+        page_size = paginate_by  # Número de elementos por página.
+        paginator = Paginator(devices, page_size)
+
+        try:
+            page = paginator.page(page_number)
+        except PageNotAnInteger:
+            page = paginator.page(1)
+        except EmptyPage:
+            page = paginator.page(paginator.num_pages)
+        current_language = translation.get_language()
+
+        formatted_results = []
+        for device in page.object_list:
+            installation_date = device["create_date"]
+            month_name = installation_date.strftime("%B")
+            month_name = _(month_name)
+            if installation_date:
+                if current_language == "es":
+                    # Formato en español
+                    formatted_date = installation_date.strftime(
+                        f'%d {_("de")} {month_name} {_("de")} %Y'
+                    )
+                else:
+                    # Formato en inglés u otros idiomas
+                    formatted_date = installation_date.strftime("%B %d, %Y")
+            formatted_results.append(
+                {
+                    "pk": device["pk"],
+                    "imei": device["imei"],
+                    "company": device["company"] or "",
+                    "ip": device["ip"] or "",
+                    "serial_number": device["serial_number"] or "",
+                    "simcard": device["simcard"] or "",
+                    "simcard_visible": device["simcard_visible"] or False,
+                    "is_active": device["is_active"] or False,
+                    "familymodel": device["familymodel"] or "",
+                    "create_date": _(formatted_date),
+                }
+            )
+
+        response_data = {
+            "results": formatted_results,
+            "page": {
+                "has_next": page.has_next(),
+                "has_previous": page.has_previous(),
+                "number": page.number,
+                "num_pages": paginator.num_pages,
+                "start_index": page.start_index(),
+                "end_index": page.end_index(),
+                "total_items": paginator.count,
+            },
+            "query_string": request.GET.urlencode(),
+        }
+        return JsonResponse(response_data, safe=False)
+
+
+@method_decorator(csrf_exempt, name="dispatch")
+class SearchSimcards(View):
+    def get(self, request):
+        company = request.user.company_id
+        user_id = request.user.id
+        session_filters = request.session.get(f'filters_sorted_simcard_{user_id}', {})
+        search_query = request.GET.get("query", None)
+        page_number = request.GET.get('page', session_filters.get('page', [1]))[0]
+
+        if not company or not user_id:
+            return JsonResponse({"error": "Faltan parámetros"}, status=400)
+        paginate_by = request.POST.get(
+            "paginate_by", None
+        )  # Obtener paginate_by de los parámetros POST
+        if paginate_by is None:
+            paginate_by = session_filters.get("paginate_by", 15)
+        # Convertir a entero si es una lista
+        try:
+            paginate_by = int(
+                paginate_by[0]
+            )  # Convertir el primer elemento de la lista a entero
+        except (TypeError, ValueError):
+            paginate_by = int(paginate_by) if paginate_by else 15
+        simcards = fetch_all_simcards(request.user.company, request.user, search_query)
+        order_by = session_filters.get('order_by', [None])[0]
+        direction = session_filters.get('direction', [None])[0]
+        # Obtener la función de clave para ordenar
+        key_function = sort_key(order_by)
+        # Determinar si es orden descendente
+        reverse = direction == 'desc'
+        try:
+            simcards = sorted(simcards, key=key_function, reverse=reverse)
+        except KeyError:
+            # Ordenamiento por defecto si la clave no existe
+            simcards = sorted(simcards, key=lambda x: x['Company'].lower(), reverse=reverse)
+        page_size = paginate_by  # Número de elementos por página.
+        paginator = Paginator(simcards, page_size)
+        try:
+            page = paginator.page(page_number)
+        except PageNotAnInteger:
+            page = paginator.page(1)
+        except EmptyPage:
+            page = paginator.page(paginator.num_pages)
+        current_language = translation.get_language()
+
+        formatted_results = []
+        for simcard in page.object_list:
+            installation_date = simcard["activate_date"]
+            month_name = installation_date.strftime("%B")
+            month_name = _(month_name)
+            if installation_date:
+                if current_language == "es":
+                    # Formato en español
+                    formatted_date = installation_date.strftime(
+                        f'%d {_("de")} {month_name} {_("de")} %Y'
+                    )
+                else:
+                    # Formato en inglés u otros idiomas
+                    formatted_date = installation_date.strftime("%B %d, %Y")
+            formatted_results.append(
+                {
+                    "id": simcard["id"],
+                    "company": simcard["Company"] or "",
+                    "serial_number": simcard["serial_number"] or "",
+                    "phone_number": simcard["phone_number"] or "",
+                    "data_plan": simcard["data_plan"] or "",
+                    "is_active": simcard["is_active"] or False,
+                    "activate_date": formatted_date,
+                }
+            )
+
+        response_data = {
+            "results": formatted_results,
+            "page": {
+                "has_next": page.has_next(),
+                "has_previous": page.has_previous(),
+                "number": page.number,
+                "num_pages": paginator.num_pages,
+                "start_index": page.start_index(),
+                "end_index": page.end_index(),
+                "total_items": paginator.count,
+            },
+            "query_string": request.GET.urlencode(),
+        }
+
+        return JsonResponse(response_data, safe=False)
+
+
+@method_decorator(csrf_exempt, name="dispatch")
+class SearchDataPlan(View):
+    def get(self, request):
+        company = request.user.company_id
+        user_id = request.user.id
+        session_filters = request.session.get(f'filters_sorted_dataplan_{user_id}', {})
+        search_query = request.GET.get("query", None)
+        page_number = request.GET.get('page', session_filters.get('page', [1]))[0]
+
+        if not company or not user_id:
+            return JsonResponse({"error": "Faltan parámetros"}, status=400)
+        paginate_by = request.POST.get(
+            "paginate_by", None
+        )  # Obtener paginate_by de los parámetros GET
+        if paginate_by is None:
+            paginate_by = session_filters.get("paginate_by", 15)
+        # Convertir a entero si es una lista
+        try:
+            paginate_by = int(
+                paginate_by[0]
+            )  # Convertir el primer elemento de la lista a entero
+        except (TypeError, ValueError):
+            paginate_by = int(paginate_by) if paginate_by else 15
+        dataplans = fetch_all_dataplan(request.user.company, request.user, search_query)
+        order_by = session_filters.get('order_by', [None])[0]
+        direction = session_filters.get('direction', [None])[0]
+        # Obtener la función de clave para ordenar
+        key_function = sort_key(order_by)
+        # Determinar si es orden descendente
+        reverse = direction == 'desc'
+        try:
+            dataplans = sorted(dataplans, key=key_function, reverse=reverse)
+        except KeyError:
+            # Ordenamiento por defecto si la clave no existe
+            dataplans = sorted(dataplans, key=lambda x: x['Company'].lower(), reverse=reverse)
+        page_size = paginate_by  # Número de elementos por página.
+        paginator = Paginator(dataplans, page_size)
+        try:
+            page = paginator.page(page_number)
+        except PageNotAnInteger:
+            page = paginator.page(1)
+        except EmptyPage:
+            page = paginator.page(paginator.num_pages)
+
+        formatted_results = []
+        for dataplan in page.object_list:
+            formatted_results.append(
+                {
+                    "id": dataplan["id"],
+                    "company": dataplan["Company"] or "",
+                    "DataPlanName": dataplan["DataPlanName"] or "",
+                    "operator": dataplan["Operator"] or "",
+                    "coin": dataplan["Coin"] or "",
+                    "price": dataplan["price"] or "",
+                }
+            )
+
+        response_data = {
+            "results": formatted_results,
+            "page": {
+                "has_next": page.has_next(),
+                "has_previous": page.has_previous(),
+                "number": page.number,
+                "num_pages": paginator.num_pages,
+                "start_index": page.start_index(),
+                "end_index": page.end_index(),
+                "total_items": paginator.count,
+            },
+            "query_string": request.GET.urlencode(),
+        }
+
+        return JsonResponse(response_data, safe=False)
+
+
+@method_decorator(csrf_exempt, name="dispatch")
+class SearchSendCommand(View):
+    def format_date(self, date_obj):
+        if isinstance(date_obj, datetime):
+            return date_obj.strftime("%d/%m/%Y %H:%M:%S")
+        return ""
+
+    def get(self, request):
+        company = request.user.company_id
+        user_id = request.user.id
+        session_filters = request.session.get(f'filters_sorted_sendcommands_{user_id}', {})
+        search_query = request.GET.get('query', None)
+        page_number = request.GET.get('page', session_filters.get('page', [1]))[0]
+        if not company or not user_id:
+            return JsonResponse({"error": "Faltan parámetros"}, status=400)
+        paginate_by = request.POST.get('paginate_by', None)  # Obtener paginate_by de los parámetros POST
+        if paginate_by is None:
+            paginate_by = session_filters.get('paginate_by', 20)
+        # Convertir a entero si es una lista
+        try:
+            paginate_by = int(
+                paginate_by[0]
+            )  # Convertir el primer elemento de la lista a entero
+        except (TypeError, ValueError):
+            paginate_by = int(paginate_by) if paginate_by else 20
+        send_commands = fetch_all_sending_commands(company, user_id, search_query)
+        order_by = session_filters.get('order_by', [None])[0]
+        direction = session_filters.get('direction', [None])[0]
+        # Determinar si es orden descendente
+        reverse = direction == 'desc'
+        try:
+            send_commands = sorted(send_commands, key=sort_key_commands_datetime(order_by), reverse=reverse)
+        except KeyError:
+            # Ordenamiento por defecto si la clave no existe
+            send_commands = sorted(send_commands, key=lambda x: x['id'].lower(), reverse=reverse)
+        page_size = paginate_by  # Número de elementos por página.
+        paginator = Paginator(send_commands, page_size)
+        try:
+            page = paginator.page(page_number)
+        except PageNotAnInteger:
+            page = paginator.page(1)
+        except EmptyPage:
+            page = paginator.page(paginator.num_pages)
+
+        formatted_results = []
+        for send_command in page.object_list:
+            formatted_results.append(
+                {
+                    "id": send_command["id"],
+                    "command": send_command["command"] or "",
+                    "codigo": send_command["codigo"] or "",
+                    "model": send_command["familymodel_name"] or "",
+                    "license": send_command["license"] or "",
+                    "status": send_command["status"] or False,
+                    "shipping_date": send_command['shipping_date'].strftime('%Y-%m-%d %H:%M:%S') or "",
+                    "answer_date": send_command["answer_date"].strftime(
+                        "%Y-%m-%d %H:%M:%S"
+                    )
+                    or "",
+                }
+            )
+
+        response_data = {
+            "results": formatted_results,
+            "page": {
+                "has_next": page.has_next(),
+                "has_previous": page.has_previous(),
+                "number": page.number,
+                "num_pages": paginator.num_pages,
+                "start_index": page.start_index(),
+                "end_index": page.end_index(),
+                "total_items": paginator.count,
+            },
+            "query_string": request.GET.urlencode(),
+        }
+        return JsonResponse(response_data, safe=False)
+
+
+@method_decorator(csrf_exempt, name="dispatch")
+class SearchResponseCommand(View):
+    def format_date(self, date_obj):
+        if isinstance(date_obj, datetime):
+            return date_obj.strftime("%d/%m/%Y %H:%M:%S")
+        return ""
+
+    def get(self, request):
+        company = request.user.company_id
+        user_id = request.user.id
+        session_filters = request.session.get(f'filters_sorted_responsecommands_{user_id}', {})
+        search_query = request.GET.get('query', None)
+        page_number = request.GET.get('page', session_filters.get('page', [1]))[0]
+
+        if not company or not user_id:
+            return JsonResponse({"error": "Faltan parámetros"}, status=400)
+        paginate_by = request.POST.get('paginate_by', None)  # Obtener paginate_by de los parámetros GET
+        if paginate_by is None:
+            session_filters = request.session.get(
+                f"filters_sorted_responsecommands_{user_id}", {}
+            )
+            paginate_by = session_filters.get("paginate_by", 20)
+        # Convertir a entero si es una lista
+        try:
+            paginate_by = int(
+                paginate_by[0]
+            )  # Convertir el primer elemento de la lista a entero
+        except (TypeError, ValueError):
+            paginate_by = int(paginate_by) if paginate_by else 20
+        response_commands = fetch_all_response_commands(company, user_id, search_query)
+        order_by = session_filters.get('order_by', [None])[0]
+        direction = session_filters.get('direction', [None])[0]
+        page_size = paginate_by # Número de elementos por página.
+        # Obtener la función de clave para ordenar
+        key_function = sort_key(order_by)
+        # Determinar si es orden descendente
+        reverse = direction == 'desc'
+        try:
+            response_commands = sorted(response_commands, key=key_function, reverse=reverse)
+        except KeyError:
+            # Ordenamiento por defecto si la clave no existe
+            response_commands = sorted(response_commands, key=lambda x: x['id'].lower(), reverse=reverse)
+        paginator = Paginator(response_commands, page_size)
+        try:
+            page = paginator.page(page_number)
+        except PageNotAnInteger:
+            page = paginator.page(1)
+        except EmptyPage:
+            page = paginator.page(paginator.num_pages)
+
+        formatted_results = []
+        for response_command in page.object_list:
+            formatted_results.append(
+                {
+                    "id": response_command["id"],
+                    "response": response_command["response"] or "",
+                    "ip": response_command["ip"] or "",
+                    "license": response_command["license"] or "",
+                    "answer_date": response_command["answer_date"].strftime(
+                        "%Y-%m-%d %H:%M:%S"
+                    )
+                    or "",
+                }
+            )
+
+        response_data = {
+            "results": formatted_results,
+            "page": {
+                "has_next": page.has_next(),
+                "has_previous": page.has_previous(),
+                "number": page.number,
+                "num_pages": paginator.num_pages,
+                "start_index": page.start_index(),
+                "end_index": page.end_index(),
+                "total_items": paginator.count,
+            },
+            "query_string": request.GET.urlencode(),
+        }
+
+        return JsonResponse(response_data, safe=False)
+
+
+@method_decorator(csrf_exempt, name="dispatch")
+class SearchGeofence(View):
+    def format_date(self, date_obj):
+        if isinstance(date_obj, datetime):
+            return date_obj.strftime("%d/%m/%Y %H:%M:%S")
+        return ""
+
+    def get(self, request):
+        company = request.user.company_id
+        user_id = request.user.id
+        session_filters = request.session.get(f'filters_sorted_geofence_{user_id}', {})
+        search_query = request.GET.get('query', None)
+        page_number = request.GET.get('page', session_filters.get('page', [1]))[0]
+
+        if not company or not user_id:
+            return JsonResponse({"error": "Faltan parámetros"}, status=400)
+        paginate_by = request.POST.get('paginate_by', None)  # Obtener paginate_by de los parámetros POST
+        if paginate_by is None:
+            paginate_by = session_filters.get('paginate_by', 20)
+        # Convertir a entero si es una lista
+        try:
+            paginate_by = int(
+                paginate_by[0]
+            )  # Convertir el primer elemento de la lista a entero
+        except (TypeError, ValueError):
+            paginate_by = int(paginate_by) if paginate_by else 20
+        geofences = fetch_all_geozones(company, user_id, search_query)
+        order_by = session_filters.get('order_by', [None])[0]
+        direction = session_filters.get('direction', [None])[0]
+        page_size = paginate_by # Número de elementos por página.
+        # Obtener la función de clave para ordenar
+        key_function = sort_key(order_by)
+        # Determinar si es orden descendente
+        reverse = direction == 'desc'
+        try:
+            geofences = sorted(geofences, key=key_function, reverse=reverse)
+        except KeyError:
+            # Ordenamiento por defecto si la clave no existe
+            geofences = sorted(geofences, key=lambda x: x['company'].lower(), reverse=reverse)
+        page_size = paginate_by  # Número de elementos por página.
+        paginator = Paginator(geofences, page_size)
+        try:
+            page = paginator.page(page_number)
+        except PageNotAnInteger:
+            page = paginator.page(1)
+        except EmptyPage:
+            page = paginator.page(paginator.num_pages)
+
+        formatted_results = []
+        for geofence in page.object_list:
+            formatted_results.append(
+                {
+                    "id": geofence["id"],
+                    "company": geofence["company"] or "",
+                    "name": geofence["name"] or "",
+                    "type_event": geofence["type_event"] or "",
+                    "shape_type": geofence["shape_type"] or "",
+                    "latitude": geofence["latitude"] or "",
+                    "longitude": geofence["longitude"] or "",
+                }
+            )
+
+        response_data = {
+            "results": formatted_results,
+            "page": {
+                "has_next": page.has_next(),
+                "has_previous": page.has_previous(),
+                "number": page.number,
+                "num_pages": paginator.num_pages,
+                "start_index": page.start_index(),
+                "end_index": page.end_index(),
+                "total_items": paginator.count,
+            },
+            "query_string": request.GET.urlencode(),
+        }
+
+        return JsonResponse(response_data, safe=False)
+
+
+@method_decorator(csrf_exempt, name="dispatch")
+class SearchGroupAssets(View):
+    def get(self, request):
+        company = request.user.company_id
+        user_id = request.user.id
+        session_filters = request.session.get(f'filters_sorted_vehiclegroup_{user_id}', {})
+        search_query = request.GET.get('query', None)
+        page_number = request.GET.get('page', session_filters.get('page', [1]))[0]
+
+        if not company or not user_id:
+            return JsonResponse({"error": "Faltan parámetros"}, status=400)
+        paginate_by = request.POST.get(
+            "paginate_by", None
+        )  # Obtener paginate_by de los parámetros GET
+        if paginate_by is None:
+            session_filters = request.session.get(
+                f"filters_sorted_vehiclegroup_{user_id}", {}
+            )
+            paginate_by = session_filters.get("paginate_by", 15)
+        # Convertir a entero si es una lista
+        try:
+            paginate_by = int(
+                paginate_by[0]
+            )  # Convertir el primer elemento de la lista a entero
+        except (TypeError, ValueError):
+            paginate_by = int(paginate_by) if paginate_by else 15
+        groupAssets = ListVehicleGroupsByCompany(company, search_query)
+        order_by = session_filters.get('order_by', [None])[0]
+        direction = session_filters.get('direction', [None])[0]
+        key_function = sort_key(order_by)
+        # Determinar si es orden descendente
+        reverse = direction == 'desc'
+        try:
+            groupAssets = sorted(groupAssets, key=key_function, reverse=reverse)
+        except KeyError:
+            # Ordenamiento por defecto si la clave no existe
+            groupAssets = sorted(groupAssets, key=lambda x: x['name'].lower(), reverse=reverse)
+        page_size = paginate_by  # Número de elementos por página.
+        paginator = Paginator(groupAssets, page_size)
+        try:
+            page = paginator.page(page_number)
+        except PageNotAnInteger:
+            page = paginator.page(1)
+        except EmptyPage:
+            page = paginator.page(paginator.num_pages)
+
+        formatted_results = []
+        for groupAsset in page.object_list:
+            formatted_results.append(
+                {
+                    "id": groupAsset["id"],
+                    "name": groupAsset["name"] or "",
+                    "VehicleCount": groupAsset["VehicleCount"] or 0,
+                }
+            )
+
+        response_data = {
+            "results": formatted_results,
+            "page": {
+                "has_next": page.has_next(),
+                "has_previous": page.has_previous(),
+                "number": page.number,
+                "num_pages": paginator.num_pages,
+                "start_index": page.start_index(),
+                "end_index": page.end_index(),
+                "total_items": paginator.count,
+            },
+            "query_string": request.GET.urlencode(),
+        }
+
+        return JsonResponse(response_data, safe=False)
+
+
+def extract_number(text):
+    match = re.search(r"\d+", text)
+    return int(match.group()) if match else float("inf")
+
+
+def extract_number_tp(s):
+    """
+    Extrae el primer número encontrado en una cadena y lo devuelve como un número entero.
+    Si no se encuentra ningún número, devuelve 0.
+    """
+    match = re.search(r"\d+", s)
+    return int(match.group()) if match else 0
+
+def sort_key(order_by):
+    """
+    Función clave para ordenar campos de las listas main.
+
+    Args:
+        order_by (str): El campo por el que ordenar.
+
+    Returns:
+        callable: Función para usar como clave en la ordenación.
+    """
+    def key(x):
+        value = x.get(order_by)
+        if value is None or value == '':
+            return (4, '')  # Prioridad 4 para valores nulos o vacíos
+        if isinstance(value, str):
+            # Verificar si comienza con números, letras o caracteres especiales
+            if value[0].isdigit():
+                return (1, extract_number(value))  # Prioridad 1 para números
+            elif value[0].isalpha():
+                return (2, value.lower())  # Prioridad 2 para letras
+            else:
+                return (3, value.lower())  # Prioridad 3 para caracteres especiales
+        return value
+    return key
+
+def sort_key_commands_datetime(order_by):
+        def extract_number(value):
+            # Implementa tu lógica para extraer números si es necesario
+            return int(''.join(filter(str.isdigit, value)))
+        def date_key(value):
+            # Manejo específico para fechas nulas o vacías
+            if value is None:
+                return (4, datetime.max)  # Prioridad 4, y asignamos la fecha máxima para que quede al final
+            return (1, value)  # Prioridad 1 para fechas válidas
+
+        def key_func(x):
+            value = x.get(order_by)
+            if isinstance(value, datetime):
+                # Si el campo es una fecha
+                return date_key(value)
+            elif value is None or value == '':
+                # Valores nulos o vacíos
+                return (4, '')  # Prioridad 4 para valores nulos o vacíos
+            if isinstance(value, str):
+                # Verificar si comienza con números, letras o caracteres especiales
+                if value[0].isdigit():
+                    return (2, extract_number(value))  # Prioridad 2 para números
+                elif value[0].isalpha():
+                    return (3, value.lower())  # Prioridad 3 para letras
+                else:
+                    return (4, value.lower())  # Prioridad 4 para caracteres especiales
+            return (5, value)  # Prioridad 5 para otros tipos de valores
+        return key_func
+
+@method_decorator(csrf_exempt, name='dispatch')
+class ExportDataSendCommands(View):
+    def format_date(self, date_obj):
+        if isinstance(date_obj, datetime):
+            return date_obj.strftime('%d/%m/%Y %H:%M:%S')
+        return ""
+    def get(self, request):
+        company = request.user.company_id
+        user_id = request.user.id
+        search_query = request.GET.get('query', None)
+        send_commands = fetch_all_sending_commands(company, user_id, search_query)
+        formatted_results = []
+        # Encabezados traducidos
+        headers = [
+            _("command"),
+            _("code"),
+            _("model"),
+            _("License"),
+            _("Status"),
+            _("shipping_date"),
+            _("answer_date")
+        ]
+
+        for send_command in send_commands:
+            formatted_results.append({
+                "command": send_command['command'] or "",
+                "codigo": send_command['codigo'] or "",
+                "model": send_command['familymodel_name'] or "",
+                "license": send_command['license'] or "",
+                "status": send_command['status'] or False,
+                "shipping_date": send_command['shipping_date'].strftime('%Y-%m-%d %H:%M:%S') or "",
+                "answer_date": send_command['answer_date'].strftime('%Y-%m-%d %H:%M:%S') or "",
+            })
+        response_data = {
+            'headers': headers,
+            'data': formatted_results
+        }
+        return JsonResponse(response_data, safe=False)
+
+@method_decorator(csrf_exempt, name='dispatch')
+class ExportDataResponseCommands(View):
+    def format_date(self, date_obj):
+        if isinstance(date_obj, datetime):
+            return date_obj.strftime('%d/%m/%Y %H:%M:%S')
+        return ""
+    def get(self, request):
+        company = request.user.company_id
+        user_id = request.user.id
+        search_query = request.GET.get('query', None)
+        response_commands = fetch_all_response_commands(company, user_id, search_query)
+        formatted_results = []
+        # Encabezados traducidos
+        headers = [
+            _("license"),
+            _("ip"),
+            _("response"),
+            _("answer_date")
+        ]
+
+        for response_command in response_commands:
+            formatted_results.append({
+                "ip": response_command['ip'] or "",
+                "response": response_command['response'] or "",
+                "license": response_command['license'] or "",
+                "answer_date": response_command['answer_date'].strftime('%Y-%m-%d %H:%M:%S') or "",
+            })
+        response_data = {
+            'headers': headers,
+            'data': formatted_results
+        }
+        return JsonResponse(response_data, safe=False)
+    
+@method_decorator(csrf_exempt, name='dispatch')
+class ExportDataGeofence(View):
+    def get(self, request):
+        company = request.user.company_id
+        user_id = request.user.id
+        search_query = request.GET.get('query', None)
+        geofences = fetch_all_geozones(company, user_id, search_query)
+        formatted_results = []
+        # Encabezados traducidos
+        headers = [
+            _("Company"),
+            _("Name geozone"),
+            _("Event"),
+            _("Type the geozone"),
+            _("Latitude"),
+            _("Longitude")
+        ]
+
+        for geofence in geofences:
+            formatted_results.append({
+                "company": geofence['company'] or "",
+                "name": geofence['name'] or "",
+                "type_event": geofence['type_event'] or "",
+                "shape_type": geofence['shape_type'] or "",
+                "latitude": geofence['latitude'] or "",
+                "longitude": geofence['longitude'] or "",
+            })
+        response_data = {
+            'headers': headers,
+            'data': formatted_results
+        }
+        return JsonResponse(response_data, safe=False)
+    
+@method_decorator(csrf_exempt, name='dispatch')
+class ExportDataPlans(View):
+    def get(self, request):
+        search_query = request.GET.get('query', None)
+        dataplans = fetch_all_dataplan(request.user.company, request.user, search_query)
+        formatted_results = []
+        # Encabezados traducidos
+        headers = [
+            _("Company"),
+            _("Name"),
+            _("Operator"),
+            _("Coin"),
+            _("Price")
+        ]
+
+        for dataplan in dataplans:
+            formatted_results.append({
+                "company": dataplan["Company"] or "",
+                "DataPlanName": dataplan["DataPlanName"] or "",
+                "operator": dataplan["Operator"] or "",
+                "coin": dataplan["Coin"] or "",
+                "price": dataplan["price"] or "",
+            })
+        response_data = {
+            'headers': headers,
+            'data': formatted_results
+        }
+        return JsonResponse(response_data, safe=False)
+    
+@method_decorator(csrf_exempt, name='dispatch')
+class ExportDataSimcards(View):
+    def get(self, request):
+        search_query = request.GET.get('query', None)
+        simcards = fetch_all_simcards(request.user.company, request.user, search_query)
+        formatted_results = []
+        # Encabezados traducidos
+        headers = [
+            _("Company"),
+            _("Phone number"),
+            _("Serial number"),
+            _("Data plan"),
+            _("Activate date"),
+            _("Status")
+        ]
+
+        for simcard in simcards:
+            formatted_results.append({
+                "company": simcard["Company"] or "",
+                "serial_number": simcard["serial_number"] or "",
+                "phone_number": simcard["phone_number"] or "",
+                "data_plan": simcard["data_plan"] or "",
+                "is_active": simcard["is_active"] or False,
+                "activate_date": simcard["activate_date"],
+            })
+        response_data = {
+            'headers': headers,
+            'data': formatted_results
+        }
+        return JsonResponse(response_data, safe=False)
+    
+@method_decorator(csrf_exempt, name='dispatch')
+class ExportDataDevices(View):
+    def get(self, request):
+        search_query = request.GET.get('query', None)
+        devices = ListDeviceByCompany(request.user.company_id, request.user.id, search_query)
+        formatted_results = []
+        # Encabezados traducidos
+        headers = [
+            _("Company"),
+            _("IMEI"),
+            _("Serial Number"),
+            _("Device Type"),
+            _("Simcard"),
+            _("IP"),
+            _("Create Date"),
+            _("Status")
+        ]
+
+        for device in devices:
+            formatted_results.append({
+                "imei": device["imei"],
+                "company": device["company"] or "",
+                "ip": device["ip"] or "",
+                "serial_number": device["serial_number"] or "",
+                "simcard": device["simcard"] or "",
+                "simcard_visible": device["simcard_visible"] or False,
+                "is_active": device["is_active"] or False,
+                "familymodel": device["familymodel"] or "",
+                "create_date": device["create_date"],
+            })
+        response_data = {
+            'headers': headers,
+            'data': formatted_results
+        }
+        return JsonResponse(response_data, safe=False)
+    
+@method_decorator(csrf_exempt, name='dispatch')
+class ExportDataVehicles(View):
+    def get(self, request):
+        search_query = request.GET.get('query', None)
+        vehicles = ListVehicleByUserAndCompany(request.user.company_id, request.user.id, search_query)
+        formatted_results = []
+        # Encabezados traducidos
+        headers = [
+            _("Company"),
+            _("Plate"),
+            _("N° Interno"),
+            _("Imei"),
+            _("Asset type"),
+            _("Installation Date"),
+            _("Status")
+        ]
+
+        for vehicle in vehicles:
+            formatted_results.append({
+                "device": vehicle["device"],
+                "company": vehicle["company"] or "",
+                "license": vehicle["license"] or "",
+                "vehicle_type": vehicle["vehicle_type"] or "",
+                "n_interno": vehicle["n_interno"] or "",
+                "is_active": vehicle["is_active"] or False,
+                "installation_date": vehicle["installation_date"],
+            })
+        response_data = {
+            'headers': headers,
+            'data': formatted_results
+        }
+
+        return JsonResponse(response_data, safe=False)
+    
+@method_decorator(csrf_exempt, name='dispatch')
+class ExportDataAssetsGroups(View):
+    def get(self, request):
+        search_query = request.GET.get('query', None)
+        groupAssets = ListVehicleGroupsByCompany(request.user.company_id, search_query)
+        formatted_results = []
+        # Encabezados traducidos
+        headers = [
+            _("Name Group"),
+            _("Content")
+        ]
+
+        for groupAsset in groupAssets:
+            formatted_results.append({
+                "name": groupAsset["name"] or "",
+                "VehicleCount": groupAsset["VehicleCount"] or 0,
+            })
+        response_data = {
+            'headers': headers,
+            'data': formatted_results
+        }
+
+        return JsonResponse(response_data, safe=False)
+

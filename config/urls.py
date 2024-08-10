@@ -12,11 +12,6 @@ from django.contrib import admin
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.urls import include, path
 
-api = i18n_patterns(
-    # Módulo de la API, endpoint principal.
-    path("api/", include("apps.api.urls")),
-)
-
 apps = i18n_patterns(
     # Módulo personalizado de autenticación de usuarios.
     path("", include("apps.authentication.urls"), name="main"),
@@ -32,6 +27,8 @@ apps = i18n_patterns(
     path("whitelabel/", include("apps.whitelabel.urls")),
     # Modulo de socketmap
     path("socketmap/", include("apps.socketmap.urls")),
+    # Modulo de Power BI Embbeded
+    path("powerbi/", include("apps.powerbi.urls")),
 )
 
 django = i18n_patterns(
@@ -47,4 +44,4 @@ media = static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 static_files = static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 
-urlpatterns = api + apps + django + media + static_files
+urlpatterns = apps + django + media + static_files

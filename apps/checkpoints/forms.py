@@ -2,15 +2,18 @@ from datetime import timedelta
 
 import pytz
 from django import forms
+from django.db.models import Q
 from django.forms import BaseInlineFormSet, inlineformset_factory
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from apps.events.models import Event
+from apps.realtime.apis import get_user_companies
 from apps.realtime.models import Device
 from apps.whitelabel.models import Company
 
-from .models import CompanyScoreSetup, Driver, DriverAnalytic, ItemScore, ItemScoreSetup
+from .models import (Advanced_Analytical, CompanyScoreSetup, Driver,
+                     DriverAnalytic, ItemScore, ItemScoreSetup)
 
 
 class DriverForm(forms.ModelForm):
@@ -48,13 +51,13 @@ class DriverForm(forms.ModelForm):
             "company": forms.Select(
                 attrs={
                     "class": "form-control",
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                 }
             ),
             "personal_identification_number": forms.NumberInput(
                 attrs={
                     "class": "form-control",
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                 }
             ),
             "first_name": forms.TextInput(
@@ -62,7 +65,7 @@ class DriverForm(forms.ModelForm):
                     "class": "form-control form-control-lg",
                     "aria-label": ".form-control-lg example",
                     "style": "padding-block-start: 11px; padding-block-end: 5px;",
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                 }
             ),
             "last_name": forms.TextInput(
@@ -70,7 +73,7 @@ class DriverForm(forms.ModelForm):
                     "class": "form-control form-control-lg",
                     "aria-label": ".form-control-lg example",
                     "style": "padding-block-start: 11px; padding-block-end: 5px;",
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                 }
             ),
             "address": forms.TextInput(
@@ -78,27 +81,27 @@ class DriverForm(forms.ModelForm):
                     "class": "form-control form-control-lg",
                     "aria-label": ".form-control-lg example",
                     "style": "padding-block-start: 11px; padding-block-end: 5px;",
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                 }
             ),
             "phone_number": forms.NumberInput(
                 attrs={
                     "class": "form-control",
                     "type": "number",
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                 }
             ),
             "date_joined": forms.DateInput(
                 attrs={
                     "class": "form-control",
                     "type": "date",
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                 }
             ),
             "is_active": forms.CheckboxInput(
                 attrs={
                     "class": "form-check-input",
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                 }
             ),
         }
@@ -141,24 +144,25 @@ class DriverAnalyticForm(forms.ModelForm):
             "vehicle": forms.Select(
                 attrs={
                     "class": "form-control",
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                 }
             ),
             "date_joined": forms.DateTimeInput(
                 attrs={
                     "type": "datetime-local",
                     "class": "form-control",
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                 }
             ),
             "date_leaving": forms.DateTimeInput(
                 attrs={
                     "type": "datetime-local",
                     "class": "form-control",
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                 }
             ),
         }
+
     def clean_date_joined(self):
         date_joined = self.cleaned_data.get("date_joined")
         if date_joined is not None:
@@ -256,7 +260,7 @@ class ItemScoreForm(forms.ModelForm):
                     "disabled": "disabled",
                     "min": "0",
                     "max": "100",
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                 }
             ),
             "maximum_infractions": forms.NumberInput(
@@ -266,7 +270,7 @@ class ItemScoreForm(forms.ModelForm):
                     "disabled": "disabled",
                     "min": "0",
                     "max": "100",
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                 }
             ),
             "subtract_points": forms.NumberInput(
@@ -276,7 +280,7 @@ class ItemScoreForm(forms.ModelForm):
                     "disabled": "disabled",
                     "min": "0",
                     "max": "100",
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                 }
             ),
         }
@@ -315,13 +319,13 @@ ItemScoreFormsets = inlineformset_factory(
 
 class ReportDriverForm(forms.Form):
     company = forms.ModelChoiceField(
-        queryset=Company.objects.filter(visible = True, actived = True),
+        queryset=Company.objects.filter(visible=True, actived=True),
         required=True,
         widget=forms.Select(attrs={"class": "form-control"}),
     )
 
     driver = forms.ModelMultipleChoiceField(
-        queryset=Driver.objects.all(),
+        queryset=Driver.objects.none(),
         required=False,
         widget=forms.CheckboxSelectMultiple(attrs={"class": "form-check-start"}),
     )
@@ -339,7 +343,7 @@ class ReportDriverForm(forms.Form):
 
 class ReportTodayForm(forms.Form):
     Company_id = forms.ModelChoiceField(
-        queryset=Company.objects.filter(visible = True, actived = True),
+        queryset=Company.objects.filter(visible=True, actived=True),
         required=True,
         widget=forms.Select(
             attrs={"class": "form-control", "id": "id_company", "name": "Company_id"}
@@ -347,10 +351,15 @@ class ReportTodayForm(forms.Form):
     )
 
     Imei = forms.ModelChoiceField(
-        queryset=Device.objects.filter(visible=True, is_active = True),
+        queryset=Device.objects.none(),
         required=True,
         widget=forms.Select(
-            attrs={"class": "form-control", "name": "Imei", "disabled": "disabled"}
+            attrs={
+                "class": "form-control",
+                "id": "id_Imei",
+                "name": "Imei",
+                "disabled": "disabled",
+            }
         ),
     )
 
@@ -397,3 +406,105 @@ class ReportTodayForm(forms.Form):
         ),
         required=True,
     )
+
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop("user", None)
+        super().__init__(*args, **kwargs)
+        if user:
+            self.fields["Company_id"].queryset = self.get_companies(user)
+
+    def get_companies(self, user):
+        if user.company_id == 1:
+            return Company.objects.filter(visible=True, actived=True)
+        else:
+            provider_company_ids = Company.objects.filter(
+                provider_id=user.company_id
+            ).values_list("id", flat=True)
+            return Company.objects.filter(
+                Q(id=user.company_id) | Q(provider_id=user.company_id), visible=True
+            )
+
+    def clean_Imei(self):
+        imei = self.cleaned_data.get("Imei")
+        if not imei:
+            raise forms.ValidationError("Debe seleccionar un vehículo.")
+        return imei
+
+class DataSemConfigurationForm(forms.ModelForm):
+    """
+    Formulario de planes de datos que utiliza la clase ModelForm de Django.
+    La clase Meta especifica el modelo y campos, y se usan widgets para personalizar el formulario.
+    """
+    
+    company = forms.ModelChoiceField(
+        queryset=Company.objects.none(),
+        widget=forms.Select(attrs={
+            "class": "form-control",
+            "autocomplete": "off",
+        }),
+        required=True
+    )
+    class Meta:
+        model = Advanced_Analytical
+        fields = [
+            'user', 'workspace', 'id_workspace', 'id_report', 'report', 'coin', 'price',
+            'is_report','demo'
+        ]
+        widgets = {
+            "user": forms.Select(
+                attrs={
+                    "class": "form-control",
+                    "autocomplete": "off",
+                }
+            ),
+            "coin": forms.Select(
+                attrs={
+                    "class": "form-control",
+                    "autocomplete": "off",
+                }
+            ),
+            "price": forms.NumberInput(
+                attrs={
+                    "class": "form-control",
+                    "type": "number",
+                    "autocomplete": "off",
+                }
+            ),
+            "id_workspace": forms.Select(
+                attrs={
+                    "class": "form-control",
+                    "autocomplete": "off",
+                }
+            ),
+            "id_report": forms.Select(
+                attrs={
+                    "class": "form-control",
+                    "autocomplete": "off",
+                }
+            ),
+            "report": forms.Select(
+                attrs={
+                    "class": "form-control",
+                    "autocomplete": "off",
+                }
+            ),
+            "workspace": forms.Select(
+                attrs={
+                    "class": "form-control",
+                    "autocomplete": "off",
+                }
+            ),
+            "is_report": forms.CheckboxInput(
+                attrs={
+                    "class": "form-check-input",
+                    "autocomplete": "off",
+                }
+            ),
+            "demo": forms.CheckboxInput(
+                attrs={
+                    "class": "form-check-input",
+                    "autocomplete": "off",
+                }
+            ),
+        }
+    

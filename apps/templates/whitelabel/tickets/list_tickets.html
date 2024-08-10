@@ -6,7 +6,7 @@
         <td>
             <!-- Aquí puedes agregar botones u acciones para el ticket si es necesario -->
             <!-- Botón para ver el ticket -->
-            <button type="button" hx-get="{% url 'companies:view_ticket' ticket.id %}" class="btn btn-primary" hx-target="#dialog">
+            <button type="button" hx-get="{% url 'companies:view_ticket' ticket.id %}" class="btn btn-primary" hx-target="#modal .modal-content">
                 <i class="fa-solid fa-eye"></i>
             </button>
         </td>
@@ -43,7 +43,7 @@
         </td>
         <td class="align-middle text-center text-sm">
             {% if ticket.provider_company_id and user.company.provider_id and ticket.status %}
-                {% trans "Distribuidor" %}
+                {% trans "Distributor" %}
             {% elif ticket.provider_company_id %}
                 {{ ticket.company }}
             {% elif ticket.customer_company_id %}

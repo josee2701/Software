@@ -1,45 +1,58 @@
-{% load i18n static %}
-
-{% block content %}
-{{form.media}}
-<div class="modal-content">
-    <div class="modal-body">
-      <div class="card">
+{% load i18n static %} {% block content %}
+<div class="modal-content" id="miModal" style="z-index: 1050;">
+  <div class="modal-body">
+    <div class="card">
       <div class="modal-header">
-                <h3>{% trans "Update process" %}</h3>
-                <button type="button" id="cerrarVenta" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <h3>{% trans "Update process" %}</h3>
+        <button type="button" id="cerrarVenta" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="card-body">
+        <form hx-post="{{ request.path}}" hx-target="#modal-content">
+          {% csrf_token %}
+          <div class="row">
+            <div class="col">
+              <p></p>
+              <div class="input-group input-group-static mb-4">
+                <label for="id_company"> {% trans "Company" %} </label>
+                {{form.company}}
               </div>
-            <div class="card-body">
-                <form hx-post="{{ request.path}}">
-                    {% csrf_token %}
-                    <div class="row">
-                      <div class="col">
-                        <p></p>
-                        <div class="input-group input-group-static mb-4">
-                          <label for="id_company"> {% trans "Company" %} </label>
-                          {{form.company}}
-                        </div>
-                        <div id="form-errors">{{form.company.errors}}</div>
-                      </div>
-                      <div class="col">
-                        <p></p>
-                        <div class="input-group input-group-static mb-4">
-                          <label for="id_vehicle"> {% trans "Process" %} </label>
-                          {{form.process_type}}
-                        </div>
-                        <div id="form-errors">{{form.process_type.errors}}</div>
-                      </div>
-
-                      <div class="col" id="boton-process">
-                        <button class="btn btn-primary" type="submit"><i class="fa-solid fa-floppy-disk me-2"></i> {% trans "Save" %}</button>
-                      </div>
-                    </div>
-                  </form>
+              <div id="form-errors">{{form.company.errors}}</div>
             </div>
-        </div>
+            <div class="col">
+              <p></p>
+              <div class="input-group input-group-static mb-4">
+                <label for="id_vehicle"> {% trans "Process" %} </label>
+                {{form.process_type}}
+              </div>
+              <div id="form-errors">{{form.process_type.errors}}</div>
+            </div>
+
+            <div class="col" id="boton-process">
+              <button class="btn btn-primary" type="submit"><i class="fa-solid fa-floppy-disk me-2"></i> {% trans "Save" %}</button>
+            </div>
+          </div>
+        </form>
+      </div>
     </div>
+  </div>
 </div>
-    <head>
-        <link rel="stylesheet" type="text/css" href="{% static 'assets/css/estilos_templates.css' %}">
-    </head>
+<head>
+  <link rel="stylesheet" type="text/css" href="{% static 'assets/css/estilos_templates.css' %}" />
+  <link rel="stylesheet" type="text/css" href="{% static 'assets/css/select2.css' %}" />
+</head>
 {% endblock content %}
+{% block scripts %}
+<!-- Incluir jQuery primero -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Incluir Select2 después de jQuery -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="{% static 'assets/js/whitelabel/process/select2.js' %}"></script>
+<style>
+  .select2-container--default .select2-results__option--highlighted.select2-results__option--selectable {
+      background-color: {{ button_color }};
+      color: white;
+  }
+</style>
+
+{% endblock  %}

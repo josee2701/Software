@@ -19,39 +19,6 @@ class EventFeature(models.Model):
         ("High", _("High")),
     ]
 
-    # Configurar las credenciales de acceso a Azure Blob Storage
-    AZURE_ACCOUNT_NAME = os.environ.get("AZURE_ACCOUNT_NAME")
-    AZURE_ACCOUNT_KEY = os.environ.get("AZURE_ACCOUNT_KEY")
-    AZURE_CONTAINER_NAME = "alarm_sounds"  # Nombre del contenedor de sonidos de alarma
-    AZURE_CUSTOM_DOMAIN = f"{AZURE_ACCOUNT_NAME}.blob.core.windows.net"
-    azure_blob_base_url = f"https://{AZURE_CUSTOM_DOMAIN }/{AZURE_CONTAINER_NAME}/"
-
-    # Crear un cliente de servicio de blobs
-    blob_service_client = BlobServiceClient(
-        account_url=f"https://{AZURE_CUSTOM_DOMAIN}",
-        credential=AZURE_ACCOUNT_KEY,
-    )
-
-    # Obtener una referencia al contenedor donde se almacenan los archivos de sonido de alarma
-    blob_container_client = blob_service_client.get_container_client(
-        settings.MEDIA_LOCATION
-    )
-
-    # Lista todos los blobs en el contenedor
-    blobs_list = blob_container_client.list_blobs()
-
-    # Filtra los blobs que corresponden a los sonidos de alarma
-    alarm_sound_files = {
-        blob.name.split("/")[-1].split(".")[
-            0
-        ]: f"{settings.MEDIA_URL.strip('/')}/{blob.name}"
-        for blob in blobs_list
-        if blob.name.endswith(".wav")
-    }
-
-    # Crear una lista de tuplas con el índice y la URL completa del archivo
-    TYPE_ALARM_SOUNDS_CHOICES = [(url, name) for name, url in alarm_sound_files.items()]
-
     event = models.ForeignKey(
         "event", on_delete=models.CASCADE, verbose_name=_("event"), default=1
     )
@@ -116,8 +83,13 @@ class EventFeature(models.Model):
     )
     type_alarm_sound = models.CharField(
         max_length=255,
-        choices=TYPE_ALARM_SOUNDS_CHOICES,
         verbose_name=_("sound type"),
+        blank=True,
+        null=True,
+    )
+    custom_alarm_sound = models.FileField(
+        upload_to='custom_sounds/',
+        verbose_name=_("custom_alarm_sound"),
         blank=True,
         null=True,
     )
@@ -140,17 +112,18 @@ class Event(models.Model):
         blank=False,
         verbose_name=_("name"),
     )
-    # modified_by = models.ForeignKey(
-    #     "authentication.User",
-    #     on_delete=models.CASCADE,
-    #     verbose_name=_("modified by"),
-    #     default=1,
-    # )
+    modified_by = models.ForeignKey(
+        "authentication.User",
+        on_delete=models.CASCADE,
+        verbose_name=_("modified by"),
+        default=1,
+    )
     last_updated = models.DateTimeField(
         auto_now_add=True,
         verbose_name=_("last updated"),
         null=True,
     )
+    visible = models.BooleanField(default=True, verbose_name=_("visible"))
 
     class Meta:
         ordering = ["number"]
@@ -225,28 +198,3 @@ class Alarm(models.Model):
 
     def __str__(self):
         return f"{self.company} Alarm: {self.main_event}"
-
-
-# class UEC(models.Model):
-#     """
-#     Define el modelo para el código único de eventos (Unified Event Code - UEC). Normaliza el
-#     número de eventos a cada uno de los elementos IO que arrojan los tipos de dispositivos. Tabla
-#     `realtime_uec`.
-#     """
-
-#     # device_type = models.ForeignKey(
-#     #     "DeviceType", on_delete=models.CASCADE, verbose_name=_("device type")
-#     # )
-#     familymodel = models.ForeignKey(
-#         "realtime.FamilyModelUEC",
-#         on_delete=models.CASCADE,
-#         verbose_name=_("family model"),
-#         default=1,
-#     )
-#     event_number = models.ForeignKey(
-#         "Event", on_delete=models.CASCADE, verbose_name=_("event number")
-#     )
-#     io_element = models.CharField(verbose_name="IO element", max_length=25)
-
-#     def __str__(self):
-#         return f"{self.familymodel}: {self.event_number} --> {self.io_element}"

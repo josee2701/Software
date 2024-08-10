@@ -1,0 +1,168 @@
+{% extends "layouts/base.html" %}
+{% load i18n static %}
+
+{% block title %} {% trans "Report configuration" %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card my-4">
+                <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
+                    <div class="bg-gradient-primary shadow-primary border-radius-lg pt-4 pb-3">
+                        <h5 class="text-white text-capitalize ps-3"> {% trans "Report configuration" %} </h5>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h6>{% trans "Company" %}<span class="text-danger"> *</span></h6>
+                            <select id="company-select" name="company" class="form-control select2" style="width: 300px;">
+                                {% if companies %}
+                                    {% for id, name in companies %}
+                                        <option value="{{ id }}">{{ name }}</option>
+                                    {% endfor %}
+                                {% endif %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <h6>{% trans "Widgets" %}</h6>
+                            <div id="widgets-container" class="scrollable-container">
+                                {% if widgets %}
+                                    {% for widget_label in widgets %}
+                                    <div class="item">{{ widget_label }}</div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <h6>{% trans "Reports" %}</h6>
+                            <div id="reports-container" class="scrollable-container">
+                                {% if reports %}
+                                    {% for report_label in reports %}
+                                    <div class="item">{{ report_label }}</div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% if perms.realtime.add_io_items_report %}
+                    <div class="mt-3">
+                        <a id="edit-button" class="btn btn-success" href="#" disabled style="background-color: {{ user.company.theme_set.all.0.button_color }}; border-color: {{ user.company.theme_set.all.0.button_color }};">
+                            <i class="fa-solid fa-pencil"></i>
+                        </a>
+                    </div>
+                    {% endif %}
+                    {% if messages %}
+                    <div class="alert-container mt-3">
+                        {% for message in messages %}
+                            <div class="alert {{ message.tags }}">{% trans "Configuration updated successfully for " %} {{ message }}</div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<head>
+    <link rel="stylesheet" href="{% static 'assets/css/select2.css' %}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
+    <style>
+        .scrollable-container {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .select2-container--default .select2-results__option--highlighted.select2-results__option--selectable {
+            background-color: {{ button_color }};
+            color: white;
+        }
+    </style>
+</head>
+
+{% block scripts %}
+<!-- Incluir jQuery primero -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Incluir Select2 después de jQuery -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+    var translations = {
+        confirmMessage: "{% trans 'Please select a company.' %}",
+    };
+
+    $(document).ready(function() {
+        $('#company-select').select2();
+
+        // Seleccionar el primer elemento automáticamente
+        var firstOption = $('#company-select option:first').val();
+        $('#company-select').val(firstOption).trigger('change');
+
+        $('#company-select').on('change', function() {
+            const companyId = $(this).val();
+            const languagePrefix = getLanguagePrefix();
+            const editButton = $('#edit-button');
+            const widgetsContainer = $('#widgets-container');
+            const reportsContainer = $('#reports-container');
+            const alerts = $('.alert');
+
+            function getLanguagePrefix() {
+                const path = window.location.pathname;
+                const languageCode = path.split('/')[1];
+                const supportedLanguages = ['en', 'es', 'es-co', 'es-mx', 'es-es'];
+                const isLanguageSupported = supportedLanguages.includes(languageCode);
+                return isLanguageSupported ? `/${languageCode}` : '';
+            }
+
+            if (companyId) {
+                editButton.attr('href', `${languagePrefix}/realtime/configuration-report/update/${companyId}`);
+                editButton.removeAttr('disabled');
+
+                fetch(`${languagePrefix}/realtime/get-instance-data/?company_id=${companyId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const infoWidgets = Array.isArray(data.info_widgets) ? data.info_widgets : JSON.parse(data.info_widgets || '[]');
+                        const infoReports = Array.isArray(data.info_reports) ? data.info_reports : JSON.parse(data.info_reports || '[]');
+
+                        widgetsContainer.empty();
+                        if (infoWidgets.length > 0) {
+                            infoWidgets.forEach(widgetLabel => {
+                                widgetsContainer.append(`<div class="item">${widgetLabel}</div>`);
+                            });
+                        }
+
+                        reportsContainer.empty();
+                        if (infoReports.length > 0) {
+                            infoReports.forEach(reportLabel => {
+                                reportsContainer.append(`<div class="item">${reportLabel}</div>`);
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+            } else {
+                editButton.attr('disabled', 'disabled');
+                editButton.attr('href', '#');
+                widgetsContainer.empty();
+                reportsContainer.empty();
+            }
+
+            alerts.each(function() {
+                $(this).hide();
+            });
+        });
+
+        $('#edit-button').on('click', function(event) {
+            if (!$('#company-select').val()) {
+                event.preventDefault();
+                alert(translations.confirmMessage);
+            }
+        });
+    });
+</script>
+{% comment %} <script src="{% static 'assets/js/realtime/configuration_report/add_items_by_company.js' %}"></script> {% endcomment %}
+{% endblock %}
+
+{% endblock %}

@@ -1,69 +1,64 @@
+import asyncio
+import base64
+import copy
+import json
+import os
+from datetime import datetime
+from decimal import Decimal, InvalidOperation
+
+from asgiref.sync import async_to_sync
 from django.contrib import messages
-from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.contrib.auth.mixins import (LoginRequiredMixin,
+                                        PermissionRequiredMixin)
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db import transaction
-from django.db.models import Q
-from django.http import HttpResponse
+from django.db.models import F, OuterRef, Q, Subquery, Sum
+from django.forms.models import model_to_dict
+from django.http import HttpResponse, JsonResponse, QueryDict
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
+from django.utils import timezone
+from django.utils.dateparse import parse_datetime
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_protect, csrf_exempt
+from django.views.generic import ListView
 from django.views import generic
 from django.views.generic.list import MultipleObjectMixin
 from rest_framework import generics
 
-from apps.whitelabel.forms import (
-    AttachmentForm,
-    CommentForm,
-    CompanyCustomerForm,
-    CompanyDeleteForm,
-    CompanyLogoForm,
-    DistributionCompanyForm,
-    KeyMapForm,
-    MessageForm,
-    Moduleform,
-    ProcessForm,
-    ThemeForm,
-    TicketForm,
-)
-from apps.whitelabel.models import (
-    Attachment,
-    Company,
-    CompanyTypeMap,
-    MapType,
-    Module,
-    Process,
-    Theme,
-    Ticket,
-)
+from apps.authentication.models import User
+from apps.log.mixins import (CreateAuditLogAsyncMixin, CreateAuditLogSyncMixin,
+                             DeleteAuditLogAsyncMixin,
+                             UpdateAuditLogAsyncMixin, UpdateAuditLogSyncMixin, AuditLogSyncMixin,
+                             obtener_ip_publica)
+from apps.log.utils import log_action
+from apps.realtime.apis import (extract_number, extract_number_tp,
+                                get_user_companies)
+from apps.whitelabel.forms import (AttachmentForm, CommentForm,
+                                   CompanyCustomerForm, CompanyDeleteForm,
+                                   CompanyLogoForm, DistributionCompanyForm,
+                                   KeyMapForm, MessageForm, Moduleform,
+                                   ProcessForm, ThemeForm, TicketForm)
+from apps.whitelabel.models import (Attachment, Company, CompanyTypeMap,
+                                    MapType, Module, Process, Theme, Ticket)
 from config.pagination import get_paginate_by
 
-from .forms import (
-    AttachmentForm,
-    CommentForm,
-    CompanyCustomerForm,
-    CompanyDeleteForm,
-    CompanyLogoForm,
-    DistributionCompanyForm,
-    KeyMapForm,
-    MessageForm,
-    Moduleform,
-    ProcessForm,
-    ThemeForm,
-    TicketForm,
-)
-from .models import (
-    Attachment,
-    Company,
-    CompanyTypeMap,
-    MapType,
-    Module,
-    Process,
-    Theme,
-    Ticket,
-)
+from .forms import (AttachmentForm, CommentForm, CompanyCustomerForm,
+                    CompanyDeleteForm, CompanyLogoForm,
+                    DistributionCompanyForm, KeyMapForm, MessageForm,
+                    Moduleform, ProcessForm, ThemeForm, TicketCrearte,
+                    TicketForm)
+from .models import (Attachment, Company, CompanyTypeMap, MapType, Message,
+                     Module, Process, Theme, Ticket)
 from .serializer import ClienteSerializer
-from .sql import fetch_all_company, get_ticket_by_user
+from .sql import (fetch_all_company, get_modules_by_user, get_ticket_by_user,
+                  get_ticket_closed)
 
 
-class CompaniesView(PermissionRequiredMixin, LoginRequiredMixin, generic.ListView):
+class CompaniesView(PermissionRequiredMixin, LoginRequiredMixin, ListView):
     """
     Esta clase es una vista de lista del modelo de empresas y representará la plantilla
     company_main.html.
@@ -97,7 +92,24 @@ class CompaniesView(PermissionRequiredMixin, LoginRequiredMixin, generic.ListVie
         Returns:
             int: El número de elementos a mostrar por página.
         """
-        return get_paginate_by(self.request)
+        paginate_by = self.request.POST.get('paginate_by', None)  # Obtener paginate_by de los parámetros POST
+
+        if paginate_by is None:
+            session_filters = self.request.session.get(
+                f"filters_sorted_company_{self.request.user.id}", {}
+            )
+            paginate_by = session_filters.get("paginate_by", 15)
+            # Convertir a entero si es una lista
+            try:
+                paginate_by = int(
+                    paginate_by[0]
+                )  # Convertir el primer elemento de la lista a entero
+            except (TypeError, ValueError):
+                paginate_by = int(paginate_by) if paginate_by else 15
+            # Añadir paginate_by a self.request.GET para asegurar que esté presente
+            self.request.POST = self.request.POST.copy()
+            self.request.POST['paginate_by'] = paginate_by
+        return int(self.request.POST['paginate_by'])
 
     def get_queryset(self):
         """
@@ -109,14 +121,75 @@ class CompaniesView(PermissionRequiredMixin, LoginRequiredMixin, generic.ListVie
         """
         user = self.request.user
         company = user.company
+        params = self.request.GET if self.request.method == 'GET' else self.request.POST
+        query = params.get("query", "").lower()
+        search = params.get("q", query).lower()
+        if 'order_by' not in params and 'paginate_by' not in params and 'page' not in params:
+            # Limpiar los filtros de la sesión
+            if f"filters_sorted_company_{user.id}" in self.request.session:
+                del self.request.session[f"filters_sorted_company_{user.id}"]
+                self.request.session.modified = True
+        # Recuperar filtros almacenados en la sesión
+        session_filters = self.request.session.get(f'filters_sorted_company_{user.id}', {})
+        order_by = params.get('order_by', session_filters.get('order_by', ['company_name'])[0])
+        direction = params.get('direction', session_filters.get('direction',['asc'])[0])
+        # Actualizar los filtros con los parámetros actuales de la solicitud GET
+        session_filters.update(params)
+        # Actualizar los filtros de la sesión con los nuevos parámetros
+        self.request.session[
+            f"filters_sorted_company_{user.id}"
+        ] = session_filters
+        self.request.session.modified = True
         # Obtener los planes de datos a través de la función fetch_all_dataplan.
-        queryset = fetch_all_company(company, user)
+        queryset = fetch_all_company(company, user, search)
 
-        # Ordenar los resultados por 'Company' de forma descendente.
-        # Si queryset es una lista de diccionarios, Python no tiene un método `order_by`.
-        # Se debe utilizar la función sorted para ordenar listas de diccionarios.
-        queryset = sorted(queryset, key=lambda x: x["company_name"], reverse=False)
-        return queryset
+        # Función para convertir los valores a minúsculas y extraer números cuando sea necesario
+        def sort_key(x):
+            value = x.get(order_by)
+            if order_by == "provider_id":
+                if value is None:
+                    return (0, "")  # Prioridad 0 para valores nulos
+                if value == "":
+                    return (4, "")  # Prioridad 4 para valores vacíos
+                if isinstance(value, str):
+                    # Verificar si comienza con números, letras o caracteres especiales
+                    if value[0].isdigit():
+                        return (1, extract_number(value))  # Prioridad 1 para números
+                    elif value[0].isalpha():
+                        return (2, value.lower())  # Prioridad 2 para letras
+                    else:
+                        return (
+                            3,
+                            value.lower(),
+                        )  # Prioridad 3 para caracteres especiales
+            else:
+                if value is None or value == "":
+                    return (4, "")  # Prioridad 4 para valores nulos o vacíos
+                if isinstance(value, str):
+                    # Verificar si comienza con números, letras o caracteres especiales
+                    if value[0].isdigit():
+                        return (1, extract_number(value))  # Prioridad 1 para números
+                    elif value[0].isalpha():
+                        return (2, value.lower())  # Prioridad 2 para letras
+                    else:
+                        return (
+                            3,
+                            value.lower(),
+                        )  # Prioridad 3 para caracteres especiales
+            return (5, value)  # Asegurar que todos los retornos sean tuplas
+
+        # Determinar si es orden descendente
+        reverse = direction == "desc"
+
+        try:
+            sorted_queryset = sorted(queryset, key=sort_key, reverse=reverse)
+        except KeyError:
+            # Ordenamiento por defecto si la clave no existe
+            sorted_queryset = sorted(
+                queryset, key=lambda x: x["company_name"].lower(), reverse=reverse
+            )
+
+        return sorted_queryset
 
     def get_context_data(self, **kwargs):
         """
@@ -132,32 +205,56 @@ class CompaniesView(PermissionRequiredMixin, LoginRequiredMixin, generic.ListVie
         companies = context[
             self.context_object_name
         ]  # Usa el objeto ya definido en el contexto
-
+        paginate_by = self.get_paginate_by(None)
+        context["paginate_by"] = paginate_by
         # Calcula start_number más eficientemente
         page_number = context.get("page_obj").number if context.get("page_obj") else 1
         context["start_number"] = (page_number - 1) * self.get_paginate_by(None)
 
-        # Optimización del cálculo para mostrar el botón de mapa
+        # Optimización del cálculo para mostrar el botón de mapa.
         for company in companies:
             company_id = company["id"]
+            provider_id = company.get(
+                "provider_id"
+            )  # Asegúrate de que el campo exista en el diccionario
+            # if provider_id is None:
+            # Filtrar los mapas de la compañía.
             company_maps = CompanyTypeMap.objects.filter(company_id=company_id)
             total_maps = company_maps.count()
+            # Determinar si se debe mostrar el botón del mapa.
             has_only_map1 = (
                 total_maps == 1 and company_maps.filter(map_type__id=1).exists()
             )
             company["show_map_button"] = not has_only_map1
+            # else:
+            #     company["show_map_button"] = False
 
+        session_filters = self.request.session.get(f'filters_sorted_company_{self.request.user.id}', {})
+        # Obtener el ordenamiento desde la solicitud actual
+        order_by = self.request.GET.get('order_by') or self.request.POST.get('order_by') or session_filters.get('order_by', ['company_name'])[0]
+        direction = self.request.GET.get('direction') or self.request.POST.get('direction') or session_filters.get('direction', ['asc'])[0]
+        context['order_by'] = order_by
+        context['direction'] = direction
         return context
+    
+    @method_decorator(csrf_protect)
+    def post(self, request, *args, **kwargs):
+        # Obtén el número de página desde la solicitud POST
+        page_number = request.POST.get('page', 1)
+        # Modifica la consulta para aplicar la paginación
+        self.object_list = self.get_queryset()
+        paginator = Paginator(self.object_list, self.get_paginate_by(None))
+        page_obj = paginator.get_page(page_number)
+        context = self.get_context_data(object_list=page_obj.object_list, page_obj=page_obj)
+        return self.render_to_response(context)
 
 
 class CreateDistributionCompanyView(
-    PermissionRequiredMixin, LoginRequiredMixin, generic.CreateView
+    PermissionRequiredMixin,
+    LoginRequiredMixin,
+    CreateAuditLogAsyncMixin,
+    generic.CreateView,
 ):
-    """
-    View para crear una empresa distribuidora.
-    La empresa se crea y se le asigna a company_id del usuario.
-    """
-
     model = Company
     template_name = "whitelabel/companies/add_company.html"
     permission_required = "whitelabel.add_company"
@@ -166,27 +263,29 @@ class CreateDistributionCompanyView(
     success_url = "companies:companies"
 
     def get_success_url(self):
-        # Asegúrate de que el nombre de la URL sea correcto y esté definido en tus archivos de URL.
         return reverse("companies:companies")
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        context["type_maps"] = CompanyTypeMap.objects.filter(company_id=user.company_id)
+        context["modules"] = Module.objects.filter(
+            company__id=self.request.user.company_id
+        )
+        button_color = self.request.user.company.theme_set.all().first().button_color
+        context["button_color"] = button_color
+        return context
+
     def form_valid(self, form):
-        """
-        Esta función se llama cuando se envía un formulario válido.
-        Guarda el formulario sin confirmar aún en la base de datos y establece provider_id en None.
-        Luego, guarda el formulario en la base de datos y guarda las relaciones many-to-many.
-        Si la empresa del usuario actual es la empresa principal, crea un tema para la empresa
-        recién creada.
-        Finalmente, devuelve una respuesta HTTP sin contenido con un encabezado que indica que se
-        debe recargar la página.
-        """
         form.instance.actived = True
         company = form.save(commit=False)
-        # Asigna la instancia del usuario al campo 'modified_by' y 'created_by'
         company.modified_by = self.request.user
         company.created_by = self.request.user
         company.provider_id = None
         company.save()
         form.save_m2m()
+        # Llama al método form_valid de la clase padre para registrar la acción en el log de auditoría
+        response = super().form_valid(form)
 
         if self.request.user.company_id == 1:
             Theme.objects.create(company_id=company.id)
@@ -194,24 +293,18 @@ class CreateDistributionCompanyView(
         maps = MapType.objects.filter(companytypemap__company=company)
 
         if maps.count() == 1 and maps.first().name == "OpenStreetMap":
-            page_update = HttpResponse(
-                ""
-            )  # O puedes enviar algún contenido si es necesario.
+            page_update = HttpResponse("")
             page_update["HX-Redirect"] = self.get_success_url()
             return page_update
         else:
             return redirect("companies:KeyMapView", pk=company.id)
 
-    def form_invalid(self, form):
-        """
-        Esta función se llama cuando se envía un formulario inválido.
-        Renderiza el template con el formulario inválido.
-        """
-        return render(self.request, self.template_name, {"form": form})
-
 
 class CreateCustomerAzCompanyView(
-    PermissionRequiredMixin, LoginRequiredMixin, generic.CreateView
+    PermissionRequiredMixin,
+    LoginRequiredMixin,
+    CreateAuditLogAsyncMixin,
+    generic.CreateView,
 ):
     model = Company
     template_name = "whitelabel/companies/add_company.html"
@@ -231,6 +324,18 @@ class CreateCustomerAzCompanyView(
         ] = self.request.user.company_id  # Asume que el usuario tiene un company_id
         return kwargs
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        # Aquí puedes agregar cualquier dato adicional que necesites en tu template
+        context["type_maps"] = CompanyTypeMap.objects.filter(company_id=user.company_id)
+        context["modules"] = Module.objects.filter(
+            company__id=self.request.user.company_id
+        )
+        button_color = self.request.user.company.theme_set.all().first().button_color
+        context["button_color"] = button_color
+        return context
+
     def form_valid(self, form):
         form.instance.provider_id = self.request.user.company_id
         form.instance.actived = True
@@ -244,9 +349,11 @@ class CreateCustomerAzCompanyView(
         maps = MapType.objects.filter(companytypemap__company=company)
 
         if maps.count() == 1 and maps.first().name == "OpenStreetMap":
-            page_update = HttpResponse(
-                ""
-            )  # O puedes enviar algún contenido si es necesario.
+            # Llama al método form_valid de la clase padre para registrar la acción en el log de auditoría
+            response = super().form_valid(form)
+
+            # Prepara una respuesta con redirección usando HTMX
+            page_update = HttpResponse("")
             page_update["HX-Redirect"] = self.get_success_url()
             return page_update
         else:
@@ -257,7 +364,10 @@ class CreateCustomerAzCompanyView(
 
 
 class CreateCustomerCompanyView(
-    PermissionRequiredMixin, LoginRequiredMixin, generic.CreateView
+    PermissionRequiredMixin,
+    LoginRequiredMixin,
+    CreateAuditLogAsyncMixin,
+    generic.CreateView,
 ):
     model = Company
     template_name = "whitelabel/companies/add_company.html"
@@ -286,6 +396,8 @@ class CreateCustomerCompanyView(
         context["modules"] = Module.objects.filter(
             company__id=self.request.user.company_id
         )
+        button_color = self.request.user.company.theme_set.all().first().button_color
+        context["button_color"] = button_color
         return context
 
     def form_valid(self, form):
@@ -310,53 +422,75 @@ class CreateCustomerCompanyView(
                     company=self.object, group_id=module_id
                 )  # Asegúrate de que `group_id` sea correcto
 
-            page_update = HttpResponse(
-                ""
-            )  # O puedes enviar algún contenido si es necesario.
+            # Llama al método form_valid de la clase padre para registrar la acción en el log de auditoría
+            response = super().form_valid(form)
+
+            # Prepara una respuesta con redirección usando HTMX
+            page_update = HttpResponse("")
             page_update["HX-Redirect"] = self.get_success_url()
             return page_update
 
 
-class KeyMapView(LoginRequiredMixin, generic.UpdateView):
-    form_class = KeyMapForm
-    model = CompanyTypeMap
+class KeyMapView(LoginRequiredMixin, UpdateAuditLogAsyncMixin, generic.TemplateView):
     template_name = "whitelabel/companies/keymap.html"
 
     def get_success_url(self):
-        # Asegúrate de que el nombre de la URL sea correcto y esté definido en tus archivos de URL.
         return reverse("companies:companies")
 
-    def get(self, request, *args, **kwargs):
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
         company_id = self.kwargs.get("pk")
-        company = Company.objects.get(id=company_id)
-        maps = CompanyTypeMap.objects.filter(company_id=company.id)
-        form = self.form_class()
-        return render(
-            request,
-            self.template_name,
-            {"maps": maps, "company": company, "form": form},
+        company = get_object_or_404(Company, id=company_id)
+        maps = CompanyTypeMap.objects.filter(company_id=company.id).exclude(
+            map_type_id=1
         )
+        forms = [
+            KeyMapForm(instance=map_instance, prefix=str(map_instance.id))
+            for map_instance in maps
+        ]
+        context.update({"forms": forms, "company": company})
+        return context
 
     def post(self, request, *args, **kwargs):
-        form = KeyMapForm(request.POST)
-        if form.is_valid():
-            company_map = form.save(commit=False)
-            key_map = form.data.getlist("key_map")
-            count = 0
-            for pk in form.data.getlist("id"):
-                CompanyTypeMap.objects.filter(id=pk).update(key_map=key_map[count])
-                count += 1
+        company_id = self.kwargs.get("pk")
+        company = get_object_or_404(Company, id=company_id)
+        maps = CompanyTypeMap.objects.filter(company_id=company.id).exclude(
+            map_type_id=1
+        )
+        forms = [
+            KeyMapForm(request.POST, instance=map_instance, prefix=str(map_instance.id))
+            for map_instance in maps
+        ]
+        all_valid = True
+        self.obj_before = [
+            map_instance for map_instance in maps
+        ]  # Guardamos el estado anterior
 
-            page_update = HttpResponse(
-                ""
-            )  # O puedes enviar algún contenido si es necesario.
+        if all_valid:
+            self.obj_after = []
+            for form in forms:
+                company_map = form.save(commit=False)
+                key_map = form.cleaned_data["key_map"]
+                if key_map:
+                    # Encriptar la clave antes de guardarla
+                    company_map.key_map = company_map.encrypt_key(key_map)
+                company_map.save()
+                self.obj_after.append(company_map)  # Guardamos el estado posterior
+
+            # Registrar la acción en el log de auditoría
+            async_to_sync(self.log_action)()
+
+            page_update = HttpResponse("")
             page_update["HX-Redirect"] = self.get_success_url()
             return page_update
         else:
-            return render(request, self.template_name, {"form": form})
+            context = {"forms": forms, "company": company}
+            return render(request, self.template_name, context)
 
 
-class UpdateCompanyLogoView(LoginRequiredMixin, generic.UpdateView):
+class UpdateCompanyLogoView(
+    LoginRequiredMixin, UpdateAuditLogAsyncMixin, generic.UpdateView
+):
     """
     UpdateCompanyLogoView es un generic.edit.UpdateView que usa el modelo Company,
     los campos enumerados,
@@ -366,11 +500,10 @@ class UpdateCompanyLogoView(LoginRequiredMixin, generic.UpdateView):
     model = Company
     template_name = "whitelabel/companies/company_update_logo.html"
     form_class = CompanyLogoForm
-    success_url = reverse_lazy("companies:companies")
 
     def get_success_url(self):
         # Asegúrate de que el nombre de la URL sea correcto y esté definido en tus archivos de URL.
-        return reverse("main")
+        return reverse("companies:companies")
 
     def form_valid(self, form):
         """
@@ -381,9 +514,11 @@ class UpdateCompanyLogoView(LoginRequiredMixin, generic.UpdateView):
         # Asigna la instancia del usuario al campo 'modified_by'
         form.instance.modified_by = self.request.user
         form.save()
-        response = HttpResponse("")  # O puedes enviar algún contenido si es necesario.
-        response["HX-Redirect"] = self.get_success_url()
-        return response
+        # Llama al método form_valid de la clase padre para registrar la acción en el log de auditoría
+        response = super().form_valid(form)
+        pague = HttpResponse("")  # O puedes enviar algún contenido si es necesario.
+        pague["HX-Redirect"] = self.get_success_url()
+        return pague
 
     def form_invalid(self, form):
         """
@@ -394,7 +529,10 @@ class UpdateCompanyLogoView(LoginRequiredMixin, generic.UpdateView):
 
 
 class UpdateDistributionCompanyView(
-    PermissionRequiredMixin, LoginRequiredMixin, generic.UpdateView
+    PermissionRequiredMixin,
+    LoginRequiredMixin,
+    UpdateAuditLogAsyncMixin,
+    generic.UpdateView,
 ):
     """
     UpdateCompanyView es un generic.edit.UpdateView que usa el modelo Company,
@@ -406,11 +544,29 @@ class UpdateDistributionCompanyView(
     template_name = "whitelabel/companies/company_update.html"
     permission_required = "whitelabel.change_company"
     form_class = DistributionCompanyForm
-    success_url = reverse_lazy("companies:companies")
 
     def get_success_url(self):
         # Asegúrate de que el nombre de la URL sea correcto y esté definido en tus archivos de URL.
         return reverse("companies:companies")
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs[
+            "provider_id"
+        ] = self.request.user.company_id  # Asume que el usuario tiene un company_id
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        # Aquí puedes agregar cualquier dato adicional que necesites en tu template
+        context["type_maps"] = CompanyTypeMap.objects.filter(company_id=user.company_id)
+        context["modules"] = Module.objects.filter(
+            company__id=self.request.user.company_id
+        )
+        button_color = self.request.user.company.theme_set.all().first().button_color
+        context["button_color"] = button_color
+        return context
 
     def form_valid(self, form):
         """
@@ -418,18 +574,33 @@ class UpdateDistributionCompanyView(
         Actualiza el logo de la empresa y responde con un código HTTP 204 y un header "HX-Trigger:
         reload-page".
         """
+        # Manejar relaciones ManyToMany aquí
+        self.object.companytypemap_set.all().delete()
+        type_map_ids = self.request.POST.getlist("type_map")
+        for type_map_id in type_map_ids:
+            CompanyTypeMap.objects.create(company=self.object, map_type_id=type_map_id)
+        self.object.module_set.all().delete()
+        modules_ids = self.request.POST.getlist("modules")
+        for module_id in modules_ids:
+            Module.objects.create(
+                company=self.object, group_id=module_id
+            )  # Asegúrate de que `group_id` sea correcto
         # Asigna la instancia del usuario al campo 'modified_by'
         form.instance.modified_by = self.request.user
         form.save()
-        page_update = HttpResponse(
-            ""
-        )  # O puedes enviar algún contenido si es necesario.
+        # Llama al método form_valid de la clase padre para registrar la acción en el log de auditoría
+        response = super().form_valid(form)
+        # Prepara una respuesta con redirección usando HTMX
+        page_update = HttpResponse("")
         page_update["HX-Redirect"] = self.get_success_url()
         return page_update
 
 
 class UpdateCustomerCompanyView(
-    PermissionRequiredMixin, LoginRequiredMixin, generic.UpdateView
+    PermissionRequiredMixin,
+    LoginRequiredMixin,
+    UpdateAuditLogAsyncMixin,
+    generic.UpdateView,
 ):
     """
     UpdateCompanyView es un generic.edit.UpdateView que usa el modelo Company,
@@ -462,39 +633,37 @@ class UpdateCustomerCompanyView(
         context["modules"] = Module.objects.filter(
             company__id=self.request.user.company_id
         )
+        button_color = self.request.user.company.theme_set.all().first().button_color
+        context["button_color"] = button_color
         return context
 
     def form_valid(self, form):
-        with transaction.atomic():
-            self.object = form.save(commit=False)
-            self.object.actived = True
-            self.object.provider_id = self.request.user.company_id
-            self.object.seller = self.request.user.company.seller
-            self.object.consultant = self.request.user.company.consultant
-            self.object.save()
-
-            # Manejar relaciones ManyToMany aquí
-            type_map_ids = self.request.POST.getlist("type_map")
-            for type_map_id in type_map_ids:
-                CompanyTypeMap.objects.create(
-                    company=self.object, map_type_id=type_map_id
-                )
-
-            modules_ids = self.request.POST.getlist("modules")
-            for module_id in modules_ids:
-                Module.objects.create(
-                    company=self.object, group_id=module_id
-                )  # Asegúrate de que `group_id` sea correcto
-
-            page_update = HttpResponse(
-                ""
-            )  # O puedes enviar algún contenido si es necesario.
-            page_update["HX-Redirect"] = self.get_success_url()
-            return page_update
+        # Manejar relaciones ManyToMany aquí
+        self.object.companytypemap_set.all().delete()
+        type_map_ids = self.request.POST.getlist("type_map")
+        for type_map_id in type_map_ids:
+            CompanyTypeMap.objects.create(company=self.object, map_type_id=type_map_id)
+        self.object.module_set.all().delete()
+        modules_ids = self.request.POST.getlist("modules")
+        for module_id in modules_ids:
+            Module.objects.create(
+                company=self.object, group_id=module_id
+            )  # Asegúrate de que `group_id` sea correcto
+        form.instance.modified_by = self.request.user
+        form.save()
+        # Llama al método form_valid de la clase padre para registrar la acción en el log de auditoría
+        response = super().form_valid(form)
+        # Prepara una respuesta con redirección usando HTMX
+        page_update = HttpResponse("")
+        page_update["HX-Redirect"] = self.get_success_url()
+        return page_update
 
 
 class DeleteCompanyView(
-    PermissionRequiredMixin, LoginRequiredMixin, generic.UpdateView
+    PermissionRequiredMixin,
+    LoginRequiredMixin,
+    DeleteAuditLogAsyncMixin,
+    generic.UpdateView,
 ):
     """
     DeleteCompanyView es un generic.edit.UpdateView que usa el modelo Company,
@@ -522,192 +691,192 @@ class DeleteCompanyView(
         company.visible = False
         company.actived = False
         form.save()
-        page_update = HttpResponse(
-            ""
-        )  # O puedes enviar algún contenido si es necesario.
+        # Llama al método form_valid de la clase padre para registrar la acción en el log de auditoría
+        response = super().form_valid(form)
+
+        # Prepara una respuesta con redirección usando HTMX
+        page_update = HttpResponse("")
         page_update["HX-Redirect"] = self.get_success_url()
         return page_update
 
 
-class ThemeView(LoginRequiredMixin, generic.UpdateView):
+class ThemeView(PermissionRequiredMixin, LoginRequiredMixin, UpdateAuditLogAsyncMixin, generic.UpdateView):
     """
-    Si el tema existe, renderice la plantilla.
-    Si el tema no existe, créelo y renderice la plantilla
+    Vista que permite manejar la actualización y creación del tema de una empresa.
+
+    Si el tema existe, renderiza la plantilla para actualizarlo.
+    Si el tema no existe, lo crea y luego renderiza la plantilla para actualizarlo.
+
+    Atributos:
+        model (Model): El modelo de datos para el tema.
+        template_name (str): La plantilla HTML que se usa para renderizar la vista.
+        permission_required (str): El permiso necesario para acceder a esta vista.
+        form_class (Form): El formulario para el tema.
+        success_url (str): URL de redirección después de una actualización exitosa.
     """
 
     model = Theme
     template_name = "whitelabel/theme/theme.html"
+    permission_required = ("whitelabel.add_theme", "whitelabel.change_theme")
     form_class = ThemeForm
     success_url = reverse_lazy("companies:companies")
+    
+    def get_context_data(self, **kwargs):
+        """
+        Proporciona datos adicionales al contexto de la plantilla.
+
+        Args:
+            **kwargs: Argumentos adicionales que se pasan a la función.
+
+        Returns:
+            dict: Contexto adicional para la plantilla, incluyendo el formulario con los valores iniciales.
+        """
+        context = super().get_context_data(**kwargs)
+        theme = self.get_theme()
+        context['form'].fields['opacity'].initial = self.convert_opacity_to_decimal(theme.opacity)
+        return context
+
+    def get_theme(self):
+        """
+        Obtiene el tema de la empresa actual del usuario.
+
+        Returns:
+            Theme: El objeto de tema correspondiente a la empresa del usuario.
+        """
+        return Theme.objects.get(company_id=self.request.user.company_id)
+
+    def convert_opacity_to_decimal(self, opacity):
+        """
+        Convierte la opacidad de hexadecimal a decimal.
+
+        Args:
+            opacity (str): El valor de opacidad en formato hexadecimal.
+
+        Returns:
+            int: El valor de opacidad en formato decimal.
+        """
+        return int(opacity, 16)
 
     def post(self, request, *args, **kwargs):
         """
-        Guarda los datos del formulario en la base de datos.
+        Maneja la solicitud POST para actualizar o crear el tema.
 
-        :param request: El objeto de la solicitud
-        :return: El formulario está siendo devuelto.
+        Args:
+            request (HttpRequest): El objeto de solicitud HTTP.
+            *args: Argumentos adicionales que se pasan a la función.
+            **kwargs: Argumentos clave adicionales que se pasan a la función.
+
+        Returns:
+            HttpResponse: Redirección a la vista del tema actualizado o renderiza el formulario con errores.
         """
-        theme = Theme.objects.get(company_id=self.request.user.company_id)
+        theme = self.get_theme()
         form = self.form_class(request.POST, request.FILES, instance=theme)
 
         if form.is_valid():
             theme = form.save(commit=False)
-            opacityhex = hex(int(theme.opacity))[2:]
-            form.instance.opacity = opacityhex
-            form.save()
-            return redirect(self.success_url)
+            self.process_opacity(theme, form)
+            self.process_images(theme, request)
+            theme.save()
+            return redirect(reverse("companies:theme", kwargs={"pk": theme.pk}))
 
         return render(request, self.template_name, {"form": form})
 
+    def process_opacity(self, theme, form):
+        """
+        Procesa y valida el valor de opacidad proporcionado en el formulario.
 
-class ModuleTemplateView(
-    PermissionRequiredMixin, LoginRequiredMixin, generic.TemplateView
-):
+        Args:
+            theme (Theme): El objeto de tema que se está actualizando.
+            form (Form): El formulario con los datos del tema.
+        """
+        opacity = theme.opacity
+        try:
+            opacity_decimal = int(opacity)
+            if 0 <= opacity_decimal <= 255:
+                form.instance.opacity = "{:02x}".format(opacity_decimal)
+            else:
+                raise ValueError("El valor está fuera del rango permitido (0-255).")
+        except ValueError:
+            try:
+                opacity_decimal = int(opacity, 16)
+                if 0 <= opacity_decimal <= 255:
+                    form.instance.opacity = opacity
+                else:
+                    raise ValueError("El valor hexadecimal está fuera del rango permitido (00-FF).")
+            except ValueError:
+                raise ValueError("El valor proporcionado para la opacidad no es válido.")
+
+    def process_images(self, theme, request):
+        """
+        Procesa y guarda las imágenes recortadas proporcionadas en el formulario.
+
+        Args:
+            theme (Theme): El objeto de tema que se está actualizando.
+            request (HttpRequest): El objeto de solicitud HTTP.
+        """
+        for field in ["sidebar_image", "lock_screen_image"]:
+            cropped_image_key = f"id_{field}_cropped"
+            if cropped_image_key in request.POST and request.POST[cropped_image_key]:
+                self.save_cropped_image(request, theme, field, cropped_image_key)
+
+    def save_cropped_image(self, request, theme, field, cropped_image_key):
+        """
+        Guarda la imagen recortada proporcionada en el formulario.
+
+        Args:
+            request (HttpRequest): El objeto de solicitud HTTP.
+            theme (Theme): El objeto de tema que se está actualizando.
+            field (str): El campo de imagen que se está actualizando.
+            cropped_image_key (str): La clave de la imagen recortada en la solicitud POST.
+        """
+        format, imgstr = request.POST[cropped_image_key].split(";base64,")
+        ext = format.split("/")[-1]
+        data = base64.b64decode(imgstr)
+
+        file_name = f"{field}_{theme.company.id}.{ext}"
+        file_path = os.path.join("uploads", file_name)
+
+        old_image = getattr(theme, field)
+        if old_image:
+            file_name, file_path = self.check_image_usage(theme, field, old_image, file_name, ext)
+
+        default_storage.save(file_path, ContentFile(data))
+        setattr(theme, field, file_path)
+
+    def check_image_usage(self, theme, field, old_image, file_name, ext):
+        """
+        Verifica si la imagen anterior está siendo usada por otros temas y actúa en consecuencia.
+
+        Args:
+            theme (Theme): El objeto de tema que se está actualizando.
+            field (str): El campo de imagen que se está actualizando.
+            old_image (File): La imagen anterior del campo.
+            file_name (str): El nombre del archivo nuevo.
+            ext (str): La extensión del archivo nuevo.
+
+        Returns:
+            tuple: El nombre y la ruta del archivo a guardar.
+        """
+        other_themes = Theme.objects.filter(**{f"{field}__name": old_image.name}).exclude(company=theme.company)
+        if other_themes.exists():
+            unique_suffix = f"_{theme.company.id}"
+            file_name = f"{field}{unique_suffix}.{ext}"
+            file_path = os.path.join("uploads", file_name)
+        else:
+            default_storage.delete(old_image.name)
+            file_path = os.path.join("uploads", file_name)
+        return file_name, file_path
+
+
+class ModuleTemplateView(PermissionRequiredMixin, LoginRequiredMixin, ListView):
     """
     Vista como clase que renderiza el template HTML que contiene la lista de modulos de cada empresa.
     """
 
-    template_name = "whitelabel/module/main_module.html"
-    permission_required = "whitelabel.view_module"
-
-
-class ModuleView(PermissionRequiredMixin, LoginRequiredMixin, generic.ListView):
-    """
-    Este código define una vista genérica basada en clases que lista todos los objetos del modelo "Module"
-    en la base de datos y agrega una lista de precios para cada empresa que posee un objeto de módulo a los
-    datos de contexto de la vista. Requiere permisos para ver módulos y requiere que el usuario haya iniciado sesión.
-    """
-
     model = Module
-    template_name = "whitelabel/module/list_create_module.html"
+    template_name = "whitelabel/module/main_module.html"
     login_url = "login"
     permission_required = "whitelabel.view_module"
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        user = self.request.user
-        if self.request.user.company_id == 1:
-            company = Company.objects.filter(visible=True, actived=True)
-            list_price = []
-            for companys in company:
-                total_price = 0
-                for modul in context["module_list"]:
-                    if companys.id == modul.company_id:
-                        total_price += modul.price
-                list_price.append(
-                    {"company_id": companys.id, "total_price": total_price}
-                )
-        else:
-            companies_monitor = user.companies_to_monitor.all()
-            if companies_monitor.exists():
-                company = companies_monitor.filter(visible=True)
-                list_price = []
-                for companys in company:
-                    total_price = 0
-                    for modul in context["module_list"]:
-                        if companys.id == modul.company_id:
-                            total_price += modul.price
-                    list_price.append(
-                        {"company_id": companys.id, "total_price": total_price}
-                    )
-            else:
-                company = Company.objects.filter(
-                    provider_id=user.company_id, visible=True
-                )
-                list_price = []
-                for companys in company:
-                    total_price = 0
-                    for modul in context["module_list"]:
-                        if companys.id == modul.company_id:
-                            total_price += modul.price
-                    list_price.append(
-                        {"company_id": companys.id, "total_price": total_price}
-                    )
-        context["list_price"] = list_price
-        context["company"] = company
-        return context
-
-
-class UpdateModuleView(PermissionRequiredMixin, LoginRequiredMixin, generic.UpdateView):
-    """
-    Este código define una vista genérica de actualización de un objeto del modelo Module, que
-    requiere permisosy autenticación de inicio de sesión. La vista maneja solicitudes GET y POST,
-    con lógica de validación de formularios.Si el formulario es válido, se actualiza la información
-    en la base de datos y se devuelve una respuesta de estado HTTP 204, y si no es válido, se
-    renderiza la plantilla de actualización de módulo con los errores del formulario.
-    """
-
-    model = Module
-    template_name = "whitelabel/module/update_module.html"
-    permission_required = "whitelabel.change_module"
-    form_class = Moduleform
-    success_url = reverse_lazy("companies:module")
-
-    def get_success_url(self):
-        # Asegúrate de que el nombre de la URL sea correcto y esté definido en tus archivos de URL.
-        return reverse("companies:module")
-
-    def get(self, request, *args, **kwargs):
-        company_id = self.kwargs.get("pk")
-        company = Company.objects.get(id=company_id)
-        modules = Module.objects.filter(company_id=company.id)
-
-        forms = [self.form_class(instance=module) for module in modules]  # Lista de formularios
-
-        return render(
-            request,
-            self.template_name,
-            {"forms": forms, "company": company}
-        )
-
-    def post(self, request, *args, **kwargs):
-        form = Moduleform(request.POST)
-        if form.is_valid():
-            price = form.data.getlist("price")
-            count = 0
-            for pk in form.data.getlist("id"):
-                # Obtiene cada objeto Module individualmente
-                module = Module.objects.get(id=pk)
-
-                # Actualiza el precio y el usuario que modificó
-                module.price = price[count]
-                module.modified_by = (
-                    request.user
-                )  # Asigna el usuario actual a 'modified_by'
-
-                # Guarda el objeto
-                module.save()
-
-                count += 1
-
-            page_update = HttpResponse(
-                ""
-            )  # O puedes enviar algún contenido si es necesario.
-            page_update["HX-Redirect"] = self.get_success_url()
-            return page_update
-        else:
-            return render(request, self.template_name, {"form": form})
-
-
-class ListProcessAddView(
-    PermissionRequiredMixin, LoginRequiredMixin, MultipleObjectMixin, generic.CreateView
-):
-    """
-    Vista de creación de procesos de lista.
-
-    Esta vista permite a los usuarios crear nuevos procesos de lista.
-    Los usuarios deben tener los permisos adecuados y estar autenticados para acceder a esta vista.
-
-    Atributos:
-        template_name (str): El nombre de la plantilla HTML para renderizar la vista.
-        permission_required (str): El permiso requerido para acceder a esta vista.
-        form_class (Form): La clase del formulario utilizado para crear nuevos procesos.
-    """
-
-    template_name = "whitelabel/process/main_process.html"
-    permission_required = "whitelabel.add_company"
-    form_class = ProcessForm
-    model = Process
 
     def get_paginate_by(self, queryset):
         """
@@ -719,88 +888,276 @@ class ListProcessAddView(
         Returns:
             int: El número de elementos a mostrar por página.
         """
-        return get_paginate_by(self.request)
+        user = self.request.user
+        params = self.request.GET if self.request.method == 'GET' else self.request.POST
+        if 'order_by' not in params and 'paginate_by' not in params and 'page' not in params:
+            # Limpiar los filtros de la sesión
+            if f"filters_sorted_module_{user.id}" in self.request.session:
+                del self.request.session[f"filters_sorted_module_{user.id}"]
+                self.request.session.modified = True
+        paginate_by = self.request.POST.get('paginate_by', None)  # Obtener paginate_by de los parámetros GET
+
+        if paginate_by is None:
+            session_filters = self.request.session.get(
+                f"filters_sorted_module_{self.request.user.id}", {}
+            )
+            paginate_by = session_filters.get("paginate_by", 10)
+            # Convertir a entero si es una lista
+            try:
+                paginate_by = int(
+                    paginate_by[0]
+                )  # Convertir el primer elemento de la lista a entero
+            except (TypeError, ValueError):
+                paginate_by = int(paginate_by) if paginate_by else 10
+            # Añadir paginate_by a self.request.GET para asegurar que esté presente
+            self.request.POST = self.request.POST.copy()
+            self.request.POST['paginate_by'] = paginate_by
+        return int(self.request.POST['paginate_by'])
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        list_price = []
+        params = self.request.GET if self.request.method == 'GET' else self.request.POST
+        query = params.get("query", "").lower()
+        search = params.get("q", query).lower()
+        if 'order_by' not in params and 'paginate_by' not in params and 'page' not in params:
+            # Limpiar los filtros de la sesión
+            if f"filters_sorted_module_{user.id}" in self.request.session:
+                del self.request.session[f"filters_sorted_module_{user.id}"]
+                self.request.session.modified = True
+        session_filters = self.request.session.get(
+                f"filters_sorted_module_{self.request.user.id}", {})
+        paginate_by = self.request.POST.get('paginate_by', None)
+        if paginate_by is None:
+            paginate_by = session_filters.get("paginate_by", 10)
+            # Convertir a entero si es una lista
+            try:
+                paginate_by = int(
+                    paginate_by[0]
+                )  # Convertir el primer elemento de la lista a entero
+            except (TypeError, ValueError):
+                paginate_by = int(paginate_by) if paginate_by else 10
+            # Añadir paginate_by a self.request.GET para asegurar que esté presente
+            self.request.POST = self.request.POST.copy()
+            self.request.POST['paginate_by'] = paginate_by
+        # Parámetros de ordenamiento por defecto
+        order_by = self.request.GET.get('order_by') or self.request.POST.get('order_by') or session_filters.get('order_by', ['company_name'])[0]
+        direction = self.request.GET.get('direction') or self.request.POST.get('direction') or session_filters.get('direction', ['asc'])[0]
+        # Actualizar los filtros con los parámetros actuales de la solicitud GET
+        session_filters.update(params)
+        # Actualizar los filtros de la sesión con los nuevos parámetros
+        self.request.session[
+            f"filters_sorted_module_{user.id}"
+        ] = session_filters
+        self.request.session.modified = True
+        queryset = get_modules_by_user(user.company_id, user.id, search)
+        # Subconsulta para calcular el total_price por compañía
+        total_price_subquery = (
+            Module.objects.filter(company_id=OuterRef("id"))
+            .values("company_id")
+            .annotate(total_price=Sum("price"))
+            .values("total_price")
+        )
+
+        # Anotar el nombre de la moneda y el total_price
+        annotated_queryset = Company.objects.filter(
+            visible=True, actived=True, id__in=[company["id"] for company in queryset]
+        ).annotate(
+            coin_name=F("coin__name"),  # Asegúrate de que la relación esté correcta
+            total_price=Subquery(total_price_subquery),
+        )
+
+        # Mapeo de los campos de ordenamiento permitidos
+        order_by_mapping = {
+            "company_name": "company_name",
+            "coin": "coin_name",
+            "total_price": "total_price",
+        }
+
+        # Validar el campo de ordenamiento
+        order_field = order_by_mapping.get(order_by, "company_name")
+
+        # Determinar el prefijo de ordenamiento
+        order_prefix = "-" if direction == "desc" else ""
+
+        # Ordenar por el campo especificado y dirección
+        sorted_queryset = annotated_queryset.order_by(f"{order_prefix}{order_field}")
+
+        # Paginación de compañías
+        paginator = Paginator(sorted_queryset, paginate_by)
+        page_number = self.request.POST.get('page', 1)
+        page_obj = paginator.get_page(page_number)
+        context["page_obj"] = page_obj
+
+        # Cargar módulos asociados y calcular precios
+        for company in page_obj:
+            modules = Module.objects.filter(company_id=company.id)
+            total_price = (
+                modules.aggregate(total_price=Sum("price"))["total_price"] or 0
+            )
+            list_price.append({"company_id": company.id, "total_price": total_price})
+
+        context["list_price"] = list_price
+        context["company"] = page_obj
+        context["paginate_by"] = paginate_by
+        context['order_by'] = order_by
+        context['direction'] = direction
+        context["object_list"] = Module.objects.filter(
+            company_id__in=[company.id for company in page_obj]
+        )
+        return context
+    
+    @method_decorator(csrf_protect)
+    def post(self, request, *args, **kwargs):
+        # Obtén el número de página desde la solicitud POST
+        page_number = request.POST.get('page', 1)
+        # Modifica la consulta para aplicar la paginación
+        self.object_list = self.get_queryset()
+        paginator = Paginator(self.object_list, self.get_paginate_by(None))
+        page_obj = paginator.get_page(page_number)
+        context = self.get_context_data(object_list=page_obj.object_list, page_obj=page_obj)
+        return self.render_to_response(context)
+
+class UpdateModuleView(PermissionRequiredMixin, LoginRequiredMixin, generic.UpdateView):
+    model = Module
+    template_name = "whitelabel/module/update_module.html"
+    permission_required = "whitelabel.change_module"
+    form_class = Moduleform
+    success_url = reverse_lazy("companies:module")
+    action = "update"
+
+    def get_success_url(self):
+        return reverse("companies:module")
+
+    def get(self, request, *args, **kwargs):
+        company_id = self.kwargs.get("pk")
+        company = get_object_or_404(Company, id=company_id)
+        modules = Module.objects.filter(company_id=company.id)
+
+        self.obj_before = copy.deepcopy(list(modules))
+        forms = [self.form_class(instance=module) for module in modules]
+
+        return render(request, self.template_name, {"forms": forms, "company": company})
+
+    def post(self, request, *args, **kwargs):
+        company_id = self.kwargs.get("pk")
+        company = get_object_or_404(Company, id=company_id)
+        price_list = request.POST.getlist("price")
+        id_list = request.POST.getlist("id")
+        count = 0
+
+        errors = []
+        self.obj_before = []
+        self.obj_after = []
+
+        for pk in id_list:
+            try:
+                module = Module.objects.get(id=pk)
+            except Module.DoesNotExist:
+                raise Http404(f"Module with id {pk} does not exist")
+
+            try:
+                self.obj_before.append(copy.deepcopy(module))
+                module.price = Decimal(price_list[count])
+                module.modified_by = request.user
+                module.save()
+                self.obj_after.append(copy.deepcopy(module))
+            except (InvalidOperation, ValueError) as e:
+                errors.append(f"El valor '{price_list[count]}' no es un número decimal válido. Error: {str(e)}")
+            count += 1
+
+        if errors:
+            modules = Module.objects.filter(company_id=company.id)
+            forms = [self.form_class(instance=module) for module in modules]
+            return render(request, self.template_name, {"forms": forms, "company": company, "errors": errors})
+
+        response = HttpResponse("")
+        response["HX-Redirect"] = self.get_success_url()
+        # Se revisa la existencia del método log_action
+        if hasattr(self, 'log_action'):
+            async_to_sync(self.log_action)()
+        else:
+            print("log_action no está definido en la clase.")
+        return response
+
+    def form_valid(self, form):
+        self.obj_after = form.instance
+        if hasattr(self, 'log_action'):
+            async_to_sync(self.log_action)()
+        else:
+            print("log_action no está definido en la clase.")
+        return super().form_valid(form)
+
+
+class ListProcessAddView(
+    PermissionRequiredMixin,
+    LoginRequiredMixin,
+    CreateAuditLogAsyncMixin,
+    generic.CreateView,
+    generic.ListView,
+):
+    template_name = "whitelabel/process/main_process.html"
+    permission_required = "whitelabel.add_company"
+    form_class = ProcessForm
+    model = Process
+    paginate_by = 10  # Establece un valor por defecto para la paginación
+
+    def get_success_url(self):
+        return reverse("companies:process")
+
+    def get_paginate_by(self, queryset):
+        paginate_by = self.request.GET.get("paginate_by", self.paginate_by)
+        try:
+            return int(paginate_by)
+        except (ValueError, TypeError):
+            return self.paginate_by
 
     def get_queryset(self):
-        """
-        Obtiene el conjunto de datos de los comandos de envío filtrados y ordenados.
-
-        Returns:
-            QuerySet: El conjunto de datos de los comandos de envío filtrados y ordenados.
-        """
         user = self.request.user
-
         return Process.objects.filter(company=user.company, visible=True).order_by(
             "process_type"
         )
 
-    def get(self, request, *args, **kwargs):
-        """
-        Método que maneja las solicitudes GET para esta vista.
-
-        Parámetros:
-        - request: La solicitud HTTP recibida.
-        - args: Argumentos posicionales adicionales.
-        - kwargs: Argumentos de palabras clave adicionales.
-
-        Retorna:
-        - La respuesta generada por la superclase.
-
-        """
-        self.object_list = self.get_queryset()
-        return super().get(request, *args, **kwargs)
-
     def get_context_data(self, **kwargs):
-        """
-        Obtiene el contexto de datos para renderizar la vista.
-
-        Args:
-            **kwargs: Argumentos clave adicionales.
-
-        Returns:
-            dict: El contexto de datos para renderizar la vista.
-        """
         context = super().get_context_data(**kwargs)
         user = self.request.user
-
+        first_process = (
+            Process.objects.filter(company=user.company, visible=True)
+            .order_by("id")
+            .first()
+        )
+        companies = get_user_companies(user)
         if user.company_id == 1:
-            context["form"].fields["company"].queryset = Company.objects.filter(
-                Q(provider_id=None, visible=True, actived=True)
-                | Q(provider_id=self.request.user.company_id)
-            )
+            context["form"].fields["company"].choices = companies
         else:
-            context["form"].fields["company"].queryset = Company.objects.filter(
-                Q(id=self.request.user.company_id)
-                | Q(provider_id=self.request.user.company_id),
-                visible=True,
-                actived=True,
-            )
-        # Simplificación directa para calcular start_number
-        page_number = context.get("page_obj").number if context.get("page_obj") else 1
+            context["form"].fields["company"].queryset = companies
+
+        paginator = Paginator(self.get_queryset(), self.get_paginate_by(None))
+        page = self.request.GET.get("page")
+        context["page_obj"] = paginator.get_page(page)
+        context["object_list"] = context["page_obj"].object_list
+
+        page_number = context["page_obj"].number if context["page_obj"] else 1
         context["start_number"] = (page_number - 1) * self.get_paginate_by(None)
+        button_color = self.request.user.company.theme_set.all().first().button_color
+        context["button_color"] = button_color
+        
+        context["process_admin"] = first_process.id
         return context
 
     def form_valid(self, form):
-        """
-        Realiza acciones cuando el formulario es válido.
-
-        Guarda el formulario y realiza acciones adicionales.
-
-        Args:
-            form (Form): El formulario válido.
-
-        Returns:
-            HttpResponse: Una respuesta HTTP con el estado 204 (Sin contenido) y encabezados adicionales.
-        """
-        form = form.save(commit=False)
-        form.modified_by = self.request.user
-        form.created_by = self.request.user
+        form.instance.modified_by = self.request.user
+        form.instance.created_by = self.request.user
         form.save()
-        return HttpResponse(status=204, headers={"HX-Trigger": "ListprocessChanged"})
+        return redirect(self.get_success_url())
 
 
 class UpdateProcessView(
-    PermissionRequiredMixin, LoginRequiredMixin, generic.UpdateView
+    PermissionRequiredMixin,
+    LoginRequiredMixin,
+    UpdateAuditLogAsyncMixin,
+    generic.UpdateView,
 ):
     """
     Vista de actualización de proceso.
@@ -827,7 +1184,9 @@ class UpdateProcessView(
     permission_required = "whitelabel.change_company"
     form_class = ProcessForm
     model = Process
-    success_url = reverse_lazy("whitelabel:list_process")
+
+    def get_success_url(self):
+        return reverse("companies:process")
 
     def get_context_data(self, **kwargs):
         """
@@ -841,6 +1200,13 @@ class UpdateProcessView(
 
         """
         context = super().get_context_data(**kwargs)
+        companies = get_user_companies(self.request.user)
+        if self.request.user.company_id == 1:
+            context["form"].fields["company"].choices = companies
+        else:
+            context["form"].fields["company"].queryset = companies
+        button_color = self.request.user.company.theme_set.all().first().button_color
+        context["button_color"] = button_color
         return context
 
     def form_valid(self, form):
@@ -854,14 +1220,18 @@ class UpdateProcessView(
             HttpResponse: Respuesta HTTP con estado 204 (Sin contenido) y encabezados adicionales.
 
         """
-        form = form.save(commit=False)
-        form.modified_by = self.request.user
-        form.save()
-        return HttpResponse(status=204, headers={"HX-Trigger": "ListprocessChanged"})
+
+        form.instance.modified_by = self.request.user
+        form.instance.created_by = self.request.user
+        response = super().form_valid(form)
+        return redirect(self.get_success_url())
 
 
 class DeleteProcessView(
-    PermissionRequiredMixin, LoginRequiredMixin, generic.UpdateView
+    PermissionRequiredMixin,
+    LoginRequiredMixin,
+    DeleteAuditLogAsyncMixin,
+    generic.UpdateView,
 ):
     """
     Vista de clase para eliminar un proceso.
@@ -883,8 +1253,11 @@ class DeleteProcessView(
 
     model = Process
     template_name = "whitelabel/process/delete_process.html"
-    permission_required = "whitelabel.delete_process"
+    permission_required = "whitelabel.delete_company"
     fields = ["visible"]
+
+    def get_success_url(self):
+        return reverse("companies:process")
 
     def form_valid(self, form):
         """
@@ -901,13 +1274,13 @@ class DeleteProcessView(
             HttpResponse: La respuesta HTTP con el código de estado 204 y el encabezado "HX-Trigger
             : ListprocessChanged".
         """
-        form = form.save(commit=False)
-        form.visible = False
-        form.save()
-        return HttpResponse(status=204, headers={"HX-Trigger": "ListprocessChanged"})
+        form.instance.visible = False
+        # Llama al método form_valid de la clase padre para registrar la acción en el log de auditoría
+        response = super().form_valid(form)
+        return redirect(self.get_success_url())
 
 
-class ListTicketTemplate(LoginRequiredMixin, generic.ListView):
+class ListTicketTemplate(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     """
     Class-based view that renders the HTML template containing the list of tickets.
     """
@@ -926,7 +1299,24 @@ class ListTicketTemplate(LoginRequiredMixin, generic.ListView):
         Returns:
             int: El número de elementos a mostrar por página.
         """
-        return get_paginate_by(self.request)
+        paginate_by = self.request.POST.get('paginate_by', None)  # Obtener paginate_by de los parámetros POST
+
+        if paginate_by is None:
+            session_filters = self.request.session.get(
+                f"filters_sorted_ticketsopen_{self.request.user.id}", {}
+            )
+            paginate_by = session_filters.get("paginate_by", 15)
+            # Convertir a entero si es una lista
+            try:
+                paginate_by = int(
+                    paginate_by[0]
+                )  # Convertir el primer elemento de la lista a entero
+            except (TypeError, ValueError):
+                paginate_by = int(paginate_by) if paginate_by else 15
+            # Añadir paginate_by a self.request.GET para asegurar que esté presente
+            self.request.POST = self.request.POST.copy()
+            self.request.POST['paginate_by'] = paginate_by
+        return int(self.request.POST['paginate_by'])
 
     def get_queryset(self):
         """
@@ -937,9 +1327,85 @@ class ListTicketTemplate(LoginRequiredMixin, generic.ListView):
         """
         user = self.request.user
         tickets = get_ticket_by_user(user.id)
-        company = user.company
+        params = self.request.GET if self.request.method == 'GET' else self.request.POST
+        query = params.get("query", "").lower()
+        search = params.get("q", "").lower()
 
-        return tickets
+        if "query" in params:
+            tickets = [
+                ticket
+                for ticket in tickets
+                if (
+                    query in str(ticket.get("id", "")).lower()
+                    or query in str(ticket.get("subject", "")).lower()
+                    or query in str(ticket.get("company", "")).lower()
+                    or query in str(ticket.get("process_type", "")).lower()
+                    or query in str(ticket.get("created_by", "")).lower()
+                )
+            ]
+        if search:
+            tickets = [
+                ticket
+                for ticket in tickets
+                if (
+                    query in str(ticket.get("id", "")).lower()
+                    or query in str(ticket.get("subject", "")).lower()
+                    or query in str(ticket.get("company", "")).lower()
+                    or query in str(ticket.get("process_type", "")).lower()
+                    or query in str(ticket.get("created_by", "")).lower()
+                )
+            ]
+
+        tickets.sort(
+            key=lambda ticket: ticket["last_comment"] or datetime.min, reverse=True
+        )
+
+        # Parámetros de ordenamiento por defecto
+        order_by = params.get("order_by", "last_comment")
+        direction = params.get("direction", "desc")
+        if 'order_by' not in params and 'paginate_by' not in params and 'page' not in params:
+            # Limpiar los filtros de la sesión
+            if f"filters_sorted_ticketsopen_{user.id}" in self.request.session:
+                del self.request.session[f"filters_sorted_ticketsopen_{user.id}"]
+                self.request.session.modified = True
+        # Recuperar filtros almacenados en la sesión
+        session_filters = self.request.session.get(f'filters_sorted_ticketsopen_{user.id}', {})
+        order_by = params.get('order_by', session_filters.get('order_by', ['last_comment'])[0])
+        direction = params.get('direction', session_filters.get('direction',['desc'])[0])
+        # Actualizar los filtros con los parámetros actuales de la solicitud GET
+        session_filters.update(params)
+        # Actualizar los filtros de la sesión con los nuevos parámetros
+        self.request.session[
+            f"filters_sorted_ticketsopen_{user.id}"
+        ] = session_filters
+        self.request.session.modified = True
+        # Función para convertir los valores a minúsculas y extraer números cuando sea necesario
+        def sort_key(x):
+            value = x.get(order_by)
+            if value is None or value == "":
+                return (4, "")  # Prioridad 4 para valores nulos o vacíos
+            if isinstance(value, str):
+                # Verificar si comienza con números, letras o caracteres especiales
+                if value[0].isdigit():
+                    return (1, extract_number(value))  # Prioridad 1 para números
+                elif value[0].isalpha():
+                    return (2, value.lower())  # Prioridad 2 para letras
+                else:
+                    return (3, value.lower())  # Prioridad 3 para caracteres especiales
+            return value
+
+        # Determinar si es orden descendente
+        reverse = direction == "desc"
+
+        try:
+            sorted_queryset = sorted(tickets, key=sort_key, reverse=reverse)
+        except KeyError:
+            # Ordenamiento por defecto si la clave no existe
+            sorted_queryset = sorted(
+                tickets, key=lambda x: x["last_comment"].lower(), reverse=reverse
+            )
+
+        return sorted_queryset
 
     def get_context_data(self, **kwargs):
         """
@@ -952,38 +1418,129 @@ class ListTicketTemplate(LoginRequiredMixin, generic.ListView):
             dict: El contexto de datos para renderizar la vista.
         """
         context = super().get_context_data(**kwargs)
+        paginate_by = self.get_paginate_by(None)
+        context["paginate_by"] = paginate_by
         # Simplificación directa para calcular start_number
         page_number = context.get("page_obj").number if context.get("page_obj") else 1
         context["start_number"] = (page_number - 1) * self.get_paginate_by(None)
+        session_filters = self.request.session.get(f'filters_sorted_ticketsopen_{self.request.user.id}', {})
+        # Obtener el ordenamiento desde la solicitud actual
+        order_by = self.request.GET.get('order_by') or self.request.POST.get('order_by') or session_filters.get('order_by', ['last_comment'])[0]
+        direction = self.request.GET.get('direction') or self.request.POST.get('direction') or session_filters.get('direction', ['desc'])[0]
+        context['order_by'] = order_by
+        context['direction'] = direction
         return context
+    
+    @method_decorator(csrf_protect)
+    def post(self, request, *args, **kwargs):
+        # Obtén el número de página desde la solicitud POST
+        page_number = request.POST.get('page', 1)
+        # Modifica la consulta para aplicar la paginación
+        self.object_list = self.get_queryset()
+        paginator = Paginator(self.object_list, self.get_paginate_by(None))
+        page_obj = paginator.get_page(page_number)
+        context = self.get_context_data(object_list=page_obj.object_list, page_obj=page_obj)
+        return self.render_to_response(context)
+    
+from django.core.mail import EmailMessage
+from django.template.loader import render_to_string
+
+from config.settings import EMAIL_HOST_USER
 
 
-class CreateTicketView(LoginRequiredMixin, generic.CreateView):
-    model = Ticket
+def sending_mail(email, ticket,asunto, message, user, prioridad, attachments=None):
+    # Renderizar el mensaje HTML con los datos proporcionados
+    confirmation_html_message = render_to_string('whitelabel/tickets/confirmation_email.html', {'message': message, 'ticket': ticket, 'asunto': asunto})
+    
+    # Crear el correo
+    confirmation_email = EmailMessage(
+        f"{ticket} {asunto} {prioridad}",  # Asunto del correo
+        confirmation_html_message,  # Mensaje HTML
+        EMAIL_HOST_USER,  # Remitente
+        [email]  # Destinatario
+    )
+    confirmation_email.content_subtype = 'html'
+    
+    # Añadir adjuntos
+    if attachments:
+        for attachment in attachments:
+            confirmation_email.attach(attachment.name, attachment.read(), attachment.content_type)
+    
+    confirmation_email.send()
+    
+class CreateTicketView(
+    PermissionRequiredMixin,
+    LoginRequiredMixin,
+    CreateAuditLogSyncMixin,
+    generic.CreateView,
+):
+    """
+    Vista de creación de tickets.
+
+    Esta vista permite a los usuarios crear nuevos tickets. Hereda de la clase CreateView de Django
+    y utiliza el formulario TicketCrearte para la validación de datos.
+
+    Atributos:
+        template_name (str): El nombre de la plantilla HTML utilizada para renderizar la vista.
+        form_class (Form): La clase del formulario utilizado para la validación de datos.
+
+    Métodos:
+        get_success_url(): Retorna la URL a la que se redirige después de crear exitosamente un ticket.
+        get_context_data(**kwargs): Retorna el contexto de datos utilizado para renderizar la vista.
+        handle_attachment_errors(form, attachment_form): Maneja los errores relacionados con los archivos adjuntos.
+        form_valid(form): Maneja la lógica cuando el formulario es válido.
+    """
+
     template_name = "whitelabel/tickets/add_ticket.html"
-    form_class = TicketForm
+    form_class = TicketCrearte
+    permission_required = "whitelabel.add_ticket"
 
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs["company"] = self.request.user.company
-        return kwargs
+    def get_success_url(self):
+        """
+        Retorna la URL a la que se redirige después de crear exitosamente un ticket.
+        """
+        return reverse_lazy("companies:main_ticket")
 
     def get_context_data(self, **kwargs):
+        """
+        Retorna el contexto de datos utilizado para renderizar la vista.
+
+        Args:
+            **kwargs: Argumentos clave adicionales.
+
+        Returns:
+            dict: El contexto de datos utilizado para renderizar la vista.
+        """
         context = super().get_context_data(**kwargs)
-        context[
-            "message_form"
-        ] = MessageForm()  # Agregar el formulario de mensaje al contexto
-        context[
-            "attachment_form"
-        ] = AttachmentForm()  # Agregar el formulario de adjunto al contexto
-        context["process_form"] = ProcessForm()
+        user = self.request.user
+        company = self.request.user.company
+        provider = company.provider_id
+        if provider is None:
+            provider = 1
+        context["company"] = company.id
+        context["provider"] = provider
+        context["message_form"] = MessageForm()
+        context["attachment_form"] = AttachmentForm()
+        button_color = self.request.user.company.theme_set.all().first().button_color
+        context["button_color"] = button_color
         return context
 
     def handle_attachment_errors(self, form, attachment_form):
+        """
+        Maneja los errores relacionados con los archivos adjuntos.
+
+        Verifica el tamaño y el formato de los archivos adjuntos y muestra mensajes de error si es necesario.
+
+        Args:
+            form (Form): El formulario principal.
+            attachment_form (Form): El formulario de archivos adjuntos.
+
+        Returns:
+            None: Si no hay errores relacionados con los archivos adjuntos.
+            HttpResponse: Si hay errores relacionados con los archivos adjuntos y se devuelve una respuesta HTTP.
+        """
         files = self.request.FILES.getlist("file")
-        total_size = sum(file.size for file in files) / (
-            1024 * 1024
-        )  # Tamaño total en MB
+        total_size = sum(file.size for file in files) / (1024 * 1024)
         if total_size > 7:
             messages.error(
                 self.request,
@@ -992,10 +1549,26 @@ class CreateTicketView(LoginRequiredMixin, generic.CreateView):
             return self.form_invalid(form)
 
         allowed_formats = [
-            "pdf", "docx", "doc", "txt", "xlsx", "xls", "zip", "exe",
-            "jpg", "png", "jpeg", "msg", "cfg", "mp4", "rar", "xim", "eml", 
+            "cfg",
+            "csv",
+            "doc",
+            "docx",
+            "eml",
+            "exe",
+            "jpeg",
+            "jpg",
+            "mp4",
+            "msg",
+            "pdf",
+            "png",
+            "rar",
+            "txt",
+            "xim",
+            "xls",
+            "xlsx",
+            "xml",
+            "zip",
         ]
-
         for file in files:
             file_extension = file.name.split(".")[-1].lower()
             if file_extension not in allowed_formats:
@@ -1008,18 +1581,54 @@ class CreateTicketView(LoginRequiredMixin, generic.CreateView):
         return None
 
     def form_valid(self, form):
+        """
+        Maneja la lógica cuando el formulario es válido.
+
+        Realiza las siguientes acciones:
+        - Asigna el usuario actual y la compañía al ticket.
+        - Asigna la compañía proveedora seleccionada al ticket si se proporciona.
+        - Maneja los errores relacionados con los archivos adjuntos.
+        - Guarda el ticket.
+        - Guarda el mensaje asociado al ticket.
+        - Guarda los archivos adjuntos asociados al ticket.
+
+        Args:
+            form (Form): El formulario válido.
+
+        Returns:
+            HttpResponse: Una respuesta HTTP vacía con una cabecera de redirección a la URL de éxito.
+        """
         company = self.request.user.company
         form.instance.created_by = self.request.user
         form.instance.company = company
+        selected_provider_id = self.request.POST.get("id_distributor")
+
+        if selected_provider_id:
+            selected_provider = get_object_or_404(Company, id=selected_provider_id)
+            form.instance.provider_company = selected_provider
+            form.instance.company = selected_provider
+
+        if not selected_provider_id and "id_interns" in self.request.POST:
+            # Verifica si company_id_tk existe en la columna provider del modelo Company
+            is_provider = Company.objects.filter(provider=company.id).exists()
+            if is_provider:
+                form.instance.provider_company = company
+            else:
+                form.instance.customer_company = company
+            form.instance.company = company
 
         attachment_form = AttachmentForm(self.request.POST, self.request.FILES)
         attachment_error = self.handle_attachment_errors(form, attachment_form)
         if attachment_error:
             return attachment_error
 
-        # Guardar el ticket
-        response = super().form_valid(form)
+        # Verificar si el formulario es válido
+        if not form.is_valid():
+            print("Form is not valid:", form.errors)
+            return self.form_invalid(form)
 
+        # Guardar el ticket primero
+        ticket = super().form_valid(form)
         # Obtener el número de mensajes del ticket
         message_count = self.object.messages.count()
 
@@ -1029,65 +1638,156 @@ class CreateTicketView(LoginRequiredMixin, generic.CreateView):
             message = message_form.save(commit=False)
             message.user = self.request.user
             message.ticket = self.object
-            # Incrementar el contador de mensajes antes de guardar el mensaje
             message_count += 1
-
-            # Asignar el número de mensaje al mensaje actual
             message.number = message_count
             message.save()
+        else:
+            print("Message form is not valid:", message_form.errors)
 
         # Guardar los adjuntos
         files = self.request.FILES.getlist("file")
+        attachments = []
         for file in files:
-            # Generar nuevo nombre de archivo
             new_file_name = f"{self.object.id}_{message_count}_{file.name}"
-
-            # Guardar el archivo con el nuevo nombre
             file.name = new_file_name
+            attachment = Attachment.objects.create(
+                ticket=self.object, file=file, message=message
+            )
+            attachments.append(attachment)
 
-            Attachment.objects.create(ticket=self.object, file=file, message=message)
+        # Registrar la acción en el log de auditoría con datos adicionales
+        self.log_additional_data(form, message_form, attachments)
+        
+        # # Llamar a la función de envío de correo
+        # sending_mail(
+        # email=self.request.user.email,
+        # ticket=str(self.object.id),
+        # asunto=form.cleaned_data['subject'],
+        # message=message.text,
+        # user=self.request.user,
+        # prioridad=form.cleaned_data['priority'],
+        # attachments=files
+        # )
+        # Prepara una respuesta con redirección usando HTMX
+        page_update = HttpResponse("")
+        page_update["HX-Redirect"] = self.get_success_url()
+        return page_update
 
-        return HttpResponse(status=204, headers={"HX-Trigger": "ListTicketChanged"})
+    def log_additional_data(self, ticket_form, message_form, attachments):
+        """
+        Registra los datos adicionales en el log de auditoría.
+        """
+        user = self.request.user
+        company_id = getattr(user, "company_id", None)
+        view_name = self.__class__.__name__
+        ip_address = asyncio.run(obtener_ip_publica(self.request))
 
-    def get_success_url(self):
-        return reverse_lazy("companies:main_ticket")
+        before = {}
+        after = {
+            "ticket": model_to_dict(ticket_form.instance),
+            "message": model_to_dict(message_form.instance)
+            if message_form.is_valid()
+            else {},
+            "attachments": [model_to_dict(att) for att in attachments],
+        }
+
+        before_json = json.dumps(before, default=str)
+        after_json = json.dumps(after, default=str)
+
+        log_action(
+            user=user,
+            company_id=company_id,
+            view_name=view_name,
+            action="create",
+            before=before_json,
+            after=after_json,
+            ip_address=ip_address,
+        )
 
 
-class ViewTicketView(LoginRequiredMixin, generic.DetailView):
+class ViewTicketView(
+    LoginRequiredMixin,
+    PermissionRequiredMixin,
+    CreateAuditLogSyncMixin,
+    generic.DetailView,
+):
     model = Ticket
     template_name = "whitelabel/tickets/view_ticket.html"
     context_object_name = "ticket"
+    permission_required = "whitelabel.change_ticket"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user  # Obtener el usuario actual
         company = self.request.user.company
+        company_queryset = Company.objects.filter(
+            id=company.id, visible=True, actived=True
+        )
 
         # Obtener las compañías proveedoras y clientes finales
         if user.company.id == 1:  # Si la empresa es la principal (Condicional para AZ)
             # Obtener todos los clientes distribuidores y clientes finales
-            provider_companies = Company.objects.filter(provider=None)
-            customer_companies = Company.objects.filter(provider=user.company)
+            provider_companies = Company.objects.filter(
+                provider=None, visible=True, actived=True
+            )
+            customer_companies = Company.objects.filter(
+                provider=user.company, visible=True, actived=True
+            )
 
-        # Logica para que le muestre a la empresa distribuidora solo a su proveedor
+        # Lógica para que le muestre a la empresa distribuidora solo a su proveedor
         elif self.object.company.provider is None:
             # Obtener las compañías proveedoras y las compañías de clientes del usuario actual
-            provider_companies = Company.objects.filter(id=1)
-            customer_companies = Company.objects.filter(provider=user.company).exclude(
-                id=user.company_id
+            provider_companies = Company.objects.filter(
+                id=1, visible=True, actived=True
             )
+            customer_companies = Company.objects.filter(
+                provider=user.company, visible=True, actived=True
+            ).exclude(id=user.company_id)
 
-        # Logica para que le muestre a la empresa final solo a su proveedor
+        # Lógica para que le muestre a la empresa final solo a su proveedor
         elif self.object.company.provider is not None:
-            provider_companies = Company.objects.filter(customer=user.company)
-            customer_companies = Company.objects.filter(provider=user.company).exclude(
-                customer=user.company
+            provider_companies = Company.objects.filter(
+                customer=user.company, visible=True, actived=True
+            )
+            customer_companies = Company.objects.filter(
+                provider=user.company, visible=True, actived=True
+            ).exclude(customer=user.company)
+        first_process = (
+            Process.objects.filter(company=user.company, visible=True)
+            .order_by("id")
+            .first()
+        )
+        if first_process == user.process_type:
+            context["process_user"] = 1
+        else:
+            context["process_user"] = 0
+        context["has_provider"] = company.provider is not None
+        if user.company.id == 1:
+            company_all = Company.objects.filter(visible=True, actived=True)
+            combined_companies = []
+            for company in company_all:
+                if company.provider_id:
+                    provider_company = Company.objects.filter(
+                        id=company.provider_id, visible=True, actived=True
+                    ).first()
+                    modified_name = (
+                        f"{company.company_name} -- {provider_company.company_name}"
+                        if provider_company
+                        else company.company_name
+                    )
+                else:
+                    modified_name = company.company_name
+                combined_companies.append((company.id, modified_name))
+        else:
+            combined_companies = list(
+                (provider_companies | customer_companies | company_queryset)
+                .distinct()
+                .values_list("id", "company_name")
             )
 
-        context["has_provider"] = company.provider is not None
+        combined_companies = sorted(combined_companies, key=lambda x: x[1])
+        context["provider_companies"] = combined_companies
 
-        context["provider_companies"] = provider_companies
-        context["customer_companies"] = customer_companies
         # Obtener la compañía y el proceso del ticket
         company_tk = self.object.company
         process = self.object.process_type
@@ -1122,8 +1822,25 @@ class ViewTicketView(LoginRequiredMixin, generic.DetailView):
         return context
 
     def post(self, request, *args, **kwargs):
-        self.object = self.get_object()  # Asegúrate de obtener el objeto ticket actual
+        send = False
+        close_ticket = False
+        if request.POST.get("Send"):
+            send = True
+        if request.POST.get("close_ticket"):
+            close_ticket = True
+        self.object = self.get_object()
         id_ticket = self.object.id
+        user_tk = self.object.assign_to_id
+
+        if request.POST.get("Reopen"):
+            # Actualiza el estado del ticket y guarda los cambios (Reabrir)
+            self.object.status = True
+            self.object.closed_at = None
+            self.object.save()
+            page_update = HttpResponse("")
+            page_update["HX-Redirect"] = self.get_success_url_closed()
+
+            return page_update
 
         # Obtén el objeto Ticket con el id específico
         ticket = Ticket.objects.get(id=id_ticket)
@@ -1132,10 +1849,21 @@ class ViewTicketView(LoginRequiredMixin, generic.DetailView):
         company_id_tk = ticket.company_id
 
         # Verifica si company_id_tk existe en la columna provider del modelo Company
-        is_provider = Company.objects.filter(provider=company_id_tk).exists()
+        is_provider = Company.objects.filter(
+            provider=company_id_tk, visible=True, actived=True
+        ).exists()
 
         # Procesamiento del formulario TicketForm
         ticket_form = TicketForm(request.POST, instance=self.object)
+
+        # Verificar si se ha enviado el valor de company_id desde JavaScript
+        company_id = request.POST.get("provider_company")
+        if company_id:
+            processes = Process.objects.filter(
+                company_id=company_id, visible=True
+            ).values("id", "process_type")
+            if not send and not close_ticket:
+                return JsonResponse({"success": True, "processes": list(processes)})
 
         # Verificar si se ha enviado el valor de process_type desde JavaScript
         process_type_id = request.POST.get("process_type")
@@ -1144,7 +1872,17 @@ class ViewTicketView(LoginRequiredMixin, generic.DetailView):
             if process_type != self.object.process_type:
                 self.object.process_type = process_type
                 self.object.assign_to = None  # Desasigna el usuario
-                self.object.save()
+                if send:
+                    self.object.save()
+
+            # Obtener la lista de usuarios asignados para este proceso
+            users = User.objects.filter(
+                process_type=process_type,
+                company=self.request.user.company,
+                visible=True,
+            ).values("id", "username")
+            if not send and not close_ticket:
+                return JsonResponse({"success": True, "users": list(users)})
 
         if ticket_form.is_valid():
             ticket = ticket_form.save(commit=False)
@@ -1169,7 +1907,13 @@ class ViewTicketView(LoginRequiredMixin, generic.DetailView):
         # Obtener el ID de la compañía proveedora y cliente seleccionada
         provider_company_id = request.POST.get("provider_company")
         customer_company_id = request.POST.get("customer_company")
-        
+        is_provider = Company.objects.filter(
+            provider=provider_company_id, visible=True, actived=True
+        ).exists()
+        provider_company_id_int = int
+        if provider_company_id:
+            provider_company_id_int = int(provider_company_id)
+
         # Procesamiento de los formularios del mensaje y adjuntos
 
         message_form = MessageForm(request.POST)
@@ -1179,8 +1923,25 @@ class ViewTicketView(LoginRequiredMixin, generic.DetailView):
         attachment_error = None
         max_size_mb = 7
         allowed_formats = [
-            "pdf", "docx", "doc", "txt", "xlsx", "xls", "zip", "exe",
-            "jpg", "png", "jpeg", "msg", "cfg", "mp4", "rar", "xim", "eml",
+            "cfg",
+            "csv",
+            "doc",
+            "docx",
+            "eml",
+            "exe",
+            "jpeg",
+            "jpg",
+            "mp4",
+            "msg",
+            "pdf",
+            "png",
+            "rar",
+            "txt",
+            "xim",
+            "xls",
+            "xlsx",
+            "xml",
+            "zip",
         ]
 
         files = request.FILES.getlist("file")
@@ -1215,6 +1976,7 @@ class ViewTicketView(LoginRequiredMixin, generic.DetailView):
             message.save()
 
         files = request.FILES.getlist("file")
+        attachments = []
         for file in files:
             # Generar nuevo nombre de archivo
             new_file_name = f"{self.object.id}_{message_count}_{file.name}"
@@ -1222,39 +1984,96 @@ class ViewTicketView(LoginRequiredMixin, generic.DetailView):
             # Guardar el archivo con el nuevo nombre
             file.name = new_file_name
 
-            Attachment.objects.create(ticket=self.object, file=file, message=message)
+            attachment = Attachment.objects.create(
+                ticket=self.object, file=file, message=message
+            )
+            attachments.append(attachment)
+
+        # Registrar la acción en el log de auditoría con datos adicionales
+        self.log_additional_data(ticket_form, message_form, attachments)
 
         # Verifica si se hizo clic en el botón para cerrar el ticket
         if "close_ticket" in request.POST:
             self.object.status = False  # Marca el ticket como cerrado
+            self.object.closed_at = timezone.now()
             self.object.save()
-
         # Asignar el ticket al usuario seleccionado
-        if user_id:
+        if user_id is not None and user_id != "" and user_id:
             self.object.assign_to_id = user_id
             self.object.save()
 
+        elif company_id_tk != provider_company_id_int:
+            self.object.assign_to_id = None
+            self.object.save()
+        else:
+            if company_id_tk == provider_company_id_int:
+                if user_id is None:
+                    self.object.assign_to_id = None
+                    self.object.save()
+            else:
+                self.object.assign_to_id = user_tk
+                self.object.save()
+
         # Asignar la compañía proveedora y cliente seleccionada al ticket
         if provider_company_id or customer_company_id:
+            provider_company = Company.objects.get(id=provider_company_id)
             if provider_company_id:
-                provider_company = Company.objects.get(id=provider_company_id)
                 if self.request.user.company_id != provider_company_id:
                     self.object.company = provider_company
                     # Actualizar la compañía del ticket si la compañía que asigna es diferente a la compañía proveedora
-                self.object.provider_company = provider_company
-            if customer_company_id:
-                customer_company = Company.objects.get(id=customer_company_id)
+                if is_provider:
+                    self.object.customer_company = None
+                    self.object.provider_company = provider_company
+            if not is_provider:
+                self.object.provider_company = None
                 if self.request.user.company_id != customer_company_id:
-                    self.object.company = customer_company
+                    self.object.company = provider_company
                     # Actualizar la compañía del ticket si la compañía que asigna es diferente a la compañía cliente
-                self.object.customer_company = customer_company
+                self.object.customer_company = provider_company
             self.object.save()
-        if is_provider:
-            company_instance = Company.objects.get(id=company_id_tk)
-            # Asignar la instancia de Company al campo provider_company del ticket
-            self.object.provider_company = company_instance
-            self.object.save()
-        return HttpResponse(status=204, headers={"HX-Trigger": "ListTicketChanged"})
+        page_update = HttpResponse(
+            ""
+        )  # O puedes enviar algún contenido si es necesario.
+        page_update["HX-Redirect"] = self.get_success_url()
+
+        return page_update
+
+    def get_success_url_closed(self):
+        return reverse_lazy("companies:closed_tickets")
+
+    def get_success_url(self):
+        return reverse_lazy("companies:main_ticket")
+
+    def log_additional_data(self, ticket_form, message_form, attachments):
+        """
+        Registra los datos adicionales en el log de auditoría.
+        """
+        user = self.request.user
+        company_id = getattr(user, "company_id", None)
+        view_name = self.__class__.__name__
+        ip_address = asyncio.run(obtener_ip_publica(self.request))
+
+        before = model_to_dict(self.object)  # Cambios antes de la actualización
+        after = {
+            "ticket": model_to_dict(ticket_form.instance),
+            "message": model_to_dict(message_form.instance)
+            if message_form.is_valid()
+            else {},
+            "attachments": [model_to_dict(att) for att in attachments],
+        }
+
+        before_json = json.dumps(before, default=str)
+        after_json = json.dumps(after, default=str)
+
+        log_action(
+            user=user,
+            company_id=company_id,
+            view_name=view_name,
+            action="update",
+            before=before_json,
+            after=after_json,
+            ip_address=ip_address,
+        )
 
 
 class CommentTicketView(LoginRequiredMixin, generic.CreateView):
@@ -1282,22 +2101,443 @@ class CommentTicketView(LoginRequiredMixin, generic.CreateView):
         )
 
 
-class ClosedTicketsView(LoginRequiredMixin, generic.ListView):
+@method_decorator(csrf_exempt, name="dispatch")
+class ClosedTicketsView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     model = Ticket
     template_name = "whitelabel/tickets/closed_tickets.html"
     context_object_name = "closed_tickets"
+    permission_required = "whitelabel.view_ticket"
+
+    def get_paginate_by(self, queryset):
+        paginate_by = self.request.POST.get('paginate_by', None)  # Obtener paginate_by de los parámetros POST
+        if paginate_by is None:
+            session_filters = self.request.session.get(
+                f"filters_{self.request.user.id}", {}
+            )
+            paginate_by = session_filters.get("paginate_by", 15)
+            # Convertir a entero si es una lista
+            try:
+                paginate_by = int(paginate_by) or int(
+                    paginate_by[0]
+                )  # Convertir el primer elemento de la lista a entero
+            except (TypeError, ValueError):
+                paginate_by = int(paginate_by) if paginate_by else 15
+            # Añadir paginate_by a self.request.GET para asegurar que esté presente
+            self.request.POST = self.request.POST.copy()
+            self.request.POST['paginate_by'] = paginate_by
+        return int(self.request.POST['paginate_by'])
+
+    def get_filtered_tickets(self, user_company, user, params, is_post=False):
+        tickets = get_ticket_closed(user_company, user)
+        tickets_all = tickets
+        for ticket in tickets:
+            ticket["rating_range"] = range(ticket["rating"] or 0)
+
+            if ticket["duration"]:
+                duration_parts = ticket["duration"].split(",")
+                ticket["days"] = int(duration_parts[0])
+                ticket["hours"] = int(duration_parts[1])
+                ticket["minutes"] = int(duration_parts[2])
+                ticket["seconds"] = int(duration_parts[3])
+            else:
+                ticket["days"] = 0
+                ticket["hours"] = 0
+                ticket["minutes"] = 0
+                ticket["seconds"] = 0
+
+            ticket["user_created"] = (
+                1 if self.request.user.username == ticket["created_by"] else 0
+            )
+
+        date_from = params.get("date_from", "")
+        date_to = params.get("date_to", "")
+        company_id = params.get("company", "")
+        assignment = params.get("assignment", "")
+        filter_pressed = params.get("filter", "")
+        status = params.get("status", "")
+        query = params.get("query", "").lower()
+        search = params.get("q", "").lower()
+
+        if "query" in params:
+            tickets = [
+                ticket
+                for ticket in tickets
+                if (
+                    query in str(ticket.get("id", "")).lower()
+                    or query in str(ticket.get("subject", "")).lower()
+                    or query in str(ticket.get("company", "")).lower()
+                    or query in str(ticket.get("process_type", "")).lower()
+                    or query in str(ticket.get("created_by", "")).lower()
+                )
+            ]
+        if search and filter_pressed:
+            tickets = [
+                ticket
+                for ticket in tickets
+                if (
+                    query in str(ticket.get("id", "")).lower()
+                    or query in str(ticket.get("subject", "")).lower()
+                    or query in str(ticket.get("company", "")).lower()
+                    or query in str(ticket.get("process_type", "")).lower()
+                    or query in str(ticket.get("created_by", "")).lower()
+                )
+            ]
+
+        if status:
+            if status == "open":
+                tickets = [ticket for ticket in tickets if ticket["status"]]
+            elif status == "closed":
+                tickets = [ticket for ticket in tickets if not ticket["status"]]
+        if date_from:
+            date_from_date = parse_datetime(date_from)
+            tickets = [
+                ticket for ticket in tickets if ticket["created_at"] >= date_from_date
+            ]
+        if date_to:
+            date_to_date = parse_datetime(date_to)
+            tickets = [
+                ticket for ticket in tickets if ticket["created_at"] <= date_to_date
+            ]
+        if company_id:
+            users_in_company = User.objects.filter(company_id=company_id)
+            tickets_commented_by_users = (
+                Message.objects.filter(user__in=users_in_company)
+                .values_list("ticket_id", flat=True)
+                .distinct()
+            )
+
+            tickets = [
+                ticket
+                for ticket in tickets
+                if ticket["created_by"] in users_in_company
+                or ticket["id"] in tickets_commented_by_users
+            ]
+        if assignment:
+            if assignment == "assigned":
+                tickets = [ticket for ticket in tickets if ticket["assign_to"]]
+            elif assignment == "unassigned":
+                tickets = [ticket for ticket in tickets if not ticket["assign_to"]]
+
+        if (
+            not company_id
+            and not status
+            and not assignment
+            and not date_from
+            and not date_to
+            and not search
+            and not "paginate_by" in params
+            and not query
+            and (filter_pressed or not filter_pressed)
+        ):
+            # Limpiar los filtros de la sesión
+            if f"filters_{user}" in self.request.session:
+                del self.request.session[f"filters_{user}"]
+                self.request.session.modified = True
+            return tickets_all
+
+        tickets.sort(
+            key=lambda ticket: ticket["last_comment"] or datetime.min, reverse=True
+        )
+        
+        return tickets
 
     def get_queryset(self):
-        # Filtrar los tickets cerrados por la empresa del usuario logueado
-        user_company = self.request.user.company
-        return Ticket.objects.filter(
-            Q(company=user_company)
-            | Q(provider_company_id=user_company)
-            | Q(customer_company_id=user_company),
-            status=False,
-        ).order_by("-last_comment")
+        user_company = self.request.user.company_id
+        user = self.request.user.id
+        params = self.request.GET if self.request.method == 'GET' else self.request.POST
+        # Verificar si alguno de los parámetros requeridos no está presente
+        if not ("paginate_by" in params or "page" in params or "order_by" in params):
+            # Limpiar los filtros de la sesión
+            if f"filters_{user}" in self.request.session:
+                del self.request.session[f"filters_{user}"]
+                self.request.session.modified = True
+        # Recuperar filtros almacenados en la sesión
+        session_filters = self.request.session.get(f"filters_{user}", {})
+        # Crear un nuevo QueryDict para almacenar los filtros combinados
+        combined_params = QueryDict("", mutable=True)
+        combined_params.update(session_filters)
 
+        # Actualizar con los parámetros de la solicitud
+        for key, value in params.items():
+            if value:
+                combined_params[key] = value
+        # Actualizar los filtros de la sesión con los nuevos parámetros
+        self.request.session[f"filters_{user}"] = combined_params.dict()
+        self.request.session.modified = True
+        # Manejo especial para el parámetro 'q'
+        if "q" in params:
+            if combined_params.get("query", "") == "":
+                combined_params["query"] = params["q"]
+        # Actualizar params con el valor de 'query' de combined_params si está vacío
+        if "query" in combined_params:
+            if params.get("query", [""])[0] == "":
+                params = params.copy()  # Hacer una copia mutable de params si es necesario
+                params["query"] = combined_params["query"]
+        session_filters = self.request.session[f"filters_{user}"]
+        # Manejo del parámetro 'paginate_by'
+        if "paginate_by" not in params or params["paginate_by"] == "":
+            combined_params["paginate_by"] = session_filters.get("paginate_by", 15)
+        # Eliminar csrfmiddlewaretoken de los parámetros combinados
+        if "csrfmiddlewaretoken" in combined_params:
+            del combined_params["csrfmiddlewaretoken"]
+        tickets = self.get_filtered_tickets(user_company, user, combined_params)
+        # Parámetros de ordenamiento por defecto
+        order_by = self.request.GET.get('order_by') or self.request.POST.get('order_by') or session_filters.get('order_by', ['last_comment'])[0]
+        direction = self.request.GET.get('direction') or self.request.POST.get('direction') or session_filters.get('direction', ['desc'])[0]
+        # Aplicar ordenamiento si hay filtro de ordenamiento activo
+        if "order_by" in params:
+            try:
+                tickets_order = sorted(
+                    tickets,
+                    key=lambda x: self.sort_key(x[order_by]),
+                    reverse=(direction == "desc"),
+                )
+            except KeyError:
+                # Ordenamiento por defecto si la clave no existe
+                tickets_order = sorted(
+                    tickets,
+                    key=lambda x: x["last_comment"],
+                    reverse=(direction == "desc"),
+                )
+            return tickets_order
 
-class ClienteListAPIView(generics.ListAPIView):
-    queryset = Company.objects.filter(visible = True, actived = True)
-    serializer_class = ClienteSerializer
+        return tickets  # Devolver tickets sin ordenamiento si no hay filtro de ordenamiento activo
+
+    def sort_key(self, value):
+        if value is None or value == "":
+            return (4, "")  # Prioridad 4 para valores nulos o vacíos
+        if isinstance(value, str):
+            # Verificar si comienza con números, letras o caracteres especiales
+            if value[0].isdigit():
+                return (1, extract_number(value))  # Prioridad 1 para números
+            elif value[0].isalpha():
+                return (2, value.lower())  # Prioridad 2 para letras
+            else:
+                return (3, value.lower())  # Prioridad 3 para caracteres especiales
+        return value
+
+    def get_context_data(self, **kwargs):
+        # Asegúrate de que el queryset esté definido
+        if not hasattr(self, 'object_list'):
+            self.object_list = self.get_queryset()
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        companies = get_user_companies(user)
+        if user.company_id == 1:
+            context["companies"] = companies
+        else:
+            companies_list = list(companies.values_list("id", "company_name"))
+            context["companies"] = companies_list
+
+        tickets = self.get_queryset()
+        session_filters = self.request.session.get(f"filters_{user.id}", {})
+        page_size = session_filters.get("paginate_by", 15)
+        paginator = Paginator(tickets, page_size)
+        page_number = 1
+
+        if "page" in self.request.POST:
+            page_number = self.request.GET.get('page', session_filters.get('page', [1]))[0]
+        try:
+            page = paginator.page(page_number)
+        except PageNotAnInteger:
+            page = paginator.page(1)
+        except EmptyPage:
+            page = paginator.page(paginator.num_pages)
+        context["paginator"] = paginator
+        context["page_obj"] = page
+        context[self.context_object_name] = page.object_list
+        context["is_paginated"] = page.has_other_pages()
+        paginate_by = session_filters.get("paginate_by", 15)
+        context["paginate_by"] = paginate_by
+
+        querydict = self.request.POST.copy()
+        # Eliminar parámetros de paginación de la URL visible
+        if "page" in querydict:
+            querydict.pop("page")
+
+        if "paginate_by" in querydict:
+            querydict.pop("page", None)
+
+        # Recuperar los filtros combinados para la URL
+        combined_params = self.request.session.get(f"filters_{user.id}", {})
+        if "csrfmiddlewaretoken" in combined_params:
+            del combined_params["csrfmiddlewaretoken"]
+        if "csrfmiddlewaretoken" in querydict:
+            del querydict["csrfmiddlewaretoken"]
+        for key, value in combined_params.items():
+            if key != "page":  # No volver a incluir 'page' en la URL
+                querydict.setlist(key, value if isinstance(value, list) else [value])
+        context["query_string"] = querydict.urlencode()
+        # Añadir los filtros combinados al contexto para el formulario
+        context["combined_params"] = combined_params
+
+        # Añadir el número de página actual al contexto (oculto)
+        context["hidden_params"] = {"page": page_number}
+
+        page_number = context.get("page_obj").number if context.get("page_obj") else 1
+        context["start_number"] = (page_number - 1) * self.get_paginate_by(None)
+        session_filters = self.request.session.get(f'filters_{self.request.user.id}', {})
+        # Obtener el ordenamiento desde la solicitud actual
+        order_by = self.request.GET.get('order_by') or self.request.POST.get('order_by') or session_filters.get('order_by', ['last_comment'])[0]
+        direction = self.request.GET.get('direction') or self.request.POST.get('direction') or session_filters.get('direction', ['desc'])[0]
+        context['order_by'] = order_by
+        context['direction'] = direction
+        return context
+
+    @method_decorator(csrf_protect)
+    def post(self, request, *args, **kwargs):
+        if "rate_ticket" in request.POST:
+            ticket_id = request.POST.get("ticket_id")
+            rating = request.POST.get("rating")
+            try:
+                ticket = Ticket.objects.get(id=ticket_id)
+                if (
+                    ticket.status == False and ticket.rating is None
+                ):  # Solo permitir calificación si el ticket está cerrado
+                    ticket.rating = rating
+                    ticket.save()
+                    return JsonResponse({"success": True})
+                else:
+                    return JsonResponse(
+                        {"success": False, "error": "Ticket not eligible for rating"}
+                    )
+            except Ticket.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Ticket not found"})
+        
+        elif "order_by" in request.POST or "paginate_by" in request.POST or "page" in request.POST:
+            # Lógica para renderizar la página
+
+            # Obtén el número de página desde la solicitud POST
+            page_number = request.POST.get('page', 1)
+            # Actualizar los filtros almacenados en la sesión
+            user = request.user.id
+            session_filters = self.request.session.get(f"filters_{user}", {})
+            params = request.POST.copy()
+            for key, value in params.items():
+                if value:
+                    session_filters[key] = value
+            self.request.session[f"filters_{user}"] = session_filters
+            self.request.session.modified = True
+            # Obtener datos filtrados
+            tickets = self.get_filtered_tickets(request.user.company_id, user, session_filters)
+            
+            # Ordenar los tickets
+            order_by = self.request.GET.get('order_by') or self.request.POST.get('order_by') or session_filters.get('order_by', ['last_comment'])[0]
+            direction = self.request.GET.get('direction') or self.request.POST.get('direction') or session_filters.get('direction', ['desc'])[0]
+            def sort_key(x):
+                value = x.get(order_by)
+                if value is None or value == "":
+                    return (4, "")  # Prioridad 4 para valores nulos o vacíos
+                if isinstance(value, str):
+                    # Verificar si comienza con números, letras o caracteres especiales
+                    if value[0].isdigit():
+                        return (1, extract_number(value))  # Prioridad 1 para números
+                    elif value[0].isalpha():
+                        return (2, value.lower())  # Prioridad 2 para letras
+                    else:
+                        return (3, value.lower())  # Prioridad 3 para caracteres especiales
+                return value
+
+            # Determinar si es orden descendente
+            reverse = direction == "desc"
+
+            try:
+                tickets_order = sorted(tickets, key=sort_key, reverse=reverse)
+            except KeyError:
+                # Ordenamiento por defecto si la clave no existe
+                tickets_order = sorted(
+                    tickets, key=lambda x: x["last_comment"].lower(), reverse=reverse
+                )
+
+            # Configurar la paginación
+            paginator = Paginator(tickets_order, session_filters.get("paginate_by", 15))
+            page_number = request.POST.get('page', 1)
+            try:
+                tickets_page = paginator.page(page_number)
+            except PageNotAnInteger:
+                tickets_page = paginator.page(1)
+            except EmptyPage:
+                tickets_page = paginator.page(paginator.num_pages)
+            # Preparar el contexto para renderizar la plantilla
+            context = self.get_context_data()
+            context.update({
+            "tickets_page": tickets_page,
+            "is_paginated": tickets_page.has_other_pages(),
+            "order_by": order_by,
+            "direction": direction,
+            "paginate_by": session_filters.get("paginate_by", 15),
+            })
+
+            return self.render_to_response(context)
+        
+        else:
+            user_company = request.user.company_id
+            user = request.user.id
+            params = request.POST.copy()
+            # Recuperar filtros almacenados en la sesión
+            session_filters = self.request.session.get(f"filters_{user}", {})
+            for key, value in session_filters.items():
+                if key not in params:
+                    params[key] = value
+            # Actualizar los filtros de la sesión con los nuevos parámetros
+            self.request.session[f"filters_{user}"] = params.dict()
+            self.request.session.modified = True
+            tickets = self.get_filtered_tickets(user_company, user, params)
+            # Paginar los tickets antes de pasar a get_pagination_data
+            page_size = session_filters.get("paginate_by", 15)
+            paginator = Paginator(tickets, page_size)
+            page_number = request.POST.get('page', session_filters.get('page', [1]))[0]
+            try:
+                tickets_page = paginator.page(page_number)
+            except PageNotAnInteger:
+                tickets_page = paginator.page(1)
+            except EmptyPage:
+                tickets_page = paginator.page(paginator.num_pages)
+
+            # Convertir el objeto `range` a una lista
+            for ticket in tickets_page:
+                if "rating_range" in ticket:
+                    ticket["rating_range"] = list(ticket["rating_range"])
+
+            formatted_results = []
+            for ticket in tickets_page:
+                formatted_results.append(
+                    {
+                        "id": ticket["id"],
+                        "created_by": ticket["created_by"] or "",
+                        "subject": ticket["subject"] or "",
+                        "priority": ticket["priority"] or "",
+                        "process_type": ticket["process_type"] or "",
+                        "assign_to": ticket.get("assign_to") or "Unassigned",
+                        "status": "Open" if ticket["status"] else "Closed",
+                        "created_at": ticket["created_at"].strftime('%Y-%m-%d %H:%M:%S') or "",
+                        "last_comment": ticket["last_comment"].strftime('%Y-%m-%d %H:%M:%S') or "",
+                        "rating": ticket["rating"] or "",
+                        "user_created": ticket["user_created"],
+                        "days": ticket["days"],
+                        "hours": ticket["hours"],
+                        "minutes": ticket["minutes"],
+                    }
+                )
+
+            page_data = self.get_pagination_data(tickets_page)
+            return JsonResponse(
+                {"success": True, "results": formatted_results, "page": page_data}
+            )
+
+    def get_pagination_data(self, tickets_page):
+        paginator = tickets_page.paginator
+        page = tickets_page
+
+        return {
+            "has_previous": page.has_previous(),
+            "has_next": page.has_next(),
+            "number": page.number,
+            "num_pages": paginator.num_pages,
+            "start_index": page.start_index(),
+            "end_index": page.end_index(),
+            "total_items": paginator.count,
+            "query_string": self.request.GET.urlencode()
+            if self.request.method == "GET"
+            else self.request.POST.urlencode(),
+        }

@@ -17,7 +17,7 @@
 
         <h5>{{ user.username }}</h5>
 
-        <form hx-post="{{ request.path }}" action="{% url 'set_language' %}" enctype="multipart/form-data">
+        <form hx-post="{{ request.path }}" hx-target="#modal-content" action="{% url 'set_language' %}" enctype="multipart/form-data">
           {% csrf_token %}
 
           <!-- Agregar un mensaje de restricciones -->
@@ -49,7 +49,7 @@
                   <li class="list-group-item">
                       <strong>{% translate 'Password' %}</strong>
                       <span class="password-toggle"><a type="button" hx-get="{% url 'Password' %}"
-                        hx-target="#dialog">{% trans 'Change password' %}</a></span>
+                        hx-target="#modal .modal-content">{% trans 'Change password' %}</a></span>
                 </li>
               </div>
               <div class="col">

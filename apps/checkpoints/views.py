@@ -1,3 +1,4 @@
+import asyncio
 import json
 from datetime import date, timedelta
 
@@ -7,6 +8,7 @@ from django.contrib.auth.mixins import (LoginRequiredMixin,
 from django.core.paginator import Paginator
 from django.db import connection
 from django.db.models import Q
+from django.forms.models import model_to_dict
 from django.http import (Http404, HttpResponse, HttpResponseRedirect,
                          JsonResponse)
 from django.shortcuts import get_object_or_404, redirect, render
@@ -15,60 +17,151 @@ from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _
 from django.views import View, generic
 from django.views.decorators import cache, csrf
-from django.views.generic import (CreateView, FormView, ListView, TemplateView,
-                                  UpdateView)
+from django.views.decorators.csrf import csrf_protect
+from django.views.generic import ListView
 from django.views.generic.detail import SingleObjectMixin
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.events.models import Event, EventFeature
-from apps.realtime.models import AVLData, Vehicle
+from apps.log.mixins import (CreateAuditLogAsyncMixin,
+                             DeleteAuditLogAsyncMixin,
+                             UpdateAuditLogAsyncMixin, obtener_ip_publica)
+from apps.log.utils import log_action
+from apps.realtime.apis import extract_number, get_user_companies, sort_key
+from apps.realtime.models import AVLData, Device, Vehicle
 from apps.realtime.serializer import AVLDataSerializer
+from apps.realtime.sql import fetch_all_dataplan
 from apps.whitelabel.models import Company
+from config.pagination import get_paginate_by
 
-from .forms import (CompanyScoreForm, DriverAnalyticForm, DriverForm,
-                    ItemScoreFormsets, ReportDriverForm, ReportTodayForm)
-from .models import (CompanyScoreSetup, Driver, DriverAnalytic, FatigueControl,
-                     ItemScore, ItemScoreSetup)
+from .forms import (CompanyScoreForm, DataSemConfigurationForm,
+                    DriverAnalyticForm, DriverForm, ItemScoreFormsets,
+                    ReportDriverForm, ReportTodayForm)
+from .models import (Advanced_Analytical, CompanyScoreSetup, Driver,
+                     DriverAnalytic, FatigueControl, ItemScore, ItemScoreSetup)
 from .postgres import GeocodingService, connect_db
-from .sql import get_drivers_list, getCompanyScoresByCompanyAndUser
+from .sql import (fetch_all_confidatasem, get_drivers_list,
+                  getCompanyScoresByCompanyAndUser)
 
 
-class ListDriverTemplate(PermissionRequiredMixin, LoginRequiredMixin, TemplateView):
+class ListDriverTemplate(PermissionRequiredMixin, LoginRequiredMixin, ListView):
     """
     Vista como clase que renderiza el template HTML que contiene la lista de conductores
     creados por una empresa (distribuidor).
     """
 
+    model = Driver
     template_name = "checkpoints/driver/main_drivers.html"
     permission_required = "checkpoints.view_driver"
+
+    def get_paginate_by(self, queryset):
+        """
+        Obtiene el número de elementos a mostrar por página.
+
+        Args:
+            queryset (QuerySet): El conjunto de datos de la consulta.
+
+        Returns:
+            int: El número de elementos a mostrar por página.
+        """
+        paginate_by = self.request.POST.get('paginate_by', None)  # Obtener paginate_by de los parámetros GET
+
+        if paginate_by is None:
+            session_filters = self.request.session.get(
+                f"filters_sorted_driver_{self.request.user.id}", {}
+            )
+            paginate_by = session_filters.get("paginate_by", 15)
+            # Convertir a entero si es una lista
+            try:
+                paginate_by = int(
+                    paginate_by[0]
+                )  # Convertir el primer elemento de la lista a entero
+            except (TypeError, ValueError):
+                paginate_by = int(paginate_by) if paginate_by else 15
+            # Añadir paginate_by a self.request.GET para asegurar que esté presente
+            self.request.POST = self.request.POST.copy()
+            self.request.POST['paginate_by'] = paginate_by
+        return int(self.request.POST['paginate_by'])
+    
+    def get_queryset(self):
+        """
+        Obtiene el conjunto de datos de los planes de datos reales de la compañía asociada al
+        usuario que realiza la solicitud.
+
+        Returns:
+            List[dict]: Lista de planes de datos ordenada por 'Company' en forma descendente.
+        """
+        user = self.request.user
+        company = user.company
+        params = self.request.GET if self.request.method == 'GET' else self.request.POST
+        query = params.get("query", "").lower()
+        search = params.get("q", query).lower()
+        # Parámetros de ordenamiento por defecto
+        if 'order_by' not in params and 'paginate_by' not in params and 'page' not in params:
+            # Limpiar los filtros de la sesión
+            if f"filters_sorted_driver_{user.id}" in self.request.session:
+                del self.request.session[f"filters_sorted_driver_{user.id}"]
+                self.request.session.modified = True
+        # Recuperar filtros almacenados en la sesión
+        session_filters = self.request.session.get(f'filters_sorted_driver_{user.id}', {})
+        order_by = params.get('order_by', session_filters.get('order_by', ['company'])[0])
+        direction = params.get('direction', session_filters.get('direction',['asc'])[0])
+        # Actualizar los filtros con los parámetros actuales de la solicitud GET
+        session_filters.update(params)
+        # Actualizar los filtros de la sesión con los nuevos parámetros
+        self.request.session[f'filters_sorted_driver_{user.id}'] = session_filters
+        self.request.session.modified = True
+        # Obtener los planes de datos a través de la función fetch_all_dataplan.
+        queryset = get_drivers_list(company.id, user.id, search)
+
+        # Función para convertir los valores a minúsculas y extraer números cuando sea necesario
+        key_function = sort_key(order_by)
+        reverse = direction == 'desc'
+        try:
+            sorted_queryset = sorted(queryset, key=key_function, reverse=reverse)
+        except KeyError:
+            # Ordenamiento por defecto si la clave no existe
+            sorted_queryset = sorted(
+                queryset, key=lambda x: x["company"].lower(), reverse=reverse
+            )
+
+        return sorted_queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context.update({"pk": self.request.user.company_id})
+        paginate_by = self.get_paginate_by(None)
+        context["paginate_by"] = paginate_by
+        # Simplificación directa para calcular start_number
+        page_number = context.get("page_obj").number if context.get("page_obj") else 1
+        context["start_number"] = (page_number - 1) * self.get_paginate_by(None)
+        session_filters = self.request.session.get(f'filters_sorted_driver_{self.request.user.id}', {})
+        # Obtener el ordenamiento desde la solicitud actual
+        order_by = self.request.GET.get('order_by') or self.request.POST.get('order_by') or session_filters.get('order_by', ['company'])[0]
+        direction = self.request.GET.get('direction') or self.request.POST.get('direction') or session_filters.get('direction', ['asc'])[0]
+        context['order_by'] = order_by
+        context['direction'] = direction
         return context
+    
+    @method_decorator(csrf_protect)
+    def post(self, request, *args, **kwargs):
+        # Obtén el número de página desde la solicitud POST
+        page_number = request.POST.get('page', 1)
+        # Modifica la consulta para aplicar la paginación
+        self.object_list = self.get_queryset()
+        paginator = Paginator(self.object_list, self.get_paginate_by(None))
+        page_obj = paginator.get_page(page_number)
+        context = self.get_context_data(object_list=page_obj.object_list, page_obj=page_obj)
+        return self.render_to_response(context)
 
 
-class ListDriversView(PermissionRequiredMixin, LoginRequiredMixin, ListView):
-    """
-    Vista como clase que permite al usuario (distribuidor) visualizar los conductores
-    creados para sus clientes finales, su configuración  y acceder a las opción para
-    editar, añadir y eliminar.
-    """
-
-    model = Driver
-    template_name = "checkpoints/driver/list_drivers_company.html"
-    permission_required = "checkpoints.view_driver"
-    context_object_name = "list_drivers"
-
-    def get_queryset(self):
-        # Llamamos al metodo get_drivers_list y nos retorna la lista de conductores.
-        queryset = get_drivers_list(self.request.user.company_id)
-
-        return queryset
-
-
-class AddDriverView(PermissionRequiredMixin, LoginRequiredMixin, CreateView):
+class AddDriverView(
+    PermissionRequiredMixin,
+    LoginRequiredMixin,
+    CreateAuditLogAsyncMixin,
+    generic.CreateView,
+):
     """
     Vista como clase que implementa la opción de crear conductores para las empresas
     distribuidoras y asignarlas a un cliente final.
@@ -79,6 +172,12 @@ class AddDriverView(PermissionRequiredMixin, LoginRequiredMixin, CreateView):
     template_name = "checkpoints/driver/add_driver.html"
     permission_required = "checkpoints.add_driver"
     form_class = DriverForm
+
+    def get_success_url(self):
+        """
+        Devuelve la URL a la que se redirige después de una eliminación exitosa.
+        """
+        return reverse("checkpoints:list_drivers")
 
     def clean_date_joined(self):
         date_joined = self.cleaned_data.get("date_joined")
@@ -91,38 +190,35 @@ class AddDriverView(PermissionRequiredMixin, LoginRequiredMixin, CreateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context = super().get_context_data(**kwargs)
-        company_id = self.request.user.company_id
-        if self.request.user.company_id == 1:
-            companies = Company.objects.filter(
-            visible=True, actived=True)
-        # Caso 2: Si el usuario tiene compañías para monitorear, mostrar solo esas
-        elif self.request.user.companies_to_monitor.exists():
-            companies = self.request.user.companies_to_monitor.filter(visible=True, actived=True)  
+        user = self.request.user
+        companies = get_user_companies(user)
+        if user.company_id == 1:
+            context["form"].fields["company"].choices = companies
         else:
-            companies = Company.objects.filter(
-                Q(id=self.request.user.company_id)
-                | Q(provider_id=self.request.user.company_id),
-                visible=True,
-                actived=True,
-            )
-        # Ordenar el queryset
-        companies = companies.order_by('company_name')
-
-        # Asignar el queryset ordenado al campo del formulario
-        context["form"].fields["company"].queryset = companies
+            context["form"].fields["company"].queryset = companies
+        button_color = self.request.user.company.theme_set.all().first().button_color
+        context["button_color"] = button_color
         return context
 
     def form_valid(self, form):
         form.instance.created_by = self.request.user
         form.instance.modified_by = self.request.user
-
+        # Llama al método form_valid de la clase padre para registrar la acción en el log de auditoría
+        response = super().form_valid(form)
         form.save()
 
-        return HttpResponse(status=204, headers={"HX-Trigger": "ListDriverChanged"})
+        # Prepara una respuesta con redirección usando HTMX
+        page_update = HttpResponse("")
+        page_update["HX-Redirect"] = self.get_success_url()
+        return page_update
 
 
-class UpdateDriverView(PermissionRequiredMixin, LoginRequiredMixin, UpdateView):
+class UpdateDriverView(
+    PermissionRequiredMixin,
+    LoginRequiredMixin,
+    UpdateAuditLogAsyncMixin,
+    generic.UpdateView,
+):
     """
     Vista como clase que implementa la opción de editar la configuración personalizada
     de conductores para las empresas distribuidoras.
@@ -134,36 +230,43 @@ class UpdateDriverView(PermissionRequiredMixin, LoginRequiredMixin, UpdateView):
     form_class = DriverForm
     success_url = "/checkpoints/drivers"
 
+    def get_success_url(self):
+        """
+        Devuelve la URL a la que se redirige después de una eliminación exitosa.
+        """
+        return reverse("checkpoints:list_drivers")
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        company_id = self.request.user.company_id
-        if self.request.user.company_id == 1:
-            companies = Company.objects.filter(
-            visible=True, actived=True)
-        # Caso 2: Si el usuario tiene compañías para monitorear, mostrar solo esas
-        elif self.request.user.companies_to_monitor.exists():
-            companies = self.request.user.companies_to_monitor.filter(visible=True, actived=True)  
+        user = self.request.user
+        companies = get_user_companies(user)
+        if user.company_id == 1:
+            context["form"].fields["company"].choices = companies
         else:
-            companies = Company.objects.filter(
-                Q(id=self.request.user.company_id)
-                | Q(provider_id=self.request.user.company_id),
-                visible=True,
-                actived=True,
-            )
-        # Ordenar el queryset
-        companies = companies.order_by('company_name')
+            context["form"].fields["company"].queryset = companies
 
-        # Asignar el queryset ordenado al campo del formulario
-        context["form"].fields["company"].queryset = companies
+        button_color = self.request.user.company.theme_set.all().first().button_color
+        context["button_color"] = button_color
         return context
 
     def form_valid(self, form):
         form.instance.modified_by = self.request.user
+        # Llama al método form_valid de la clase padre para registrar la acción en el log de auditoría
+        response = super().form_valid(form)
         form.save()
-        return HttpResponse(status=204, headers={"HX-Trigger": "ListDriverChanged"})
+
+        # Prepara una respuesta con redirección usando HTMX
+        page_update = HttpResponse("")
+        page_update["HX-Redirect"] = self.get_success_url()
+        return page_update
 
 
-class DeleteDriverView(PermissionRequiredMixin, LoginRequiredMixin, generic.UpdateView):
+class DeleteDriverView(
+    PermissionRequiredMixin,
+    LoginRequiredMixin,
+    DeleteAuditLogAsyncMixin,
+    generic.UpdateView,
+):
     """
     Este código define una vista de Django que implementa la eliminación de una instancia del
     modelo "Driver". En lugar de eliminar el objeto, se establece el valor de la propiedad
@@ -178,15 +281,27 @@ class DeleteDriverView(PermissionRequiredMixin, LoginRequiredMixin, generic.Upda
     success_url = reverse_lazy("checkpoints:list_driver_created")
     fields = ["visible"]
 
+    def get_success_url(self):
+        """
+        Devuelve la URL a la que se redirige después de una eliminación exitosa.
+        """
+        return reverse("checkpoints:list_drivers")
+
     def form_valid(self, form):
         driver = form.save(commit=False)
         driver.modified_by = self.request.user
         driver.visible = False
+        # Llama al método form_valid de la clase padre para registrar la acción en el log de auditoría
+        response = super().form_valid(form)
         driver.save()
-        return HttpResponse(status=204, headers={"HX-Trigger": "ListDriverChanged"})
+
+        # Prepara una respuesta con redirección usando HTMX
+        page_update = HttpResponse("")
+        page_update["HX-Redirect"] = self.get_success_url()
+        return page_update
 
 
-class BottonView(LoginRequiredMixin, TemplateView):
+class BottonView(LoginRequiredMixin, generic.TemplateView):
     """
     Vista intermedia que redirecciona la solicitud enviada a través del botón que asigna
     un vehículo a un conductor teniendo en cuenta si el conductor tiene o no un vehículo
@@ -220,11 +335,14 @@ class BottonView(LoginRequiredMixin, TemplateView):
                 return HttpResponseRedirect(
                     reverse("checkpoints:update_assign", args=(kwargs.get("pk"),))
                 )
-        except Exception:
-            return reverse_lazy("checkpoints:list_drivers")
+        except Exception as e:
+            print(f"Error: {e}")
+            return HttpResponseRedirect(reverse_lazy("checkpoints:list_drivers"))
 
 
-class AddAssignDriverView(LoginRequiredMixin, CreateView):
+class AddAssignDriverView(
+    LoginRequiredMixin, CreateAuditLogAsyncMixin, generic.CreateView
+):
     """
     Vista como clase que permite a los usuarios (distribuidores) asignar un vehículo a un conductor
     por primera vez.
@@ -233,6 +351,10 @@ class AddAssignDriverView(LoginRequiredMixin, CreateView):
     model = DriverAnalytic
     form_class = DriverAnalyticForm
     template_name = "checkpoints/driver_analytic/assign_driver.html"
+
+    def get_success_url(self):
+        # Asegúrate de que el nombre de la URL sea correcto y esté definido en tus archivos de URL.
+        return reverse("checkpoints:list_drivers")
 
     def get_context_data(self, **kwargs):
         """
@@ -251,17 +373,27 @@ class AddAssignDriverView(LoginRequiredMixin, CreateView):
         )
         context["form"].fields["vehicle"].queryset = assigned_vehicle
         context.update({"Driver": driver, "pk": self.kwargs.get("pk")})
+        button_color = self.request.user.company.theme_set.all().first().button_color
+        context["button_color"] = button_color
         return context
 
     def form_valid(self, DriverAnalitycForm):
+        print(self.request.POST)
         DriverAnalitycForm.instance.driver_id = self.kwargs.get("pk")
         DriverAnalitycForm.instance.created_by = self.request.user
         DriverAnalitycForm.instance.modified_by = self.request.user
         DriverAnalitycForm.save()
-        return HttpResponse(status=204, headers={"HX-Trigger": "ListDriverChanged"})
+        # Llama al método form_valid de la clase padre para registrar la acción en el log de auditoría
+        response = super().form_valid(DriverAnalitycForm)
+        # Prepara una respuesta con redirección usando HTMX
+        page_update = HttpResponse("")
+        page_update["HX-Redirect"] = self.get_success_url()
+        return page_update
 
 
-class UpdateAssignDriverView(LoginRequiredMixin, CreateView):
+class UpdateAssignDriverView(
+    LoginRequiredMixin, CreateAuditLogAsyncMixin, generic.CreateView
+):
     """
     Vista como clase que permite a los usuarios (distribuidores) añadir más vehículos a un
     conductor que ya cuenta con un vehículo asignado.
@@ -270,6 +402,10 @@ class UpdateAssignDriverView(LoginRequiredMixin, CreateView):
     model = DriverAnalytic
     form_class = DriverAnalyticForm
     template_name = "checkpoints/driver_analytic/update_assign.html"
+
+    def get_success_url(self):
+        # Asegúrate de que el nombre de la URL sea correcto y esté definido en tus archivos de URL.
+        return reverse("checkpoints:list_drivers")
 
     def get_context_data(self, **kwargs):
         """
@@ -286,7 +422,6 @@ class UpdateAssignDriverView(LoginRequiredMixin, CreateView):
         assigned_vehicle = Vehicle.objects.filter(
             company_id=driver_company, visible=True, driveranalytic__isnull=True
         )
-
         context["form"].fields["vehicle"].queryset = assigned_vehicle
         context.update(
             {
@@ -295,6 +430,8 @@ class UpdateAssignDriverView(LoginRequiredMixin, CreateView):
                 "pk": self.kwargs.get("pk"),
             }
         )
+        button_color = self.request.user.company.theme_set.all().first().button_color
+        context["button_color"] = button_color
         return context
 
     def form_valid(self, form):
@@ -321,7 +458,12 @@ class UpdateAssignDriverView(LoginRequiredMixin, CreateView):
             form.add_error("date_joined", msg)
             return self.form_invalid(form)
         form.save()
-        return HttpResponse(status=204, headers={"HX-Trigger": "ListDriverChanged"})
+        # Llama al método form_valid de la clase padre para registrar la acción en el log de auditoría
+        response = super().form_valid(form)
+        # Prepara una respuesta con redirección usando HTMX
+        page_update = HttpResponse("")
+        page_update["HX-Redirect"] = self.get_success_url()
+        return page_update
 
     def form_invalid(self, form):
         """
@@ -331,17 +473,38 @@ class UpdateAssignDriverView(LoginRequiredMixin, CreateView):
         return self.render_to_response(self.get_context_data(form=form))
 
 
-class UpdateVehicleAssignView(LoginRequiredMixin, UpdateView):
+class UpdateVehicleAssignView(
+    LoginRequiredMixin, UpdateAuditLogAsyncMixin, generic.UpdateView
+):
     model = DriverAnalytic
     form_class = DriverAnalyticForm
     template_name = "checkpoints/driver_analytic/update_vehicle_assign.html"
 
     def get_context_data(self, **kwargs):
+        """
+        Esta función consulta los vehículos ya asignados al conductor y los retorna,
+        para ser mostrados en el template.
+        """
         context = super().get_context_data(**kwargs)
+        Company = self.request.user.company
+        #  Filtrar los dispositivos que ya están asignados a un vehículo
+        assigned_vehicle = Vehicle.objects.filter(
+            company_id=Company,
+            visible=True,
+            is_active=True,
+            # driveranalytic__isnull=True,
+        )
+        context["form"].fields["vehicle"].queryset = assigned_vehicle
+        button_color = self.request.user.company.theme_set.all().first().button_color
+        context["button_color"] = button_color
         return context
 
     def form_valid(self, form):
+        """
+        Verifica las validaciones creadas para el formulario.
+        """
         form.instance.modified_by = self.request.user
+        response = super().form_valid(form)
         # Aquí deberías actualizar el objeto existente en lugar de crear uno nuevo
         return super().form_valid(form)
 
@@ -353,130 +516,205 @@ class UpdateVehicleAssignView(LoginRequiredMixin, UpdateView):
         return reverse("checkpoints:update_assign", args=(driver.id,))
 
 
-class ListScoreCompanyTemplate(
-    PermissionRequiredMixin, LoginRequiredMixin, TemplateView
-):
+class ListScoreCompanyTemplate(PermissionRequiredMixin, LoginRequiredMixin, ListView):
     """
     Vista como clase que renderiza el template HTML que contiene la lista de
     empresas (clientes finales) a las que tiene acceso un distribuidor
     para configurar su calificación de conductores.
     """
 
+    model = CompanyScoreSetup
     template_name = "checkpoints/score_configuration/main_score_configuration.html"
     permission_required = "checkpoints.view_companyscoresetup"
-
-
-class ListScoreCompaniesView(PermissionRequiredMixin, LoginRequiredMixin, ListView):
-    """
-    Vista como clase que muestra a las empresas (distribuidoras) sus clientes finales
-    así como la opción de acceder a la configuración de calificación.
-    """
-
-    template_name = (
-        "checkpoints/score_configuration/list_score_configuration_companies.html"
-    )
     context_object_name = "list_score_configuration"
-    permission_required = "checkpoints.view_companyscoresetup"
+
+    def get_paginate_by(self, queryset):
+        """
+        Obtiene el número de elementos a mostrar por página.
+
+        Args:
+            queryset (QuerySet): El conjunto de datos de la consulta.
+
+        Returns:
+            int: El número de elementos a mostrar por página.
+        """
+        paginate_by = self.request.POST.get('paginate_by', None)  # Obtener paginate_by de los parámetros POST
+        if paginate_by is None:
+            session_filters = self.request.session.get(
+                f"filters_sorted_scoredriver_{self.request.user.id}", {}
+            )
+            paginate_by = session_filters.get("paginate_by", 15)
+            # Convertir a entero si es una lista
+            try:
+                paginate_by = int(
+                    paginate_by[0]
+                )  # Convertir el primer elemento de la lista a entero
+            except (TypeError, ValueError):
+                paginate_by = int(paginate_by) if paginate_by else 15
+            # Añadir paginate_by a self.request.GET para asegurar que esté presente
+            self.request.POST = self.request.POST.copy()
+            self.request.POST['paginate_by'] = paginate_by
+        return int(self.request.POST['paginate_by'])
+    
+    def get_queryset(self):
+        """
+        Obtiene el conjunto de datos de los planes de datos reales de la compañía asociada al
+        usuario que realiza la solicitud.
+
+        Returns:
+            QuerySet: Conjunto de datos de CompanyScoreSetup relacionados con las empresas del usuario.
+        """
+        companies = Company.objects.filter(
+            Q(pk=self.request.user.company_id)
+            | Q(provider=self.request.user.company_id),
+            visible=True,
+            actived=True,
+        )
+
+        for user_company in companies:
+            try:
+                # Intentamos obtener el CompanyScoreSetup para cada empresa
+                CompanyScoreSetup.objects.get(company=user_company)
+            except CompanyScoreSetup.DoesNotExist:
+                # Si no existe un CompanyScoreSetup, lo creamos para la empresa
+                CompanyScoreSetup.objects.create(
+                    company=user_company,
+                    created_by=self.request.user,
+                    modified_by=self.request.user,
+                )
+        user = self.request.user
+        params = self.request.GET if self.request.method == 'GET' else self.request.POST
+        query = params.get("query", "").lower()
+        search = params.get("q", query).lower()
+        if 'order_by' not in params and 'paginate_by' not in params and 'page' not in params:
+            # Limpiar los filtros de la sesión
+            if f"filters_sorted_scoredriver_{user.id}" in self.request.session:
+                del self.request.session[f"filters_sorted_scoredriver_{user.id}"]
+                self.request.session.modified = True
+        session_filters = self.request.session.get(f'filters_sorted_scoredriver_{user.id}', {})
+        order_by = params.get('order_by', session_filters.get('order_by', ['company'])[0])
+        direction = params.get('direction', session_filters.get('direction',['asc'])[0])
+        # Actualizar los filtros con los parámetros actuales de la solicitud GET
+        session_filters.update(params)
+        # Actualizar los filtros de la sesión con los nuevos parámetros
+        self.request.session[f'filters_sorted_scoredriver_{user.id}'] = session_filters
+        self.request.session.modified = True
+        # Obtener los planes de datos a través de la función fetch_all_dataplan.
+        queryset = getCompanyScoresByCompanyAndUser(self.request.user.company_id, self.request.user.id, search)
+        # Función para convertir los valores a minúsculas y extraer números cuando sea necesario
+        key_function = sort_key(order_by)
+        # Determinar si es orden descendente
+        reverse = direction == 'desc'
+        try:
+            sorted_queryset = sorted(queryset, key=key_function, reverse=reverse)
+        except KeyError:
+            # Ordenamiento por defecto si la clave no existe
+            sorted_queryset = sorted(queryset, key=lambda x: x['company'].lower(), reverse=reverse)
+        return sorted_queryset
 
     def get_context_data(self, **kwargs):
+        """
+        Obtiene el contexto de datos para renderizar la vista.
+
+        Args:
+            **kwargs: Argumentos clave adicionales.
+
+        Returns:
+            dict: El contexto de datos para renderizar la vista.
+        """
         context = super().get_context_data(**kwargs)
-        # Obtener todas las empresas
-        list_score_configuration = getCompanyScoresByCompanyAndUser(self.request.user.company_id, self.request.user.id)
-        
-        context["list_score_configuration"] = list_score_configuration
-
+        paginate_by = self.get_paginate_by(None)
+        context["paginate_by"] = paginate_by
+        # Simplificación directa para calcular start_number
+        page_number = context.get("page_obj").number if context.get("page_obj") else 1
+        context["start_number"] = (page_number - 1) * self.get_paginate_by(None)
+        session_filters = self.request.session.get(f'filters_sorted_scoredriver_{self.request.user.id}', {})
+        # Obtener el ordenamiento desde la solicitud actual
+        order_by = self.request.GET.get('order_by') or self.request.POST.get('order_by') or session_filters.get('order_by', ['company'])[0]
+        direction = self.request.GET.get('direction') or self.request.POST.get('direction') or session_filters.get('direction', ['asc'])[0]
+        context['order_by'] = order_by
+        context['direction'] = direction
         return context
-
-    def get_queryset(self):
-        return CompanyScoreSetup.objects.all()
+    
+    @method_decorator(csrf_protect)
+    def post(self, request, *args, **kwargs):
+        # Obtén el número de página desde la solicitud POST
+        page_number = request.POST.get('page', 1)
+        # Modifica la consulta para aplicar la paginación
+        self.object_list = self.get_queryset()
+        paginator = Paginator(self.object_list, self.get_paginate_by(None))
+        page_obj = paginator.get_page(page_number)
+        context = self.get_context_data(object_list=page_obj.object_list, page_obj=page_obj)
+        return self.render_to_response(context)
 
 
 class ScoreConfigurationView(
-    PermissionRequiredMixin, LoginRequiredMixin, SingleObjectMixin, FormView
+    PermissionRequiredMixin,
+    LoginRequiredMixin,
+    SingleObjectMixin,
+    UpdateAuditLogAsyncMixin,
+    generic.FormView,
 ):
-    """
-    Vista como clase que permite a las empresas (distribuidoras) configurar
-    los parámetros sobre los que van a evaluarse los conductores de sus clientes
-    """
-
     model = CompanyScoreSetup
     template_name = "checkpoints/score_configuration/update_score_configuration.html"
     permission_required = "checkpoints.add_companyscoresetup"
 
+    # Esta función devuelve la URL a la que se redirigirá al usuario después de guardar con éxito.
+    def get_success_url(self):
+        return reverse("checkpoints:list_score_configuration")
+
+    # Esta función obtiene todos los elementos ItemScore de la base de datos y los devuelve como
+    # una lista.
     def get_queryset(self):
-        # Se crea una lista con los itemss
-        query_items = ItemScore.objects.all()
-        items = [item for item in query_items]
-        return items
+        return list(ItemScore.objects.all())
 
+    # Esta función empareja cada item con su formulario correspondiente y los devuelve como una
+    # lista de tuplas.
     def get_score_forms(self, items, score_form):
-        # Se crea la funcion donde trae la lista de los items, crea una lista de tuplas,
-        # ada una con un ítem y el formulario correspondiente (score_form) para ese ítem.
-        # Recibe la lista de ítems y la lista de formularios de puntuación como parámetros y
-        # retorna una lista de tuplas.
-        forms = [(items[i], score_form[i]) for i in range(len(items))]
-        return forms
+        return zip(items, score_form)
 
+    # Esta función obtiene el objeto CompanyScoreSetup correspondiente y asegura que todos los
+    # ItemScores estén configurados.
     def get_object(self):
-        try:
-            company = self.kwargs.get("pk")
-            get_object_or_404(CompanyScoreSetup, company_id=company)
-            query_items = ItemScore.objects.all()
-            query_company = CompanyScoreSetup.objects.get(company_id=company)
-            len_item = ItemScoreSetup.objects.filter(company_score_id=query_company.pk)
-            # Si no o los itemes son diferentes en el objetos ItemScoreSetup asociados a este
-            # CompanyScoreSetup,
-            # creamos configuraciones predeterminadas para cada ítem en la base de datos.
-            if len(query_items) != len_item.count():
-                # Si no hay objetos ItemScoreSetup, creamos configuraciones predeterminadas para
-                # todos los ítems.
-                if len(len_item) == 0:
-                    for item in query_items:
-                        ItemScoreSetup.objects.create(
-                            company_score_id=query_company.pk,
-                            item_id=item.pk,
-                            created_by=self.request.user,
-                            modified_by=self.request.user,
-                        )
-                    obj = query_company
-                else:
-                    # Si faltan algunos ítems, identificamos cuáles faltan y creamos las
-                    # configuraciones faltantes.
-                    existing_items = {item.item_id for item in len_item}
-                    missing_items = [
-                        item for item in query_items if item.pk not in existing_items
-                    ]
-                    for item in missing_items:
-                        ItemScoreSetup.objects.create(
-                            company_score_id=query_company.pk,
-                            item_id=item.pk,
-                            created_by=self.request.user,
-                            modified_by=self.request.user,
-                        )
-                    obj = query_company
-            else:
-                obj = query_company
-        except CompanyScoreSetup.DoesNotExist:
-            # Si no se encuentra un objeto CompanyScoreSetup con el "company_id" lanzamos un error
-            # 404
-            raise Http404
-        return obj
+        company_id = self.kwargs.get("pk")
+        company_score_setup = get_object_or_404(
+            CompanyScoreSetup, company_id=company_id
+        )
+        self.ensure_items_setup(company_score_setup)
+        return company_score_setup
 
+    # Esta función asegura que todos los elementos de ItemScore estén configurados en ItemScoreSetup para una compañía específica.
+    def ensure_items_setup(self, company_score_setup):
+        query_items = ItemScore.objects.all()
+        existing_items = ItemScoreSetup.objects.filter(
+            company_score_id=company_score_setup.pk
+        )
+        existing_item_ids = {item.item_id for item in existing_items}
+
+        # Encuentra los elementos que faltan y los crea.
+        missing_items = [
+            item for item in query_items if item.pk not in existing_item_ids
+        ]
+
+        if missing_items:
+            ItemScoreSetup.objects.bulk_create(
+                [
+                    ItemScoreSetup(
+                        company_score_id=company_score_setup.pk,
+                        item_id=item.pk,
+                        created_by=self.request.user,
+                        modified_by=self.request.user,
+                    )
+                    for item in missing_items
+                ]
+            )
+
+    # Esta función maneja la solicitud GET. Carga los formularios necesarios y los datos del contexto para la plantilla.
     def get(self, request, *args, **kwargs):
-        # Obtiene el objeto CompanyScoreSetup usando el método get_object() y lo almacena en
-        # self.object
         self.object = self.get_object()
-        # Crea un formulario CompanyScoreForm usando el objeto CompanyScoreSetup almacenado
-        # en self.object
         form = CompanyScoreForm(instance=self.object)
-        # Crea un conjunto de formularios ItemScoreFormsets usando el objeto CompanyScoreSetup
-        # almacenado en self.object
         score_form = ItemScoreFormsets(instance=self.object)
-        # Obtiene una lista de ítems (nombres de los ítems) usando el método get_queryset()
         items = self.get_queryset()
-        # Crea una lista de tuplas que contiene cada ítem junto con su formulario de puntuación
-        # correspondiente utilizando la función get_score_forms() y las listas de ítems y
-        # formularios de puntuación
         forms = self.get_score_forms(items, score_form)
         company = Company.objects.get(id=self.object.company_id)
         return self.render_to_response(
@@ -488,41 +726,69 @@ class ScoreConfigurationView(
             )
         )
 
+    # Esta función obtiene los datos del contexto para la plantilla.
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         return context
 
+    # Esta función maneja la solicitud POST. Captura el estado anterior, valida y guarda los formularios.
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         form = CompanyScoreForm(request.POST, instance=self.object)
         score_formset = ItemScoreFormsets(request.POST, instance=self.object)
+
+        # Captura el estado antes de la actualización.
+        self.capture_state_before(form, score_formset)
 
         if form.is_valid() and score_formset.is_valid():
             return self.form_valid(form, score_formset)
         else:
             return self.form_invalid(form, score_formset)
 
+    # Esta función captura el estado del objeto y los formsets antes de guardarlos.
+    def capture_state_before(self, form, score_formset):
+        self.obj_before = model_to_dict(form.instance)
+        self.formsets_before = [
+            model_to_dict(obj) for obj in form.instance.itemscoresetup_set.all()
+        ]
+
+    # Esta función guarda el formulario principal y los formsets. Luego, captura el estado después de guardar.
     def form_valid(self, form, score_formset):
-        # Guardamos el CompanyScoreSetup con los campos modificados
+        self.save_form_and_formsets(form, score_formset)
+        self.capture_state_after(form, score_formset)
+        self.log_action()
+        return self.redirect_with_htmx()
+
+    # Esta función guarda el formulario principal y los formsets.
+    def save_form_and_formsets(self, form, score_formset):
         company_score_setup = form.save(commit=False)
         company_score_setup.modified_by = self.request.user
         if not company_score_setup.created_by_id:
             company_score_setup.created_by = self.request.user
         company_score_setup.save()
 
-        # Guardamos los formularios de ItemScoreSetup
         instances = score_formset.save(commit=False)
         for instance in instances:
             instance.modified_by = self.request.user
             if not instance.created_by_id:
                 instance.created_by = self.request.user
             instance.save()
-
-        # Guardamos las relaciones ManyToMany si hay alguna
         score_formset.save_m2m()
 
-        return HttpResponse(status=204, headers={"HX-Trigger": "ListScoreChanged"})
+    # Esta función captura el estado del objeto y los formsets después de guardarlos.
+    def capture_state_after(self, form, score_formset):
+        self.obj_after = model_to_dict(form.instance)
+        self.formsets_after = [
+            model_to_dict(obj) for obj in score_formset.save(commit=False)
+        ]
 
+    # Esta función redirige usando HTMX.
+    def redirect_with_htmx(self):
+        page_update = HttpResponse("")
+        page_update["HX-Redirect"] = self.get_success_url()
+        return page_update
+
+    # Esta función maneja el caso en que el formulario no es válido. Recarga los formularios y los datos del contexto.
     def form_invalid(self, form, score_form):
         self.object = self.get_object()
         items = self.get_queryset()
@@ -537,34 +803,36 @@ class ScoreConfigurationView(
             )
         )
 
+    # Esta función registra la acción en el log de auditoría.
+    def log_action(self):
+        user = self.request.user
+        company_id = getattr(user, "company_id", None)
+        view_name = self.__class__.__name__
 
-# class ReportFormView(View):
-#     template_name = 'checkpoints/reportes/report_from.html'
+        before = self.obj_before if self.obj_before else {}
+        after = self.obj_after if self.obj_after else {}
 
-#     def get(self, request):
-#         form = ReportFilterForm()
-#         return render(request, self.template_name, {'form': form})
+        before_formsets = self.formsets_before if self.formsets_before else []
+        after_formsets = self.formsets_after if self.formsets_after else []
 
-#     def post(self, request):
-#         print(self.request.POST)
-#         form = ReportFilterForm(request.POST)
-#         if form.is_valid():
-#             company = form.cleaned_data['company']
-#             drivers = form.cleaned_data['driver']
-#             start_date = form.cleaned_data['start_date']
-#             end_date = form.cleaned_data['end_date']
-#             # Aquí puedes redirigir a ReportResultsView o filtrar los datos directamente
-#             # y mostrar los resultados en el mismo template.
-#             # Por ahora, redirigiremos a ReportResultsView con los datos filtrados.
-#         for driver in drivers:
-#             driver_ids = []
-#             if isinstance(drivers, str):
-#                 driver_ids = [int(id) for id in drivers.split(",") if id.isdigit()]
-#             else:
-#                 # Si drivers es un número entero, simplemente agrégalo a la lista
-#                 driver_ids = [drivers]
-#             return redirect('checkpoints:report_results', company=company.id, drivers=driver_ids,
-# start_date=start_date, end_date=end_date)
+        before_json = json.dumps(
+            {"form": before, "formsets": before_formsets}, default=str
+        )
+        after_json = json.dumps(
+            {"form": after, "formsets": after_formsets}, default=str
+        )
+
+        ip_address = asyncio.run(obtener_ip_publica(self.request))
+
+        log_action(
+            user=user,
+            company_id=company_id,
+            view_name=view_name,
+            action=self.action,
+            before=before_json,
+            after=after_json,
+            ip_address=ip_address,
+        )
 
 
 class ReporDriverView(View, LoginRequiredMixin):
@@ -820,36 +1088,10 @@ class ReportTodayView(PermissionRequiredMixin, View, LoginRequiredMixin):
     permission_required = "checkpoints.view_report"
     login_url = "login"
 
-    def get_companies(self):
-        """
-        Filtro el cual valida si el usuario está autenticado y me trae las empresas de acuerdo
-        al id de la compañía del usuario.
-
-        Returns:
-            QuerySet: Un conjunto de objetos Company que cumplen con los criterios de filtrado.
-
-        Raises:
-            Http404: Si el usuario no está autenticado.
-        """
-        user = self.request.user
-        if not user.is_authenticated:
-            raise Http404("User not authenticated")
-
-        company_id = user.company_id
-        if company_id == 1:
-            companies = Company.objects.filter(visible=True, actived=True)
-        else:
-            provider_company_ids = Company.objects.filter(
-                provider_id=company_id
-            ).values_list("id", flat=True)
-            companies = Company.objects.filter(
-                Q(id=company_id) | Q(provider_id=company_id), visible=True
-            )
-        return companies
-
     def execute_stored_procedure(
         self, company_id, imei, fecha_inicial, fecha_final, paginate_by, page
     ):
+        print("enrtra al bd")
         """
         Ejecuta un procedimiento almacenado y devuelve los resultados en formato JSON.
 
@@ -941,9 +1183,16 @@ class ReportTodayView(PermissionRequiredMixin, View, LoginRequiredMixin):
         - Una respuesta HTTP con el formulario y los datos necesarios para renderizar la plantilla.
         """
         form = ReportTodayForm()
-        companies = self.get_companies()
-        form.fields["Company_id"].queryset = companies
-        return render(request, self.template_name, {"form": form})
+        user = self.request.user
+        companies = get_user_companies(user)
+        if user.company_id == 1:
+            form.fields["Company_id"].choices = companies
+        else:
+            form.fields["Company_id"].queryset = companies
+        button_color = request.user.company.theme_set.all().first().button_color
+        return render(
+            request, self.template_name, {"form": form, "button_color": button_color}
+        )
 
     def post(self, request, *args, **kwargs):
         """
@@ -958,9 +1207,16 @@ class ReportTodayView(PermissionRequiredMixin, View, LoginRequiredMixin):
         - Una respuesta HTTP que renderiza una plantilla con los datos procesados o los errores del
         formulario.
         """
-        form = ReportTodayForm(request.POST)
-        companies = self.get_companies()
-        form.fields["Company_id"].queryset = companies
+        form = ReportTodayForm(request.POST, user=request.user)
+        user = self.request.user
+        companies = get_user_companies(user)
+        if user.company_id == 1:
+            form.fields["Company_id"].choices = companies
+        else:
+            form.fields["Company_id"].queryset = companies
+        form.fields["Imei"].queryset = Device.objects.filter(
+            company_id=request.POST.get("Company_id")
+        )
 
         if form.is_valid():
             page_str = request.POST.get("page", "1").strip()
@@ -970,18 +1226,18 @@ class ReportTodayView(PermissionRequiredMixin, View, LoginRequiredMixin):
             paginate_by = (
                 int(paginate_by_str)
                 if paginate_by_str.isdigit()
-                else request.session.get("paginate_by", 10)
+                else request.session.get("paginate_by", 15)
             )
             request.session["paginate_by"] = paginate_by
 
             company_id = form.cleaned_data["Company_id"].id
             imei = form.cleaned_data["Imei"].imei
             timezone_offset = int(request.POST.get("timezone_offset", 0))
-
-            fecha_inicial = form.cleaned_data["FechaInicial"] - timedelta(
+            print(imei)
+            fecha_inicial = form.cleaned_data["FechaInicial"] + timedelta(
                 minutes=timezone_offset
             )
-            fecha_final = form.cleaned_data["FechaFinal"] - timedelta(
+            fecha_final = form.cleaned_data["FechaFinal"] + timedelta(
                 minutes=timezone_offset
             )
 
@@ -992,13 +1248,13 @@ class ReportTodayView(PermissionRequiredMixin, View, LoginRequiredMixin):
                 company_id, imei, fecha_inicial_str, fecha_final_str, paginate_by, page
             )
             json_data = self.update_dates_and_location(json_data, timezone_offset)
+            additional_keys = []
 
-            additional_keys = [
-                key
-                for item in json_data
-                for key in item.keys()
-                if key
-                not in [
+            # Obtener las claves adicionales en el mismo orden en que aparecen en el JSON
+            if json_data:
+                sample_item = json_data[0]
+                all_keys = list(sample_item.keys())
+                excluded_keys = [
                     "RowNum",
                     "license",
                     "server_date",
@@ -1012,8 +1268,8 @@ class ReportTodayView(PermissionRequiredMixin, View, LoginRequiredMixin):
                     "TotalPages",
                     "TotalRecords",
                 ]
-            ]
-            additional_keys = list(set(additional_keys))
+                additional_keys = [key for key in all_keys if key not in excluded_keys]
+
             total_registros = (
                 int(json_data[0].get("TotalRecords", 0)) if json_data else 0
             )
@@ -1023,6 +1279,7 @@ class ReportTodayView(PermissionRequiredMixin, View, LoginRequiredMixin):
                 current_end_item,
                 total_registros,
             ) = self.get_paginated_data(json_data, paginate_by, page)
+            button_color = request.user.company.theme_set.all().first().button_color
 
             return render(
                 request,
@@ -1036,44 +1293,325 @@ class ReportTodayView(PermissionRequiredMixin, View, LoginRequiredMixin):
                     "current_start_item": current_start_item,
                     "current_end_item": current_end_item,
                     "total_registros": total_registros,
+                    "button_color": button_color,
                 },
             )
         else:
+            print("Errores en el formulario:", form.errors)
             return render(
                 request, self.template_name, {"form": form, "errors": form.errors}
             )
 
 
-class ReportToday(View):
-    template_name = "checkpoints/reportes/report_today_copy.html"
+class Advanced_AnalyticalView(
+    PermissionRequiredMixin, LoginRequiredMixin, generic.TemplateView
+):
+    model = Advanced_Analytical
+    login_url = reverse_lazy("index")
+    template_name = "checkpoints/powerbi/advanced_analytical.html"
+    permission_required = "checkpoints.view_advanced_analytical"
 
-    def get(self, request):
-        form = ReportTodayForm()  # Inicializa el formulario vacío
-        return render(request, self.template_name, {"form": form})
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        return context
+
+class DataSemConfigurationList(LoginRequiredMixin, ListView):
+    """
+    Vista basada en clase para listar y paginar configuraciones de datos SEM.
+
+    Atributos:
+        model: Modelo asociado a la vista.
+        login_url: URL de redirección para usuarios no autenticados.
+        template_name: Plantilla utilizada para renderizar la vista.
+    """
+    model = Advanced_Analytical
+    login_url = reverse_lazy("index")
+    template_name = "checkpoints/powerbi/main_datasem.html"
+
+    def get_paginate_by(self, queryset):
+        """
+        Obtiene el número de elementos por página de la solicitud POST o de los filtros de sesión.
+
+        Args:
+            queryset: Conjunto de datos (no utilizado en este método).
+
+        Returns:
+            int: Número de elementos por página.
+        """
+        paginate_by = self.request.POST.get('paginate_by', None)
+        if paginate_by is None:
+            session_filters = self.request.session.get(f"filters_sorted_confidatasem_{self.request.user.id}", {})
+            paginate_by = session_filters.get("paginate_by", 15)
+            paginate_by = self.convert_paginate_by_to_int(paginate_by)
+            self.request.POST = self.request.POST.copy()
+            self.request.POST['paginate_by'] = paginate_by
+        return int(self.request.POST['paginate_by'])
+
+    def convert_paginate_by_to_int(self, paginate_by):
+        """
+        Convierte el valor de `paginate_by` a entero.
+
+        Args:
+            paginate_by: Valor de `paginate_by`.
+
+        Returns:
+            int: Valor de `paginate_by` convertido a entero.
+        """
+        try:
+            return int(paginate_by[0])
+        except (TypeError, ValueError):
+            return int(paginate_by) if paginate_by else 15
+
+    def get_queryset(self):
+        """
+        Obtiene el conjunto de datos basado en los parámetros de solicitud y los filtros de sesión.
+
+        Returns:
+            list: Conjunto de datos ordenado.
+        """
+        user = self.request.user
+        company = user.company
+        params = self.get_request_params()
+        search = params.get("q", params.get("query", "").lower())
+
+        self.reset_session_filters_if_needed(params)
+
+        session_filters = self.update_session_filters(params)
+        order_by, direction = self.get_ordering_params(session_filters, params)
+
+        queryset = fetch_all_confidatasem(company, user, search)
+        sorted_queryset = self.sort_queryset(queryset, order_by, direction)
+
+        return sorted_queryset
+
+    def get_request_params(self):
+        """
+        Obtiene los parámetros de solicitud (GET o POST).
+
+        Returns:
+            QueryDict: Parámetros de solicitud.
+        """
+        return self.request.GET if self.request.method == 'GET' else self.request.POST
+
+    def reset_session_filters_if_needed(self, params):
+        """
+        Reinicia los filtros de sesión si no se encuentran parámetros específicos en la solicitud.
+
+        Args:
+            params (dict): Parámetros de solicitud.
+        """
+        if 'order_by' not in params and 'paginate_by' not in params and 'page' not in params:
+            if f"filters_sorted_confidatasem_{self.request.user.id}" in self.request.session:
+                del self.request.session[f"filters_sorted_confidatasem_{self.request.user.id}"]
+                self.request.session.modified = True
+
+    def update_session_filters(self, params):
+        """
+        Actualiza los filtros de sesión con los nuevos parámetros de solicitud.
+
+        Args:
+            params (dict): Parámetros de solicitud.
+
+        Returns:
+            dict: Filtros de sesión actualizados.
+        """
+        session_filters = self.request.session.get(f'filters_sorted_confidatasem_{self.request.user.id}', {})
+        session_filters.update(params)
+        self.request.session[f"filters_sorted_confidatasem_{self.request.user.id}"] = session_filters
+        self.request.session.modified = True
+        return session_filters
+
+    def get_ordering_params(self, session_filters, params):
+        """
+        Obtiene los parámetros de ordenación de los filtros de sesión o de la solicitud.
+
+        Args:
+            session_filters (dict): Filtros de sesión.
+            params (dict): Parámetros de solicitud.
+
+        Returns:
+            tuple: Parámetros de ordenación (campo de ordenación, dirección).
+        """
+        order_by = params.get('order_by', session_filters.get('order_by', ['company_name'])[0])
+        direction = params.get('direction', session_filters.get('direction', ['asc'])[0])
+        return order_by, direction
+
+    def sort_queryset(self, queryset, order_by, direction):
+        """
+        Ordena el conjunto de datos según los parámetros de ordenación.
+
+        Args:
+            queryset (list): Conjunto de datos.
+            order_by (str): Campo de ordenación.
+            direction (str): Dirección de ordenación ('asc' o 'desc').
+
+        Returns:
+            list: Conjunto de datos ordenado.
+        """
+        key_function = sort_key(order_by)
+        reverse = direction == 'desc'
+        try:
+            return sorted(queryset, key=key_function, reverse=reverse)
+        except KeyError:
+            return sorted(queryset, key=lambda x: x["company_name"].lower(), reverse=reverse)
+
+    def get_context_data(self, **kwargs):
+        """
+        Obtiene el contexto adicional para renderizar la plantilla.
+
+        Args:
+            **kwargs: Argumentos adicionales de contexto.
+
+        Returns:
+            dict: Contexto actualizado.
+        """
+        context = super().get_context_data(**kwargs)
+        paginate_by = self.get_paginate_by(None)
+        context["paginate_by"] = paginate_by
+        page_number = context.get("page_obj").number if context.get("page_obj") else 1
+        context["start_number"] = (page_number - 1) * paginate_by
+        session_filters = self.request.session.get(f'filters_sorted_confidatasem_{self.request.user.id}', {})
+        context['order_by'], context['direction'] = self.get_ordering_params(session_filters, self.get_request_params())
+        return context
+
+    @method_decorator(csrf_protect)
+    def post(self, request, *args, **kwargs):
+        """
+        Maneja solicitudes POST para obtener y paginar el conjunto de datos.
+
+        Args:
+            request (HttpRequest): La solicitud HTTP.
+            *args: Argumentos adicionales.
+            **kwargs: Argumentos de palabra clave adicionales.
+
+        Returns:
+            HttpResponse: Respuesta HTTP con el contexto renderizado.
+        """
+        page_number = request.POST.get('page', 1)
+        self.object_list = self.get_queryset()
+        paginator = Paginator(self.object_list, self.get_paginate_by(None))
+        page_obj = paginator.get_page(page_number)
+        context = self.get_context_data(object_list=page_obj.object_list, page_obj=page_obj)
+        return self.render_to_response(context)
+
+class AddDataSemConfiguration(
+    LoginRequiredMixin,
+    CreateAuditLogAsyncMixin,
+    generic.CreateView,
+):
+    """
+    Vista para agregar un nuevo plan de datos.
+    """
+
+    model = Advanced_Analytical
+    template_name = "checkpoints/powerbi/add_datasem.html"
+    form_class = DataSemConfigurationForm
+
+    def get_success_url(self):
+        return reverse("realtime:confidatasem")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        companies = get_user_companies(user)
+        context["form"].fields["company"].choices = companies
+        
+        button_color = self.request.user.company.theme_set.all().first().button_color
+        context["button_color"] = button_color
+        return context
+
+    def form_valid(self, form):
+        dataplan = form.save(commit=False)
+        dataplan.modified_by = self.request.user
+        dataplan.created_by = self.request.user
+        dataplan.save()
+        # Prepara una respuesta con redirección usando HTMX
+        if self.request.htmx:
+            return HttpResponse(headers={"HX-Redirect": self.get_success_url()})
 
 
-class ReportDataAPIView(APIView):
-    def get(self, request):
-        # Recoge los parámetros de la solicitud GET
-        company_id = request.query_params.get("company_id")
-        vehicle = request.query_params.get(
-            "vehicles"
-        )  # Asegúrate que esto coincide con cómo se envía en el formulario
-        start_date = request.query_params.get("start_date")
-        end_date = request.query_params.get("end_date")
-        # event_id = request.query_params.get('event')
+class UpdateDataSemConfiguration(
+    LoginRequiredMixin,
+    UpdateAuditLogAsyncMixin,
+    generic.UpdateView,
+):
+    """
+    Esta clase es una vista basada en clase que permite actualizar los datos de un modelo
+    "DataPlan" utilizando un formulario "DataPlanForm". Requiere de permisos para la vista y
+    redirige al éxito al listar los planes de datos creados. Además, en el método
+    "get_context_data", se actualiza el contexto con la información de la empresa del usuario
+    actual y en "form_valid" se actualiza el campo "modified_by" del modelo y se guarda.
+    Por último, retorna una respuesta HTTP vacía con un encabezado personalizado para actualizar
+    la lista de planes de datos cambiados en tiempo real mediante tecnología HX.
+    """
 
-        # Construye el queryset basado en los parámetros recibidos
-        queryset = AVLData.objects.all()
-        # if company_id:
-        #     queryset = queryset.filter(company_id=company_id)
-        if vehicle:
-            queryset = queryset.filter(device=vehicle)
-        # if event_id:
-        #     queryset = queryset.filter(event_id=event_id)
-        if start_date and end_date:
-            queryset = queryset.filter(server_date__range=[start_date, end_date])
+    model = Advanced_Analytical
+    template_name = "checkpoints/powerbi/update_datasem.html"
+    form_class = DataSemConfigurationForm
+    success_url = reverse_lazy("realtime:list_dataplan_created")
 
-        # Serializa los datos
-        serializer = AVLDataSerializer(queryset, many=True)
-        return Response(serializer.data)
+    def get_success_url(self):
+        # Asegúrate de que el nombre de la URL sea correcto y esté definido en tus archivos de URL.
+        return reverse("realtime:dataplan")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        companies = get_user_companies(user)
+        if user.company_id == 1:
+            context["form"].fields["company"].choices = companies
+        else:
+            context["form"].fields["company"].queryset = companies
+        button_color = self.request.user.company.theme_set.all().first().button_color
+        context["button_color"] = button_color
+        return context
+
+    def form_valid(self, form):
+        dataplan = form.save(commit=False)
+        dataplan.modified_by = self.request.user
+        dataplan.save()
+
+        # Llama al método form_valid de la clase padre para registrar la acción en el log de auditoría
+        response = super().form_valid(form)
+
+        # Prepara una respuesta con redirección usando HTMX
+        page_update = HttpResponse("")
+        page_update["HX-Redirect"] = self.get_success_url()
+        return page_update
+
+
+class DeleteDataSemConfiguration(
+    LoginRequiredMixin,
+    DeleteAuditLogAsyncMixin,
+    generic.UpdateView,
+):
+    """
+    La clase DeleteDataPlanView es una vista de Django que hereda de las clases
+    PermissionRequiredMixin, LoginRequiredMixin y  generic.UpdateView. Implementa
+    la funcionalidad de ocultar un plan de datos (en lugar de eliminarlo) estableciendo
+    el valor de la variable visible en False en el método form_valid(). Retorna una
+    respuesta HTTP con el código 204 y la cabecera HX-Redirect para redirigir
+    a la lista de planes de datos en la interfaz de usuario.
+    """
+
+    model = Advanced_Analytical
+    template_name = "realtime/dataplan/delete_dataplan.html"
+    permission_required = "realtime.delete_dataplan"
+    fields = ["visible"]
+
+    def get_success_url(self):
+        # Asegúrate de que el nombre de la URL sea correcto y esté definido en tus archivos de URL.
+        return reverse("realtime:dataplan")
+
+    def form_valid(self, form):
+        # Modifica el plan de datos en lugar de eliminarlo
+        form.instance.modified_by = self.request.user
+        form.instance.visible = False
+        form.instance.is_active = False
+        form.save()
+        # Llama al método form_valid de la clase padre para registrar la acción en el log de auditoría
+        response = super().form_valid(form)
+        # Prepara una respuesta con redirección usando HTMX
+        page_update = HttpResponse("")
+        page_update["HX-Redirect"] = self.get_success_url()
+        return page_update

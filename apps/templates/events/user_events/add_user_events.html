@@ -1,245 +1,152 @@
-{% load i18n static %}
-
-
-{%block content %}
-{{form.media}}
-
-    <div class="modal-content">
-        <div class="modal-body">
-            <div class="card">
-            <div class="modal-header">
-                <h3> {% trans "Add Event" %} </h3>
-                <button type="button" id="cerrarVenta" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+{% load i18n static %} {%block content %} {{form.media}}
+<div class="modal-content" id="miModal" style="z-index: 1050">
+  <div class="modal-body">
+    <div class="card">
+      <div class="modal-header">
+        <h3>{% trans "Add Event" %}</h3>
+        <button type="button" id="cerrarVenta" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="card-body">
+        <form hx-post="{{ request.path }}" hx-target="#modal-content">
+          {% csrf_token %}
+          <div class="row">
+            <div class="col">
+              <div class="input-group input-group-static mb-4">
+                <label for="company">{% trans "Company:" %} <span style="color: red">*</span> </label>
+                {{ form.company }}
+              </div>
             </div>
-            <div class="card-body">
-                <form hx-post="{{ request.path }}" > {% csrf_token %}
-                    <div class="row">
-                        <div class="col">
-                            <div class="input-group input-group-static mb-4">
-                                <label for="id_company" class="ms-0 mt-0">{% trans "Company" %}</label>
-                                <select class="form-control" id="id_company" name="company">
-                                    <option value=""></option> <!-- Espacio en blanco -->
-                                    {% for company in companies %}
-                                        <option value="{{ company.id }}">{{ company.company_name }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col">
-                            <div class="input-group input-group-static mb-4">
-                                <label for="id_event" > {% trans "Event Predefined" %} </label>
-                                {{ form.event }}
-                            </div>
-                            <div id="form-errors">
-                                {{ form.event.errors }}
-                            </div>
-                        </div>
-                        <div class="col">
-                            <div class="input-group input-group-static mb-4">
-                                <label for="id_alias" class="ms-0 mt-0"> {% trans "Event name" %} </label>
-                                {{ form.alias }}
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col">
-                                <p>
-                                    <div class="form-check form-switch">
-                                        <label class="form-check-label" for="id_alarm_sound"> {% trans "Alarm" %}  </label>
-                                        {{form.alarm_sound}}
-                                    </div>
-                                </p>
-                            </div>
-                            <div class="col">
-                                <p>
-                                    <div class="input-group  input-group-static mb-4">
-                                        <label for="id_sound_priority" class="ms-0"> {% trans "Priority" %} </label>
-                                        {{form.sound_priority}}
-                                    </div>
-                                </p>
-                            </div>
-                            <div class="col">
-                                <p>
-                                    <div class="input-group input-group-static mb-4">
-                                        <label for="id_type_alarm_sound" class="ms-0">{% trans "Sound type" %}</label>
-                                        {{ form.type_alarm_sound }}
-                                    </div>
-                                </p>
-                            </div>
-                            <div class="col">
-                                <p>
-                                    <div class="input-group input-group-static mb-4">
-                                        <button type="button" class="btn btn-xs btn-primary" onclick="toggleSound(getSelectedSoundUrl(), this, event)" style="margin-top: 5mm;">
-                                            <i class="fas fa-play"></i>
-                                        </button>
-                                    </div>
-                                </p>
-                            </div>
-                            <div class="col">
-                                <p>
-                                    <div class="input-group  input-group-static mb-4">
-                                        <label for="id_color" class="input-group input-group-static mb-4" >
-                                            {{ form.color.label_tag }}
-                                        </label>
-                                        <input type="color" class="form-control; ms-3" id="id_color" name="color" value="{{ form.color.value }}" oninput="updateColorPreview(this.value)" disabled style="margin-top: -5mm;">
-                                    </div>
-                                </p>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col">
-                                <p>
-                                    <div class="form-check">
-                                        <label class="custom-control-label" for="id_central_alarm"> {% trans "Central notification" %}</label>
-                                        {{form.central_alarm}}
-                                    </div>
-                                </p>
-                            </div>
-
-                            <div class="col">
-                                <p>
-                                    <div class="form-check">
-                                        <label class="custom-control-label" for="id_user_alarm"> {% trans "User notification" %}</label>
-                                        {{form.user_alarm}}
-                                    </div>
-                                    <div id="form-errors">
-                                        {{form.user_alarm.errors}}
-                                    </div>
-                                </p>
-                            </div>
-
-                            <div class="col">
-                                <p>
-                                    <div class="form-check">
-                                        <label class="custom-control-label" for="id_email_alarm"> {% trans "Email notification" %}</label>
-                                        {{form.email_alarm}}
-                                    </div>
-                                </p>
-                            </div>
-
-                        </div>
-                        <div class="row">
-                            <div class="col">
-                                <p>
-                                    <div class="input-group input-group-static my-3">
-                                        <label for="id_start_time"> {% trans "Start time" %} </label>
-                                        {{form.start_time}}
-                                    </div>
-                                </p>
-                            </div>
-
-                            <div class="col">
-                                <p>
-                                    <div class="input-group input-group-static my-3">
-                                        <label for="id_end_time"> {% trans "End time" %} </label>
-                                        {{form.end_time}}
-                                    </div>
-                                    <div id="form-errors">
-                                        {{form.end_time.errors}}
-                                    </div>
-                                </p>
-                            </div>
-
-                        </div>
-
-                        <div class="row">
-                            <div class="col">
-                                <button class="btn btn-primary mt-3" type="submit"> <i class="fa-solid  fa-floppy-disk me-2"></i>{% trans "Save" %} </button>
-                            </div>
-                        </div>
-                    </div>
-                </form>
+            <div class="col">
+              <div class="input-group input-group-static mb-4">
+                <label for="id_event"> {% trans "Event Predefined" %} </label>
+                {{ form.event }}
+              </div>
+              <div id="form-errors">{{ form.event.errors }}</div>
             </div>
-        </div>
+            <div class="col">
+              <div class="input-group input-group-static mb-4">
+                <label for="id_alias" class="ms-0 mt-0"> {% trans "Event name" %} </label>
+                {{ form.alias }}
+              </div>
+            </div>
+            <div class="row">
+              <div class="col">
+                <div class="form-check form-switch">
+                  <label class="form-check-label" for="id_alarm_sound"> {% trans "Alarm" %} </label>
+                  {{form.alarm_sound}}
+                </div>
+              </div>
+              <div class="col">
+                <div class="input-group input-group-static mb-4">
+                  <label for="id_sound_priority" class="ms-0"> {% trans "Priority" %} </label>
+                  {{form.sound_priority}}
+                </div>
+              </div>
+              <div class="col">
+                <div class="input-group input-group-static mb-4">
+                  <label for="id_type_alarm_sound" class="ms-0">{% trans "Sound type" %}</label>
+                  {{ form.type_alarm_sound }}
+                </div>
+              </div>
+              <div class="col">
+                <div class="input-group input-group-static mb-4">
+                  <button
+                    type="button"
+                    class="btn btn-xs btn-primary"
+                    onclick="toggleSound(getSelectedSoundUrl(), this, event)"
+                    style="margin-top: 5mm"
+                  >
+                    <i class="fas fa-play"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="col">
+                <div class="input-group input-group-static mb-4">
+                  <label for="id_color" class="input-group input-group-static mb-4"> {{ form.color.label_tag }} </label>
+                  <input
+                    type="color"
+                    class="form-control; ms-3"
+                    id="id_color"
+                    name="color"
+                    value="{{ form.color.value }}"
+                    oninput="updateColorPreview(this.value)"
+                    disabled
+                    style="margin-top: -5mm"
+                  />
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col">
+                <div class="form-check">
+                  <label class="custom-control-label" for="id_central_alarm"> {% trans "Central notification" %}</label>
+                  {{form.central_alarm}}
+                </div>
+              </div>
+
+              <div class="col">
+                <div class="form-check">
+                  <label class="custom-control-label" for="id_user_alarm"> {% trans "User notification" %}</label>
+                  {{form.user_alarm}}
+                </div>
+                <div id="form-errors">{{form.user_alarm.errors}}</div>
+              </div>
+
+              <div class="col">
+                <div class="form-check">
+                  <label class="custom-control-label" for="id_email_alarm"> {% trans "Email notification" %}</label>
+                  {{form.email_alarm}}
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col">
+                <div class="input-group input-group-static my-3">
+                  <label for="id_start_time"> {% trans "Start time" %} </label>
+                  {{form.start_time}}
+                </div>
+              </div>
+
+              <div class="col">
+                <div class="input-group input-group-static my-3">
+                  <label for="id_end_time"> {% trans "End time" %} </label>
+                  {{form.end_time}}
+                </div>
+                <div id="form-errors">{{form.end_time.errors}}</div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col">
+                <button class="btn btn-primary mt-3" type="submit"><i class="fa-solid fa-floppy-disk me-2"></i>{% trans "Save" %}</button>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
     </div>
-    <head>
-        <link rel="stylesheet" type="text/css" href="{% static 'assets/css/estilos_templates.css' %}">
-    </head>
+  </div>
+  <head>
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/estilos_templates.css' %}" />
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/select2.css' %}" />
+  </head>
+  {% endblock content %} {% block scripts %}
 
+  <!-- Incluir jQuery primero -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <!-- Incluir Select2 después de jQuery -->
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+  <script src="{% static 'assets\js\event\select.js' %}"></script>
+  <script src="{% static 'assets\js\event\activate.js' %}"></script>
+  <script src="{% static 'assets\js\event\toggleCheckboxes.js' %}"></script>
+  <script src="{% static 'assets\js\event\toggleSound.js' %}"></script>
 
-{% endblock content %}
-
-{% block scripts %}
-<script>
-    function getSelectedSoundUrl() {
-        var selectElement = document.getElementById("id_type_alarm_sound");
-        return selectElement.options[selectElement.selectedIndex].value;
+  <style>
+    .select2-container--default .select2-results__option--highlighted.select2-results__option--selectable {
+        background-color: {{ button_color }};
+        color: white;
     }
-
-    function activate(id_alarm_sound) {
-        var ddl = document.getElementById("id_sound_priority");
-        ddl.disabled = !id_alarm_sound.checked;
-        var ddl_2 = document.getElementById("id_type_alarm_sound");
-        ddl_2.disabled = !id_alarm_sound.checked;
-        document.getElementById("id_start_time").disabled = !id_alarm_sound.checked;
-        document.getElementById("id_end_time").disabled = !id_alarm_sound.checked;
-        document.getElementById("id_color").disabled = !id_alarm_sound.checked;
-        document.getElementById("id_alarm_sound_file").disabled = !id_alarm_sound.checked; // Agregar esta línea
-
-        // Mostrar el campo de selección de archivo de sonido cuando se marque la casilla de alarma
-        var alarm_sound_file_div = document.getElementById("id_alarm_sound_file");
-        alarm_sound_file_div.style.display = id_alarm_sound.checked ? "block" : "none";
-
-        if (!ddl.disabled) {
-            ddl.focus();
-        } else {
-            var field_1 = document.getElementById("id_sound_priority");
-            var field_2 = document.getElementById("id_type_alarm_sound");
-            var field_3 = document.getElementById("id_end_time");
-            var field_4 = document.getElementById("id_start_time");
-            field_1.value = "";
-            field_2.value = "";
-            field_3.value = "";
-            field_4.value = "";
-        }
-    }
-</script>
-<script>
-    let audioPlayer = null;
-
-    function toggleSound(soundUrl, button, event) {
-        event.preventDefault(); // Evita que se envíe el formulario al hacer clic en el botón
-        if (audioPlayer && !audioPlayer.paused) {
-            audioPlayer.pause();
-            button.innerHTML = '<i class="fas fa-play "></i>';
-        } else {
-            if(audioPlayer) {
-                audioPlayer.pause();
-            }
-            audioPlayer = new Audio(soundUrl);
-            audioPlayer.play();
-            button.innerHTML = '<i class="fas fa-pause "></i>';
-        }
-    }
-</script>
-<script>
-    // Obtener referencia a la casilla de verificación de "Alarm"
-    var alarm_checkbox = document.getElementById("id_alarm_sound");
-
-    // Obtener referencias a las casillas de verificación que queremos deshabilitar
-    var central_notification_checkbox = document.getElementById("id_central_alarm");
-    var user_notification_checkbox = document.getElementById("id_user_alarm");
-    var email_notification_checkbox = document.getElementById("id_email_alarm");
-
-    // Función para activar/desactivar las casillas de verificación
-    function toggleCheckboxes(isAlarmChecked) {
-        central_notification_checkbox.disabled = !isAlarmChecked;
-        user_notification_checkbox.disabled = !isAlarmChecked;
-        email_notification_checkbox.disabled = !isAlarmChecked;
-
-        // Si la casilla de "Alarm" no está marcada, desmarcar las otras casillas
-        if (!isAlarmChecked) {
-            central_notification_checkbox.checked = false;
-            user_notification_checkbox.checked = false;
-            email_notification_checkbox.checked = false;
-        }
-    }
-
-    // Agregar evento "change" a la casilla de verificación de "Alarm"
-    alarm_checkbox.addEventListener("change", function() {
-        toggleCheckboxes(this.checked);
-    });
-
-    // Llamar a la función inicialmente para configurar el estado inicial de las casillas
-    toggleCheckboxes(alarm_checkbox.checked);
-</script>
-{% endblock scripts %}
+  </style>
+  {% endblock %}
+</div>

@@ -1,33 +1,38 @@
 import json
-from itertools import chain
-
+from datetime import datetime
 from django.contrib import messages
 from django.contrib.auth.mixins import (LoginRequiredMixin,
                                         PermissionRequiredMixin)
+from django.core.paginator import Paginator
 from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
+from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _
 from django.views import View, generic
-from django.views.generic import TemplateView
-from rest_framework import generics
+from django.views.decorators.csrf import csrf_protect
+from django.views.generic import ListView, TemplateView
 
+from apps.log.mixins import (CreateAuditLogAsyncMixin,
+                             DeleteAuditLogAsyncMixin,
+                             UpdateAuditLogAsyncMixin, UpdateAuditLogSyncMixin)
 from apps.realtime.forms import (DataPlanForm, DeviceForm, SimcardForm,
                                  VehicleForm, VehicleGroupForm)
 from apps.realtime.models import (DataPlan, Device, FamilyModelUEC,
                                   Manufacture, SimCard, Vehicle, VehicleGroup)
-from apps.realtime.serializer import GeozonesSerializer, VehicleSerializer
 from apps.whitelabel.models import Company
 from config.pagination import get_paginate_by
 
-from .apis import get_geozone_by_id, get_user_vehicles
+from .apis import (extract_number, get_user_companies, get_user_vehicles, sort_key_commands_datetime,
+                   sort_key)
 from .forms import (ConfigurationReport, DataPlanForm, DeviceForm,
                     GeozonesForm, SendingCommandsFrom, SimcardForm,
                     VehicleForm, VehicleGroupForm)
 from .models import (Command_response, DataPlan, Device, FamilyModelUEC,
                      Geozones, Io_items_report, Last_Avl, Manufacture,
-                     Sending_Commands, SimCard, Vehicle, VehicleGroup)
+                     Sending_Commands, SimCard, Types_assets, Vehicle,
+                     VehicleGroup)
 from .sql import (ListDeviceByCompany, ListVehicleByUserAndCompany,
                   ListVehicleGroupsByCompany, fetch_all_dataplan,
                   fetch_all_geozones, fetch_all_response_commands,
@@ -35,7 +40,7 @@ from .sql import (ListDeviceByCompany, ListVehicleByUserAndCompany,
 
 
 class ListDataPlanTemplate(
-    PermissionRequiredMixin, LoginRequiredMixin, generic.ListView
+    PermissionRequiredMixin, LoginRequiredMixin, ListView
 ):
     """
     Vista como clase que renderiza el template HTML que contiene la lista de planes de datos.
@@ -55,7 +60,24 @@ class ListDataPlanTemplate(
         Returns:
             int: El número de elementos a mostrar por página.
         """
-        return get_paginate_by(self.request)
+        paginate_by = self.request.POST.get('paginate_by', None)  # Obtener paginate_by de los parámetros POST
+
+        if paginate_by is None:
+            session_filters = self.request.session.get(
+                f"filters_sorted_dataplan_{self.request.user.id}", {}
+            )
+            paginate_by = session_filters.get("paginate_by", 15)
+            # Convertir a entero si es una lista
+            try:
+                paginate_by = int(
+                    paginate_by[0]
+                )  # Convertir el primer elemento de la lista a entero
+            except (TypeError, ValueError):
+                paginate_by = int(paginate_by) if paginate_by else 15
+            # Añadir paginate_by a self.request.GET para asegurar que esté presente
+            self.request.POST = self.request.POST.copy()
+            self.request.POST['paginate_by'] = paginate_by
+        return int(self.request.POST['paginate_by'])
 
     def get_queryset(self):
         """
@@ -67,15 +89,40 @@ class ListDataPlanTemplate(
         """
         user = self.request.user
         company = user.company
+        params = self.request.GET if self.request.method == 'GET' else self.request.POST
+        query = params.get("query", "").lower()
+        search = params.get("q", query).lower()
+        if 'order_by' not in params and 'paginate_by' not in params and 'page' not in params:
+            # Limpiar los filtros de la sesión
+            if f"filters_sorted_dataplan_{user.id}" in self.request.session:
+                del self.request.session[f"filters_sorted_dataplan_{user.id}"]
+                self.request.session.modified = True
+        # Recuperar filtros almacenados en la sesión
+        session_filters = self.request.session.get(f'filters_sorted_dataplan_{user.id}', {})
+        order_by = params.get('order_by', session_filters.get('order_by', ['Company'])[0])
+        direction = params.get('direction', session_filters.get('direction',['asc'])[0])
+        # Actualizar los filtros con los parámetros actuales de la solicitud GET
+        session_filters.update(params)
+
+        # Actualizar los filtros de la sesión con los nuevos parámetros
+        self.request.session[
+            f"filters_sorted_dataplan_{user.id}"
+        ] = session_filters
+        self.request.session.modified = True
         # Obtener los planes de datos a través de la función fetch_all_dataplan.
-        queryset = fetch_all_dataplan(company, user)
+        queryset = fetch_all_dataplan(company, user, search)
+        # Función para convertir los valores a minúsculas y extraer números cuando sea necesario
+        key_function = sort_key(order_by)
+        reverse = direction == 'desc'
+        try:
+            sorted_queryset = sorted(queryset, key=key_function, reverse=reverse)
+        except KeyError:
+            # Ordenamiento por defecto si la clave no existe
+            sorted_queryset = sorted(
+                queryset, key=lambda x: x["Company"].lower(), reverse=reverse
+            )
 
-        # Ordenar los resultados por 'Company' de forma descendente.
-        # Si queryset es una lista de diccionarios, Python no tiene un método `order_by`.
-        # Se debe utilizar la función sorted para ordenar listas de diccionarios.
-        queryset = sorted(queryset, key=lambda x: x["Company"], reverse=False)
-
-        return queryset
+        return sorted_queryset
 
     def get_context_data(self, **kwargs):
         """
@@ -88,49 +135,60 @@ class ListDataPlanTemplate(
             dict: El contexto de datos para renderizar la vista.
         """
         context = super().get_context_data(**kwargs)
+        paginate_by = self.get_paginate_by(None)
+        context["paginate_by"] = paginate_by
         # Simplificación directa para calcular start_number
         page_number = context.get("page_obj").number if context.get("page_obj") else 1
         context["start_number"] = (page_number - 1) * self.get_paginate_by(None)
+        session_filters = self.request.session.get(f'filters_sorted_dataplan_{self.request.user.id}', {})
+        # Obtener el ordenamiento desde la solicitud actual
+        order_by = self.request.GET.get('order_by') or self.request.POST.get('order_by') or session_filters.get('order_by', ['Company'])[0]
+        direction = self.request.GET.get('direction') or self.request.POST.get('direction') or session_filters.get('direction', ['asc'])[0]
+        context['order_by'] = order_by
+        context['direction'] = direction
         return context
+    
+    @method_decorator(csrf_protect)
+    def post(self, request, *args, **kwargs):
+        # Obtén el número de página desde la solicitud POST
+        page_number = request.POST.get('page', 1)
+        # Modifica la consulta para aplicar la paginación
+        self.object_list = self.get_queryset()
+        paginator = Paginator(self.object_list, self.get_paginate_by(None))
+        page_obj = paginator.get_page(page_number)
+        context = self.get_context_data(object_list=page_obj.object_list, page_obj=page_obj)
+        return self.render_to_response(context)
 
 
-class AddDataPlanView(PermissionRequiredMixin, LoginRequiredMixin, generic.CreateView):
+class AddDataPlanView(
+    PermissionRequiredMixin,
+    LoginRequiredMixin,
+    CreateAuditLogAsyncMixin,
+    generic.CreateView,
+):
     """
-    Este código define una vista de clase llamada "AddDataPlanView" que hereda de otras dos
-    vistas y utiliza un formulariollamado "DataPlanForm". También define un método
-    "get_context_data" que agrega información adicional al contexto de lavista y un método
-    "form_valid" que guarda los datos del formulario y devuelve una respuesta HTTP con un
-    encabezado personalizado.
+    Vista para agregar un nuevo plan de datos.
     """
 
+    model = DataPlan
     template_name = "realtime/dataplan/add_dataplan.html"
     permission_required = "realtime.add_dataplan"
     form_class = DataPlanForm
+    success_url = reverse_lazy("realtime:list_dataplan_created")
 
     def get_success_url(self):
-        # Asegúrate de que el nombre de la URL sea correcto y esté definido en tus archivos de URL.
         return reverse("realtime:dataplan")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        if self.request.user.company_id == 1:
-            companies = Company.objects.filter(
-            visible=True, actived=True)
-        # Caso 2: Si el usuario tiene compañías para monitorear, mostrar solo esas
-        elif self.request.user.companies_to_monitor.exists():
-            companies = self.request.user.companies_to_monitor.filter(visible=True, actived=True)  
+        user = self.request.user
+        companies = get_user_companies(user)
+        if user.company_id == 1:
+            context["form"].fields["company"].choices = companies
         else:
-            companies = Company.objects.filter(
-                Q(id=self.request.user.company_id)
-                | Q(provider_id=self.request.user.company_id),
-                visible=True,
-                actived=True,
-            )
-        # Ordenar el queryset
-        companies = companies.order_by('company_name')
-
-        # Asignar el queryset ordenado al campo del formulario
-        context["form"].fields["company"].queryset = companies
+            context["form"].fields["company"].queryset = companies
+        button_color = self.request.user.company.theme_set.all().first().button_color
+        context["button_color"] = button_color
         return context
 
     def form_valid(self, form):
@@ -138,15 +196,22 @@ class AddDataPlanView(PermissionRequiredMixin, LoginRequiredMixin, generic.Creat
         dataplan.modified_by = self.request.user
         dataplan.created_by = self.request.user
         dataplan.save()
-        page_update = HttpResponse(
-            ""
-        )  # O puedes enviar algún contenido si es necesario.
-        page_update["HX-Redirect"] = self.get_success_url()
-        return page_update
+
+        # Llama al método form_valid de la clase padre para registrar la acción en el log de auditoría
+        response = super().form_valid(form)
+
+        # Prepara una respuesta con redirección usando HTMX
+        if self.request.htmx:
+            return HttpResponse(headers={"HX-Redirect": self.get_success_url()})
+        else:
+            return response
 
 
 class UpdateDataPlanView(
-    PermissionRequiredMixin, LoginRequiredMixin, generic.UpdateView
+    PermissionRequiredMixin,
+    LoginRequiredMixin,
+    UpdateAuditLogAsyncMixin,
+    generic.UpdateView,
 ):
     """
     Esta clase es una vista basada en clase que permite actualizar los datos de un modelo
@@ -170,46 +235,43 @@ class UpdateDataPlanView(
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        if self.request.user.company_id == 1:
-            companies = Company.objects.filter(
-            visible=True, actived=True)
-        # Caso 2: Si el usuario tiene compañías para monitorear, mostrar solo esas
-        elif self.request.user.companies_to_monitor.exists():
-            companies = self.request.user.companies_to_monitor.filter(visible=True, actived=True)  
+        user = self.request.user
+        companies = get_user_companies(user)
+        if user.company_id == 1:
+            context["form"].fields["company"].choices = companies
         else:
-            companies = Company.objects.filter(
-                Q(id=self.request.user.company_id)
-                | Q(provider_id=self.request.user.company_id),
-                visible=True,
-                actived=True,
-            )
-        # Ordenar el queryset
-        companies = companies.order_by('company_name')
-
-        # Asignar el queryset ordenado al campo del formulario
-        context["form"].fields["company"].queryset = companies
+            context["form"].fields["company"].queryset = companies
+        button_color = self.request.user.company.theme_set.all().first().button_color
+        context["button_color"] = button_color
         return context
 
     def form_valid(self, form):
         dataplan = form.save(commit=False)
         dataplan.modified_by = self.request.user
         dataplan.save()
-        page_update = HttpResponse(
-            ""
-        )  # O puedes enviar algún contenido si es necesario.
+
+        # Llama al método form_valid de la clase padre para registrar la acción en el log de auditoría
+        response = super().form_valid(form)
+
+        # Prepara una respuesta con redirección usando HTMX
+        page_update = HttpResponse("")
         page_update["HX-Redirect"] = self.get_success_url()
         return page_update
 
 
 class DeleteDataPlanView(
-    PermissionRequiredMixin, LoginRequiredMixin, generic.UpdateView
+    PermissionRequiredMixin,
+    LoginRequiredMixin,
+    DeleteAuditLogAsyncMixin,
+    generic.UpdateView,
 ):
     """
-    La clase DeleteDataPlanView es una vista de Django que hereda de las clases P
-    ermissionRequiredMixin, LoginRequiredMixin y generic.UpdateView. Implementa la funcionalidad
-    de ocultar un plan de datos (en lugar de eliminarlo) estableciendo el valor de la variable
-    visible en False en el método form_valid(). Retorna una respuesta HTTP con el código 204 y
-    la cabecera HX-Trigger para actualizar la lista de planes de datos en la interfaz de usuario.
+    La clase DeleteDataPlanView es una vista de Django que hereda de las clases
+    PermissionRequiredMixin, LoginRequiredMixin y  generic.UpdateView. Implementa
+    la funcionalidad de ocultar un plan de datos (en lugar de eliminarlo) estableciendo
+    el valor de la variable visible en False en el método form_valid(). Retorna una
+    respuesta HTTP con el código 204 y la cabecera HX-Redirect para redirigir
+    a la lista de planes de datos en la interfaz de usuario.
     """
 
     model = DataPlan
@@ -222,19 +284,21 @@ class DeleteDataPlanView(
         return reverse("realtime:dataplan")
 
     def form_valid(self, form):
-        dataplan = form.save(commit=False)
-        dataplan.modified_by = self.request.user
-        dataplan.visible = False
-        dataplan.save()
-        page_update = HttpResponse(
-            ""
-        )  # O puedes enviar algún contenido si es necesario.
+        # Modifica el plan de datos en lugar de eliminarlo
+        form.instance.modified_by = self.request.user
+        form.instance.visible = False
+        form.instance.is_active = False
+        form.save()
+        # Llama al método form_valid de la clase padre para registrar la acción en el log de auditoría
+        response = super().form_valid(form)
+        # Prepara una respuesta con redirección usando HTMX
+        page_update = HttpResponse("")
         page_update["HX-Redirect"] = self.get_success_url()
         return page_update
 
 
 class ListSimcardTemplate(
-    PermissionRequiredMixin, LoginRequiredMixin, generic.ListView
+    PermissionRequiredMixin, LoginRequiredMixin, ListView
 ):
     """
     Vista como clase que renderiza el template HTML que contiene la lista de simcards.
@@ -255,7 +319,24 @@ class ListSimcardTemplate(
         Returns:
             int: El número de elementos a mostrar por página.
         """
-        return get_paginate_by(self.request)
+        paginate_by = self.request.POST.get('paginate_by', None)  # Obtener paginate_by de los parámetros POST
+
+        if paginate_by is None:
+            session_filters = self.request.session.get(
+                f"filters_sorted_simcard_{self.request.user.id}", {}
+            )
+            paginate_by = session_filters.get("paginate_by", 15)
+            # Convertir a entero si es una lista
+            try:
+                paginate_by = int(
+                    paginate_by[0]
+                )  # Convertir el primer elemento de la lista a entero
+            except (TypeError, ValueError):
+                paginate_by = int(paginate_by) if paginate_by else 15
+            # Añadir paginate_by a self.request.GET para asegurar que esté presente
+            self.request.POST = self.request.POST.copy()
+            self.request.POST['paginate_by'] = paginate_by
+        return int(self.request.POST['paginate_by'])
 
     def get_queryset(self):
         """
@@ -266,15 +347,38 @@ class ListSimcardTemplate(
         """
         user = self.request.user
         company = user.company
-        # Obtener los planes de datos a través de la función fetch_all_dataplan.
-        queryset = fetch_all_simcards(company, user)
+        params = self.request.GET if self.request.method == 'GET' else self.request.POST
+        query = params.get("query", "").lower()
+        search = params.get("q", query).lower()
+        if 'order_by' not in params and 'paginate_by' not in params and 'page' not in params:
+            # Limpiar los filtros de la sesión
+            if f"filters_sorted_simcard_{user.id}" in self.request.session:
+                del self.request.session[f"filters_sorted_simcard_{user.id}"]
+                self.request.session.modified = True
+        # Recuperar filtros almacenados en la sesión
+        session_filters = self.request.session.get(f'filters_sorted_simcard_{user.id}', {})
+        order_by = params.get('order_by', session_filters.get('order_by', ['Company'])[0])
+        direction = params.get('direction', session_filters.get('direction',['asc'])[0])
+        # Actualizar los filtros con los parámetros actuales de la solicitud GET
+        session_filters.update(params)
+        # Actualizar los filtros de la sesión con los nuevos parámetros
+        self.request.session[
+            f"filters_sorted_simcard_{user.id}"
+        ] = session_filters
+        self.request.session.modified = True
+        queryset = fetch_all_simcards(company, user, search)
+        # Función para convertir los valores a minúsculas y extraer números cuando sea necesario
+        key_function = sort_key(order_by)
+        reverse = direction == 'desc'
+        try:
+            sorted_queryset = sorted(queryset, key=key_function, reverse=reverse)
+        except KeyError:
+            # Ordenamiento por defecto si la clave no existe
+            sorted_queryset = sorted(
+                queryset, key=lambda x: x["Company"].lower(), reverse=reverse
+            )
 
-        # Ordenar los resultados por 'Company' de forma descendente.
-        # Si queryset es una lista de diccionarios, Python no tiene un método `order_by`.
-        # Se debe utilizar la función sorted para ordenar listas de diccionarios.
-        queryset = sorted(queryset, key=lambda x: x["Company"], reverse=False)
-
-        return queryset
+        return sorted_queryset
 
     def get_context_data(self, **kwargs):
         """
@@ -287,13 +391,37 @@ class ListSimcardTemplate(
             dict: El contexto de datos para renderizar la vista.
         """
         context = super().get_context_data(**kwargs)
+        paginate_by = self.get_paginate_by(None)
+        context["paginate_by"] = paginate_by
         # Simplificación directa para calcular start_number
         page_number = context.get("page_obj").number if context.get("page_obj") else 1
         context["start_number"] = (page_number - 1) * self.get_paginate_by(None)
+        session_filters = self.request.session.get(f'filters_sorted_simcard_{self.request.user.id}', {})
+        # Obtener el ordenamiento desde la solicitud actual
+        order_by = self.request.GET.get('order_by') or self.request.POST.get('order_by') or session_filters.get('order_by', ['Company'])[0]
+        direction = self.request.GET.get('direction') or self.request.POST.get('direction') or session_filters.get('direction', ['asc'])[0]
+        context['order_by'] = order_by
+        context['direction'] = direction
         return context
+    
+    @method_decorator(csrf_protect)
+    def post(self, request, *args, **kwargs):
+        # Obtén el número de página desde la solicitud POST
+        page_number = request.POST.get('page', 1)
+        # Modifica la consulta para aplicar la paginación
+        self.object_list = self.get_queryset()
+        paginator = Paginator(self.object_list, self.get_paginate_by(None))
+        page_obj = paginator.get_page(page_number)
+        context = self.get_context_data(object_list=page_obj.object_list, page_obj=page_obj)
+        return self.render_to_response(context)
 
 
-class AddSimcardView(PermissionRequiredMixin, LoginRequiredMixin, generic.CreateView):
+class AddSimcardView(
+    PermissionRequiredMixin,
+    LoginRequiredMixin,
+    CreateAuditLogAsyncMixin,
+    generic.CreateView,
+):
     """
     Clase que implementa la opción de crear tarjetas SIM. Permite añadir una configuración
     personalizada para los campos 'serial_number', 'phone_number', 'expiration_date' y 'data_plan'.
@@ -315,25 +443,15 @@ class AddSimcardView(PermissionRequiredMixin, LoginRequiredMixin, generic.Create
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user_company = self.request.user.company_id
-        if self.request.user.company_id == 1:
-            companies = Company.objects.filter(
-            visible=True, actived=True)
-        # Caso 2: Si el usuario tiene compañías para monitorear, mostrar solo esas
-        elif self.request.user.companies_to_monitor.exists():
-            companies = self.request.user.companies_to_monitor.filter(visible=True, actived=True)  
+        user = self.request.user
+        companies = get_user_companies(user)
+        if user.company_id == 1:
+            context["form"].fields["company"].choices = companies
         else:
-            companies = Company.objects.filter(
-                Q(id=self.request.user.company_id)
-                | Q(provider_id=self.request.user.company_id),
-                visible=True,
-                actived=True,
-            )
-        # Ordenar el queryset
-        companies = companies.order_by('company_name')
-
-        # Asignar el queryset ordenado al campo del formulario
-        context["form"].fields["company"].queryset = companies
+            context["form"].fields["company"].queryset = companies
         context["simcard"] = user_company
+        button_color = self.request.user.company.theme_set.all().first().button_color
+        context["button_color"] = button_color
         return context
 
     def form_valid(self, form):
@@ -341,15 +459,20 @@ class AddSimcardView(PermissionRequiredMixin, LoginRequiredMixin, generic.Create
         form.instance.modified_by = self.request.user
         form.instance.created_by = self.request.user
         form.save()
-        page_update = HttpResponse(
-            ""
-        )  # O puedes enviar algún contenido si es necesario.
+        # Llama al método form_valid de la clase padre para registrar la acción en el log de auditoría
+        response = super().form_valid(form)
+
+        # Prepara una respuesta con redirección usando HTMX
+        page_update = HttpResponse("")
         page_update["HX-Redirect"] = self.get_success_url()
         return page_update
 
 
 class UpdateSimcardView(
-    PermissionRequiredMixin, LoginRequiredMixin, generic.UpdateView
+    PermissionRequiredMixin,
+    LoginRequiredMixin,
+    UpdateAuditLogAsyncMixin,
+    generic.UpdateView,
 ):
     """
     Esta es una clase de vista que implementa la opción de editar información de las Simcards.
@@ -377,34 +500,26 @@ class UpdateSimcardView(
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user_company = self.request.user.company_id
-        if self.request.user.company_id == 1:
-            companies = Company.objects.filter(
-            visible=True, actived=True)
-        # Caso 2: Si el usuario tiene compañías para monitorear, mostrar solo esas
-        elif self.request.user.companies_to_monitor.exists():
-            companies = self.request.user.companies_to_monitor.filter(visible=True, actived=True)  
+        user = self.request.user
+        companies = get_user_companies(user)
+        if user.company_id == 1:
+            context["form"].fields["company"].choices = companies
         else:
-            companies = Company.objects.filter(
-                Q(id=self.request.user.company_id)
-                | Q(provider_id=self.request.user.company_id),
-                visible=True,
-                actived=True,
-            )
-        # Ordenar el queryset
-        companies = companies.order_by('company_name')
-
-        # Asignar el queryset ordenado al campo del formulario
-        context["form"].fields["company"].queryset = companies
+            context["form"].fields["company"].queryset = companies
         context["simcard"] = user_company
+        button_color = self.request.user.company.theme_set.all().first().button_color
+        context["button_color"] = button_color
         return context
 
     def form_valid(self, form):
         # form.clean_activate_date()
         form.instance.modified_by = self.request.user
         form.save()
-        page_update = HttpResponse(
-            ""
-        )  # O puedes enviar algún contenido si es necesario.
+        # Llama al método form_valid de la clase padre para registrar la acción en el log de auditoría
+        response = super().form_valid(form)
+
+        # Prepara una respuesta con redirección usando HTMX
+        page_update = HttpResponse("")
         page_update["HX-Redirect"] = self.get_success_url()
         return page_update
 
@@ -413,7 +528,10 @@ class UpdateSimcardView(
 
 
 class DeleteSimcardView(
-    PermissionRequiredMixin, LoginRequiredMixin, generic.UpdateView
+    PermissionRequiredMixin,
+    LoginRequiredMixin,
+    DeleteAuditLogAsyncMixin,
+    generic.UpdateView,
 ):
     """
     Este código define una vista de Django que implementa la eliminación de una instancia del
@@ -446,14 +564,16 @@ class DeleteSimcardView(
         simcard.visible = False
         simcard.save()
 
-        page_update = HttpResponse(
-            ""
-        )  # O puedes enviar algún contenido si es necesario.
+        # Llama al método form_valid de la clase padre para registrar la acción en el log de auditoría
+        response = super().form_valid(form)
+
+        # Prepara una respuesta con redirección usando HTMX
+        page_update = HttpResponse("")
         page_update["HX-Redirect"] = self.get_success_url()
         return page_update
 
 
-class ListDeviceTemplate(PermissionRequiredMixin, LoginRequiredMixin, generic.ListView):
+class ListDeviceTemplate(PermissionRequiredMixin, LoginRequiredMixin, ListView):
     """
     Vista como clase que renderiza el template HTML que contiene la lista de dispositivos.
     """
@@ -472,7 +592,24 @@ class ListDeviceTemplate(PermissionRequiredMixin, LoginRequiredMixin, generic.Li
         Returns:
             int: El número de elementos a mostrar por página.
         """
-        return get_paginate_by(self.request)
+        paginate_by = self.request.POST.get('paginate_by', None)  # Obtener paginate_by de los parámetros POST
+
+        if paginate_by is None:
+            session_filters = self.request.session.get(
+                f"filters_sorted_device_{self.request.user.id}", {}
+            )
+            paginate_by = session_filters.get("paginate_by", 15)
+            # Convertir a entero si es una lista
+            try:
+                paginate_by = int(
+                    paginate_by[0]
+                )  # Convertir el primer elemento de la lista a entero
+            except (TypeError, ValueError):
+                paginate_by = int(paginate_by) if paginate_by else 15
+            # Añadir paginate_by a self.request.GET para asegurar que esté presente
+            self.request.POST = self.request.POST.copy()
+            self.request.POST['paginate_by'] = paginate_by
+        return int(self.request.POST['paginate_by'])
 
     def get_queryset(self):
         """
@@ -482,8 +619,38 @@ class ListDeviceTemplate(PermissionRequiredMixin, LoginRequiredMixin, generic.Li
             QuerySet: El conjunto de datos de los comandos de envío filtrados y ordenados.
         """
         user = self.request.user
-        devices = ListDeviceByCompany(user.company_id, user.id)
-        return devices
+        params = self.request.GET if self.request.method == 'GET' else self.request.POST
+        query = params.get("query", "").lower()
+        search = params.get("q", query).lower()
+        if 'order_by' not in params and 'paginate_by' not in params and 'page' not in params:
+            # Limpiar los filtros de la sesión
+            if f"filters_sorted_device_{user.id}" in self.request.session:
+                del self.request.session[f"filters_sorted_device_{user.id}"]
+                self.request.session.modified = True
+        # Recuperar filtros almacenados en la sesión
+        session_filters = self.request.session.get(f'filters_sorted_device_{user.id}', {})
+        order_by = params.get('order_by', session_filters.get('order_by', ['company'])[0])
+        direction = params.get('direction', session_filters.get('direction',['asc'])[0])
+        # Actualizar los filtros con los parámetros actuales de la solicitud GET
+        session_filters.update(params)
+        # Actualizar los filtros de la sesión con los nuevos parámetros
+        self.request.session[
+            f"filters_sorted_device_{user.id}"
+        ] = session_filters
+        self.request.session.modified = True
+        devices = ListDeviceByCompany(user.company_id, user.id, str(search))
+        # Función para convertir los valores a minúsculas y extraer números cuando sea necesario
+        key_function = sort_key(order_by)
+        reverse = direction == 'desc'
+        try:
+            sorted_queryset = sorted(devices, key=key_function, reverse=reverse)
+        except KeyError:
+            # Ordenamiento por defecto si la clave no existe
+            sorted_queryset = sorted(
+                devices, key=lambda x: x["company"].lower(), reverse=reverse
+            )
+
+        return sorted_queryset
 
     def get_context_data(self, **kwargs):
         """
@@ -496,13 +663,37 @@ class ListDeviceTemplate(PermissionRequiredMixin, LoginRequiredMixin, generic.Li
             dict: El contexto de datos para renderizar la vista.
         """
         context = super().get_context_data(**kwargs)
+        paginate_by = self.get_paginate_by(None)
+        context["paginate_by"] = paginate_by
         # Simplificación directa para calcular start_number
         page_number = context.get("page_obj").number if context.get("page_obj") else 1
         context["start_number"] = (page_number - 1) * self.get_paginate_by(None)
+        session_filters = self.request.session.get(f'filters_sorted_device_{self.request.user.id}', {})
+        # Obtener el ordenamiento desde la solicitud actual
+        order_by = self.request.GET.get('order_by') or self.request.POST.get('order_by') or session_filters.get('order_by', ['company'])[0]
+        direction = self.request.GET.get('direction') or self.request.POST.get('direction') or session_filters.get('direction', ['asc'])[0]
+        context['order_by'] = order_by
+        context['direction'] = direction
         return context
+    
+    @method_decorator(csrf_protect)
+    def post(self, request, *args, **kwargs):
+        # Obtén el número de página desde la solicitud POST
+        page_number = request.POST.get('page', 1)
+        # Modifica la consulta para aplicar la paginación
+        self.object_list = self.get_queryset()
+        paginator = Paginator(self.object_list, self.get_paginate_by(None))
+        page_obj = paginator.get_page(page_number)
+        context = self.get_context_data(object_list=page_obj.object_list, page_obj=page_obj)
+        return self.render_to_response(context)
 
 
-class AddDeviceView(PermissionRequiredMixin, LoginRequiredMixin, generic.CreateView):
+class AddDeviceView(
+    PermissionRequiredMixin,
+    LoginRequiredMixin,
+    CreateAuditLogAsyncMixin,
+    generic.CreateView,
+):
     """
     Este código define una vista de Django para agregar un nuevo objeto "Device" en la base de
     datos. El usuario debe estar autenticado y tener los permisos necesarios para acceder a esta
@@ -523,26 +714,16 @@ class AddDeviceView(PermissionRequiredMixin, LoginRequiredMixin, generic.CreateV
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        if self.request.user.company_id == 1:
-            companies = Company.objects.filter(
-            visible=True, actived=True)
-        # Caso 2: Si el usuario tiene compañías para monitorear, mostrar solo esas
-        elif self.request.user.companies_to_monitor.exists():
-            companies = self.request.user.companies_to_monitor.filter(visible=True, actived=True)  
+        user = self.request.user
+        companies = get_user_companies(user)
+        if user.company_id == 1:
+            context["form"].fields["company"].choices = companies
         else:
-            companies = Company.objects.filter(
-                Q(id=self.request.user.company_id)
-                | Q(provider_id=self.request.user.company_id),
-                visible=True,
-                actived=True,
-            )
-        # Ordenar el queryset
-        companies = companies.order_by('company_name')
-
-        # Asignar el queryset ordenado al campo del formulario
-        context["form"].fields["company"].queryset = companies
+            context["form"].fields["company"].queryset = companies
+        
+        context["form"].fields["familymodel"].queryset=FamilyModelUEC.objects.none()
+        
         manufactures = Manufacture.objects.all()
-        family_models = FamilyModelUEC.objects.all()
         selected_model = self.request.POST.get("model")
         int_selected_model = None
         if selected_model is not None:
@@ -550,10 +731,11 @@ class AddDeviceView(PermissionRequiredMixin, LoginRequiredMixin, generic.CreateV
         context.update(
             {
                 "manufactures": manufactures,
-                "family_models": family_models,
                 "selected_model": int_selected_model,
             }
         )
+        button_color = self.request.user.company.theme_set.all().first().button_color
+        context["button_color"] = button_color
         return context
 
     def form_valid(self, form):
@@ -562,9 +744,11 @@ class AddDeviceView(PermissionRequiredMixin, LoginRequiredMixin, generic.CreateV
 
         form.save()
 
-        page_update = HttpResponse(
-            ""
-        )  # O puedes enviar algún contenido si es necesario.
+        # Llama al método form_valid de la clase padre para registrar la acción en el log de auditoría
+        response = super().form_valid(form)
+
+        # Prepara una respuesta con redirección usando HTMX
+        page_update = HttpResponse("")
         page_update["HX-Redirect"] = self.get_success_url()
         return page_update
 
@@ -573,7 +757,12 @@ class AddDeviceView(PermissionRequiredMixin, LoginRequiredMixin, generic.CreateV
         return self.render_to_response(self.get_context_data(form=form))
 
 
-class UpdateDeviceView(PermissionRequiredMixin, LoginRequiredMixin, generic.UpdateView):
+class UpdateDeviceView(
+    PermissionRequiredMixin,
+    LoginRequiredMixin,
+    UpdateAuditLogAsyncMixin,
+    generic.UpdateView,
+):
     """
     Este código define una vista de Django que se utiliza para editar un objeto "Device" en la
     base de datos.  El usuario debe estar autenticado y tener los permisos necesarios para acceder
@@ -594,50 +783,30 @@ class UpdateDeviceView(PermissionRequiredMixin, LoginRequiredMixin, generic.Upda
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        if self.request.user.company_id == 1:
-            companies = Company.objects.filter(
-            visible=True, actived=True)
-        # Caso 2: Si el usuario tiene compañías para monitorear, mostrar solo esas
-        elif self.request.user.companies_to_monitor.exists():
-            companies = self.request.user.companies_to_monitor.filter(visible=True, actived=True)  
+        user = self.request.user
+        companies = get_user_companies(user)
+        if user.company_id == 1:
+            context["form"].fields["company"].choices = companies
         else:
-            companies = Company.objects.filter(
-                Q(id=self.request.user.company_id)
-                | Q(provider_id=self.request.user.company_id),
-                visible=True,
-                actived=True,
-            )
-        # Ordenar el queryset
-        companies = companies.order_by('company_name')
-
-        # Asignar el queryset ordenado al campo del formulario
-        context["form"].fields["company"].queryset = companies
-        user_device = self.object
-
+            context["form"].fields["company"].queryset = companies
         manufactures = Manufacture.objects.all()
-        family_models = FamilyModelUEC.objects.all()
-        selected_model = self.request.POST.get("model")
-        int_selected_model = None
-        if selected_model is not None:
-            int_selected_model = int(selected_model)
-        model_assigned = user_device.familymodel if user_device.familymodel else None
-        context["model_assigned"] = model_assigned
-
         context.update(
             {
                 "manufactures": manufactures,
-                "family_models": family_models,
-                "selected_model": int_selected_model,
             }
         )
+        button_color = self.request.user.company.theme_set.all().first().button_color
+        context["button_color"] = button_color
         return context
 
     def form_valid(self, form):
         form.instance.modified_by = self.request.user
         form.save()
-        page_update = HttpResponse(
-            ""
-        )  # O puedes enviar algún contenido si es necesario.
+        # Llama al método form_valid de la clase padre para registrar la acción en el log de auditoría
+        response = super().form_valid(form)
+
+        # Prepara una respuesta con redirección usando HTMX
+        page_update = HttpResponse("")
         page_update["HX-Redirect"] = self.get_success_url()
         return page_update
 
@@ -646,7 +815,12 @@ class UpdateDeviceView(PermissionRequiredMixin, LoginRequiredMixin, generic.Upda
         return self.render_to_response(self.get_context_data(form=form))
 
 
-class DeleteDeviceView(PermissionRequiredMixin, LoginRequiredMixin, generic.UpdateView):
+class DeleteDeviceView(
+    PermissionRequiredMixin,
+    LoginRequiredMixin,
+    DeleteAuditLogAsyncMixin,
+    generic.UpdateView,
+):
     """
     Este código define una vista de Django para eliminar un objeto "Device" de la base de datos y
     configurar su campo "visible" como falso. Se requiere que el usuario tenga ciertos permisos y
@@ -690,15 +864,17 @@ class DeleteDeviceView(PermissionRequiredMixin, LoginRequiredMixin, generic.Upda
             vehicle.device = None  # Limpiar el campo de dispositivo
             vehicle.save()
 
-        page_update = HttpResponse(
-            ""
-        )  # O puedes enviar algún contenido si es necesario.
+        # Llama al método form_valid de la clase padre para registrar la acción en el log de auditoría
+        response = super().form_valid(form)
+
+        # Prepara una respuesta con redirección usando HTMX
+        page_update = HttpResponse("")
         page_update["HX-Redirect"] = self.get_success_url()
         return page_update
 
 
 class ListVehicleTemplate(
-    PermissionRequiredMixin, LoginRequiredMixin, generic.ListView
+    PermissionRequiredMixin, LoginRequiredMixin, ListView
 ):
     """
     La clase ListVehicleTemplate es una vista que requiere permisos y autenticación, y que
@@ -720,7 +896,24 @@ class ListVehicleTemplate(
         Returns:
             int: El número de elementos a mostrar por página.
         """
-        return get_paginate_by(self.request)
+        paginate_by = self.request.POST.get('paginate_by', None)  # Obtener paginate_by de los parámetros POST
+
+        if paginate_by is None:
+            session_filters = self.request.session.get(
+                f"filters_sorted_vehicle_{self.request.user.id}", {}
+            )
+            paginate_by = session_filters.get("paginate_by", 15)
+            # Convertir a entero si es una lista
+            try:
+                paginate_by = int(
+                    paginate_by[0]
+                )  # Convertir el primer elemento de la lista a entero
+            except (TypeError, ValueError):
+                paginate_by = int(paginate_by) if paginate_by else 15
+            # Añadir paginate_by a self.request.GET para asegurar que esté presente
+            self.request.POST = self.request.POST.copy()
+            self.request.POST['paginate_by'] = paginate_by
+        return int(self.request.POST['paginate_by'])
 
     def get_queryset(self):
         """
@@ -729,10 +922,43 @@ class ListVehicleTemplate(
         Returns:
             QuerySet: El conjunto de datos de los comandos de envío filtrados y ordenados.
         """
+        user = self.request.user
+        params = self.request.GET if self.request.method == 'GET' else self.request.POST
+        query = params.get("query", "").lower()
+        search = params.get("q", query).lower()
+        if 'order_by' not in params and 'paginate_by' not in params and 'page' not in params:
+            # Limpiar los filtros de la sesión
+            if f"filters_sorted_vehicle_{user.id}" in self.request.session:
+                del self.request.session[f"filters_sorted_vehicle_{user.id}"]
+                self.request.session.modified = True
+        # Recuperar filtros almacenados en la sesión
+        session_filters = self.request.session.get(f'filters_sorted_vehicle_{user.id}', {})
+        order_by = params.get('order_by', session_filters.get('order_by', ['company'])[0])
+        direction = params.get('direction', session_filters.get('direction',['asc'])[0])
+        # Actualizar los filtros con los parámetros actuales de la solicitud GET
+        session_filters.update(params)
+        # Actualizar los filtros de la sesión con los nuevos parámetros
+        self.request.session[
+            f"filters_sorted_vehicle_{user.id}"
+        ] = session_filters
+        self.request.session.modified = True
+        # Obtener los planes de datos a través de la función fetch_all_dataplan.
         vehicles = ListVehicleByUserAndCompany(
-            self.request.user.company_id, self.request.user.id
+            self.request.user.company_id, self.request.user.id, str(search)
         )
-        return vehicles
+
+        # Función para convertir los valores a minúsculas y extraer números cuando sea necesario
+        key_function = sort_key(order_by)
+        reverse = direction == 'desc'
+        try:
+            sorted_queryset = sorted(vehicles, key=key_function, reverse=reverse)
+        except KeyError:
+            # Ordenamiento por defecto si la clave no existe
+            sorted_queryset = sorted(
+                vehicles, key=lambda x: x["company"].lower(), reverse=reverse
+            )
+
+        return sorted_queryset
 
     def get_context_data(self, **kwargs):
         """
@@ -745,70 +971,37 @@ class ListVehicleTemplate(
             dict: El contexto de datos para renderizar la vista.
         """
         context = super().get_context_data(**kwargs)
+        paginate_by = self.get_paginate_by(None)
+        context["paginate_by"] = paginate_by
         # Simplificación directa para calcular start_number
         page_number = context.get("page_obj").number if context.get("page_obj") else 1
         context["start_number"] = (page_number - 1) * self.get_paginate_by(None)
+        session_filters = self.request.session.get(f'filters_sorted_vehicle_{self.request.user.id}', {})
+        # Obtener el ordenamiento desde la solicitud actual
+        order_by = self.request.GET.get('order_by') or self.request.POST.get('order_by') or session_filters.get('order_by', ['company'])[0]
+        direction = self.request.GET.get('direction') or self.request.POST.get('direction') or session_filters.get('direction', ['asc'])[0]
+        context['order_by'] = order_by
+        context['direction'] = direction
         return context
+    
+    @method_decorator(csrf_protect)
+    def post(self, request, *args, **kwargs):
+        # Obtén el número de página desde la solicitud POST
+        page_number = request.POST.get('page', 1)
+        # Modifica la consulta para aplicar la paginación
+        self.object_list = self.get_queryset()
+        paginator = Paginator(self.object_list, self.get_paginate_by(None))
+        page_obj = paginator.get_page(page_number)
+        context = self.get_context_data(object_list=page_obj.object_list, page_obj=page_obj)
+        return self.render_to_response(context)
 
 
-# class ListVehiclesView(PermissionRequiredMixin, LoginRequiredMixin, generic.ListView):
-#     """
-#     Este código define una vista de Django para listar los objetos "Vehicle" en la base de datos.
-#     La vista requiere que el usuario tenga ciertos permisos y esté autenticado para acceder a ella.
-#     Se agrega una lista de vehículos visibles y pertenecientes a la compañía del usuario al
-#     contexto de la plantilla y se devuelve un queryset de todos los vehículos pertenecientes a la
-#     compañía del usuario.
-#     """
-
-#     model = Vehicle
-#     template_name = "realtime/vehicles/list_vehicles_created.html"
-#     context_object_name = "list_vehicles"
-#     permission_required = "realtime.view_vehicle"
-
-#     def get_context_data(self, **kwargs):
-#         context = super().get_context_data(**kwargs)
-#         user = self.request.user  # Obtener el usuario actual
-
-#         user_company = user.company_id
-#         companies_to_monitor = user.companies_to_monitor.all()
-#         user_selected_vehicles = user.vehicles_to_monitor.all()
-#         user_selected_group_vehicles = Vehicle.objects.filter(
-#             vehiclegroup__in=user.group_vehicles.all()
-#         )
-#         provider_company_ids = Company.objects.filter(
-#             provider_id=user_company
-#         ).values_list("id", flat=True)
-#         list_vehicles = Vehicle.objects.filter(
-#             Q(company_id=user_company, visible=True)
-#             | Q(company_id__in=list(provider_company_ids), visible=True)
-#         )
-
-#         if (
-#             companies_to_monitor.exists()
-#             or user_selected_vehicles.exists()
-#             or user_selected_group_vehicles.exists()
-#         ):
-#             companies = companies_to_monitor.filter(visible=True)
-
-#             list_vehicles = list_vehicles.filter(
-#                 Q(id__in=user_selected_vehicles)
-#                 | Q(id__in=user_selected_group_vehicles)
-#             )
-#             list_vehicles = Vehicle.objects.filter(
-#                 company_id=user_company, visible=True
-#             ) | Vehicle.objects.filter(company__in=companies, visible=True)
-
-#         else:
-#             companys_provider = Company.objects.filter(id=self.request.user.company_id)
-#             list_vehicles = list_vehicles | Vehicle.objects.filter(
-#                 company__in=companys_provider, visible=True
-#             )
-
-#         context["list_vehicles"] = list_vehicles
-#         return context
-
-
-class AddVehicleView(PermissionRequiredMixin, LoginRequiredMixin, generic.CreateView):
+class AddVehicleView(
+    PermissionRequiredMixin,
+    LoginRequiredMixin,
+    CreateAuditLogAsyncMixin,
+    generic.CreateView,
+):
 
     """
     Este código define una vista de Django para agregar un objeto "Vehicle" a la base de datos.
@@ -840,27 +1033,15 @@ class AddVehicleView(PermissionRequiredMixin, LoginRequiredMixin, generic.Create
             company_id=company_id, visible=True, is_active=True
         ).exclude(pk__in=assigned_devices)
 
-        if self.request.user.company_id == 1:
-            companies = Company.objects.filter(
-            visible=True, actived=True)
-        # Caso 2: Si el usuario tiene compañías para monitorear, mostrar solo esas
-        elif self.request.user.companies_to_monitor.exists():
-            companies = self.request.user.companies_to_monitor.filter(visible=True, actived=True)  
+        user = self.request.user
+        companies = get_user_companies(user)
+        if user.company_id == 1:
+            context["form"].fields["company"].choices = companies
         else:
-            companies = Company.objects.filter(
-                Q(id=self.request.user.company_id)
-                | Q(provider_id=self.request.user.company_id),
-                visible=True,
-                actived=True,
-            )
-        # Ordenar el queryset
-        companies = companies.order_by('company_name')
-
-        # Asignar el queryset ordenado al campo del formulario
-        context["form"].fields["company"].queryset = companies
-        # Obtener los dispositivos disponibles (que no están asignados a ningún vehículo)
-        # available_devices = Device.objects.filter(company_id=company_id, visible=True, vehicle__isnull=True)
-        # context["form"].fields["device"].queryset = available_devices
+            context["form"].fields["company"].queryset = companies
+        context["types_assets"] = Types_assets.objects.all()
+        button_color = self.request.user.company.theme_set.all().first().button_color
+        context["button_color"] = button_color
 
         return context
 
@@ -868,17 +1049,23 @@ class AddVehicleView(PermissionRequiredMixin, LoginRequiredMixin, generic.Create
         vehicle = form.save(commit=False)
         vehicle.modified_by = self.request.user
         vehicle.created_by = self.request.user
+        vehicle.is_active = True
         vehicle.icon = form.cleaned_data["icon"]
         vehicle.save()
-        page_update = HttpResponse(
-            ""
-        )  # O puedes enviar algún contenido si es necesario.
+        # Llama al método form_valid de la clase padre para registrar la acción en el log de auditoría
+        response = super().form_valid(form)
+
+        # Prepara una respuesta con redirección usando HTMX
+        page_update = HttpResponse("")
         page_update["HX-Redirect"] = self.get_success_url()
         return page_update
 
 
 class UpdateVehicleView(
-    PermissionRequiredMixin, LoginRequiredMixin, generic.UpdateView
+    PermissionRequiredMixin,
+    LoginRequiredMixin,
+    UpdateAuditLogAsyncMixin,
+    generic.UpdateView,
 ):
 
     """
@@ -910,47 +1097,49 @@ class UpdateVehicleView(
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user_vehicle = self.object
-        # Configurar el valor seleccionado para el campo 'icon'
-        selected_icon = user_vehicle.icon
-        if self.request.user.company_id == 1:
-            companies = Company.objects.filter(
-            visible=True, actived=True)
-        # Caso 2: Si el usuario tiene compañías para monitorear, mostrar solo esas
-        elif self.request.user.companies_to_monitor.exists():
-            companies = self.request.user.companies_to_monitor.filter(visible=True, actived=True)  
+        user = self.request.user
+        companies = get_user_companies(user)
+        if user.company_id == 1:
+            context["form"].fields["company"].choices = companies
         else:
-            companies = Company.objects.filter(
-                Q(id=self.request.user.company_id)
-                | Q(provider_id=self.request.user.company_id),
-                visible=True,
-                actived=True,
-            )
-        # Ordenar el queryset
-        companies = companies.order_by('company_name')
-
-        # Asignar el queryset ordenado al campo del formulario
-        context["form"].fields["company"].queryset = companies
+            context["form"].fields["company"].queryset = companies
         assigned_devices = Device.objects.filter(vehicle=user_vehicle).values_list(
             "pk", flat=True
         )
+        context["types_assets"] = Types_assets.objects.all()
 
-        context["form"].initial["icon"] = selected_icon
+        context["initial_vehicle_type"] = (
+            user_vehicle.vehicle_type if user_vehicle.vehicle_type else ""
+        )
+        context["initial_brand"] = user_vehicle.brand if user_vehicle.brand else ""
+        context["initial_line"] = user_vehicle.line if user_vehicle.line else ""
+
+        context["form"].initial["icon"] = user_vehicle.icon
+        context["button_color"] = (
+            self.request.user.company.theme_set.all().first().button_color
+        )
         return context
 
     def form_valid(self, form):
         vehicle = form.save(commit=False)
         vehicle.modified_by = self.request.user
         vehicle.icon = form.cleaned_data["icon"]
+        vehicle.asset_type = form.cleaned_data["asset_type"]
         vehicle.save()
-        page_update = HttpResponse(
-            ""
-        )  # O puedes enviar algún contenido si es necesario.
+        # Llama al método form_valid de la clase padre para registrar la acción en el log de auditoría
+        response = super().form_valid(form)
+
+        # Prepara una respuesta con redirección usando HTMX
+        page_update = HttpResponse("")
         page_update["HX-Redirect"] = self.get_success_url()
         return page_update
 
 
 class DeleteVehicleView(
-    PermissionRequiredMixin, LoginRequiredMixin, generic.UpdateView
+    PermissionRequiredMixin,
+    LoginRequiredMixin,
+    DeleteAuditLogAsyncMixin,
+    generic.UpdateView,
 ):
     """
     Es una vista de Django para eliminar un objeto "Vehicle" de la base de datos y configurar su
@@ -999,15 +1188,17 @@ class DeleteVehicleView(
                 new_vehicle.device = device_to_reuse
                 new_vehicle.save()
 
-        page_update = HttpResponse(
-            ""
-        )  # O puedes enviar algún contenido si es necesario.
+        # Llama al método form_valid de la clase padre para registrar la acción en el log de auditoría
+        response = super().form_valid(form)
+
+        # Prepara una respuesta con redirección usando HTMX
+        page_update = HttpResponse("")
         page_update["HX-Redirect"] = self.get_success_url()
         return page_update
 
 
 class ListVehicleGroupTemplate(
-    PermissionRequiredMixin, LoginRequiredMixin, generic.TemplateView
+    PermissionRequiredMixin, LoginRequiredMixin, ListView
 ):
     """
     La clase ListVehicleTemplate es una vista que requiere permisos y autenticación, y que
@@ -1016,51 +1207,118 @@ class ListVehicleGroupTemplate(
     """
 
     template_name = "realtime/group_vehicles/main_group_vehicles.html"
-    permission_required = "realtime.view_vehiclegroup"
-
-
-class ListVehiclesGroupView(
-    PermissionRequiredMixin, LoginRequiredMixin, generic.ListView
-):
-    """
-    Este código define una vista de Django para listar los objetos "Vehicle" en la base de datos.
-    La vista requiere que el usuario tenga ciertos permisos y esté autenticado para acceder a ella.
-    Se agrega una lista de vehículos visibles y pertenecientes a la compañía del usuario al
-    contexto de la plantilla y se devuelve un queryset de todos los vehículos pertenecientes a la
-    compañía del usuario.
-    """
-
-    template_name = "realtime/group_vehicles/list_group_vehicles_created.html"
     context_object_name = "list_group"
     permission_required = "realtime.view_vehiclegroup"
+    paginate_by = 10  # Número de elementos por página
+
+    def get_paginate_by(self, queryset):
+        """
+        Obtiene el número de elementos a mostrar por página.
+
+        Args:
+            queryset (QuerySet): El conjunto de datos de la consulta.
+
+        Returns:
+            int: El número de elementos a mostrar por página.
+        """
+        paginate_by = self.request.POST.get('paginate_by', None)  # Obtener paginate_by de los parámetros POST
+
+        if paginate_by is None:
+            session_filters = self.request.session.get(
+                f"filters_sorted_vehiclegroup_{self.request.user.id}", {}
+            )
+            paginate_by = session_filters.get("paginate_by", 15)
+            # Convertir a entero si es una lista
+            try:
+                paginate_by = int(
+                    paginate_by[0]
+                )  # Convertir el primer elemento de la lista a entero
+            except (TypeError, ValueError):
+                paginate_by = int(paginate_by) if paginate_by else 15
+            # Añadir paginate_by a self.request.GET para asegurar que esté presente
+            self.request.POST = self.request.POST.copy()
+            self.request.POST['paginate_by'] = paginate_by
+        return int(self.request.POST['paginate_by'])
+
+    def get_queryset(self):
+        """
+        Obtiene el conjunto de datos de los comandos de envío filtrados y ordenados.
+
+        Returns:
+            QuerySet: El conjunto de datos de los comandos de envío filtrados y ordenados.
+        """
+        user = self.request.user
+        params = self.request.GET if self.request.method == 'GET' else self.request.POST
+        query = params.get("query", "").lower()
+        search = params.get("q", query).lower()
+        if 'order_by' not in params and 'paginate_by' not in params and 'page' not in params:
+            # Limpiar los filtros de la sesión
+            if f"filters_sorted_vehiclegroup_{user.id}" in self.request.session:
+                del self.request.session[f"filters_sorted_vehiclegroup_{user.id}"]
+                self.request.session.modified = True
+        # Recuperar filtros almacenados en la sesión
+        session_filters = self.request.session.get(f'filters_sorted_vehiclegroup_{user.id}', {})
+        order_by = params.get('order_by', session_filters.get('order_by', ['name'])[0])
+        direction = params.get('direction', session_filters.get('direction',['asc'])[0])
+        # Actualizar los filtros con los parámetros actuales de la solicitud GET
+        session_filters.update(params)
+        # Actualizar los filtros de la sesión con los nuevos parámetros
+        self.request.session[
+            f"filters_sorted_vehiclegroup_{user.id}"
+        ] = session_filters
+        self.request.session.modified = True
+        groups = ListVehicleGroupsByCompany(self.request.user.company_id, search)
+        # Función para convertir los valores a minúsculas y extraer números cuando sea necesario
+        key_function = sort_key(order_by)
+        reverse = direction == 'desc'
+        try:
+            sorted_queryset = sorted(groups, key=key_function, reverse=reverse)
+        except KeyError:
+            # Ordenamiento por defecto si la clave no existe
+            sorted_queryset = sorted(
+                groups, key=lambda x: x["name"].lower(), reverse=reverse
+            )
+
+        return sorted_queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Crear una lista para almacenar las tuplas de grupo y conteo de vehículos
-        group_and_vehicle_count = []
-        # Iterar sobre la lista de grupos
-        Groups = ListVehicleGroupsByCompany(self.request.user.company_id)
+        group_and_vehicle_count = self.get_queryset()
 
-        for group_data in Groups:
-            group_name = group_data["VehicleGroup"]
-            vehicle_count = group_data["VehicleCount"]
-
-            # Busca la instancia de VehicleGroup por su nombre
-            group_instance = VehicleGroup.objects.get(name=group_name, visible=True)
-
-            # Agrega la tupla a la lista usando la instancia y el recuento de vehículos
-            group_and_vehicle_count.append((group_instance, vehicle_count))
-
-        # Agrega la lista de tuplas al contexto
-        context["group_and_vehicle_count"] = group_and_vehicle_count
+        # Paginación
+        paginator = Paginator(group_and_vehicle_count, self.get_paginate_by(None))
+        session_filters = self.request.session.get(f'filters_sorted_vehiclegroup_{self.request.user.id}', {})
+        page = self.request.GET.get('page', session_filters.get('page', [1]))[0]
+        page_obj = paginator.get_page(page)
+        paginate_by = self.get_paginate_by(None)
+        context["group_and_vehicle_count"] = page_obj
+        context["page_obj"] = page_obj
+        context["paginator"] = paginator
+        context["paginate_by"] = paginate_by
+        # Obtener el ordenamiento desde la solicitud actual
+        order_by = self.request.GET.get('order_by') or self.request.POST.get('order_by') or session_filters.get('order_by', ['name'])[0]
+        direction = self.request.GET.get('direction') or self.request.POST.get('direction') or session_filters.get('direction', ['asc'])[0]
+        context['order_by'] = order_by
+        context['direction'] = direction
         return context
-
-    def get_queryset(self):
-        return
+    
+    @method_decorator(csrf_protect)
+    def post(self, request, *args, **kwargs):
+        # Obtén el número de página desde la solicitud POST
+        page_number = request.POST.get('page', 1)
+        # Modifica la consulta para aplicar la paginación
+        self.object_list = self.get_queryset()
+        paginator = Paginator(self.object_list, self.get_paginate_by(None))
+        page_obj = paginator.get_page(page_number)
+        context = self.get_context_data(object_list=page_obj.object_list, page_obj=page_obj)
+        return self.render_to_response(context)
 
 
 class AddVehicleGroupView(
-    PermissionRequiredMixin, LoginRequiredMixin, generic.CreateView
+    PermissionRequiredMixin,
+    LoginRequiredMixin,
+    CreateAuditLogAsyncMixin,
+    generic.CreateView,
 ):
 
     """
@@ -1073,6 +1331,10 @@ class AddVehicleGroupView(
     template_name = "realtime/group_vehicles/add_group_vehicles.html"
     permission_required = "realtime.add_vehiclegroup"
     form_class = VehicleGroupForm
+
+    def get_success_url(self):
+        # Asegúrate de que el nombre de la URL sea correcto y esté definido en tus archivos de URL.
+        return reverse("realtime:group_vehicles")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -1104,19 +1366,32 @@ class AddVehicleGroupView(
         vehicle_group.save()  # Primero se guarda el objeto para obtener un ID
 
         form.save_m2m()  # Ahora se pueden guardar las relaciones ManyToMany
+        # Llama al método form_valid de la clase padre para registrar la acción en el log de auditoría
+        response = super().form_valid(form)
 
-        return HttpResponse(status=204, headers={"HX-Trigger": "ListgroupChanged"})
+        # Prepara una respuesta con redirección usando HTMX
+        page_update = HttpResponse("")
+        page_update["HX-Redirect"] = self.get_success_url()
+        return page_update
+
     def form_invalid(self, form):
         return self.render_to_response(self.get_context_data(form=form))
 
 
 class UpdateVehicleGroupView(
-    PermissionRequiredMixin, LoginRequiredMixin, generic.UpdateView
+    PermissionRequiredMixin,
+    LoginRequiredMixin,
+    UpdateAuditLogAsyncMixin,
+    generic.UpdateView,
 ):
     model = VehicleGroup
     template_name = "realtime/group_vehicles/update_group_vehicles.html"
     permission_required = "realtime.change_vehiclegroup"
     form_class = VehicleGroupForm
+
+    def get_success_url(self):
+        # Asegúrate de que el nombre de la URL sea correcto y esté definido en tus archivos de URL.
+        return reverse("realtime:group_vehicles")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -1143,12 +1418,23 @@ class UpdateVehicleGroupView(
         vehicle.modified_by = self.request.user
         vehicle.save()
         form.save_m2m()
-        return HttpResponse(status=204, headers={"HX-Trigger": "ListgroupChanged"})
+
+        # Llama al método form_valid de la clase padre para registrar la acción en el log de auditoría
+        response = super().form_valid(form)
+        # Prepara una respuesta con redirección usando HTMX
+        page_update = HttpResponse("")
+        page_update["HX-Redirect"] = self.get_success_url()
+        return page_update
+
     def form_invalid(self, form):
         return self.render_to_response(self.get_context_data(form=form))
 
+
 class DeleteVehicleGroupView(
-    PermissionRequiredMixin, LoginRequiredMixin, generic.UpdateView
+    PermissionRequiredMixin,
+    LoginRequiredMixin,
+    DeleteAuditLogAsyncMixin,
+    generic.UpdateView,
 ):
     """
     Es una vista de Django para eliminar un objeto "Vehicle" de la base de datos y configurar su
@@ -1165,27 +1451,25 @@ class DeleteVehicleGroupView(
     success_url = reverse_lazy("realtime:list_group_vehicles_created")
     fields = ["visible"]
 
+    def get_success_url(self):
+        # Asegúrate de que el nombre de la URL sea correcto y esté definido en tus archivos de URL.
+        return reverse("realtime:group_vehicles")
+
     def form_valid(self, form):
         vehicle = form.save(commit=False)
         vehicle.modified_by = self.request.user
         vehicle.visible = False
         vehicle.save()
-
-        return HttpResponse(status=204, headers={"HX-Trigger": "ListgroupChanged"})
-
-
-class VehicleListAPIView(generics.ListAPIView):
-    serializer_class = VehicleSerializer
-
-    def get_queryset(self):
-        company_id = self.kwargs["company_id"]
-        company = get_object_or_404(Company, id=company_id)
-        return Vehicle.objects.filter(company=company, visible=True)
+        # Llama al método form_valid de la clase padre para registrar la acción en el log de auditoría
+        response = super().form_valid(form)
+        # Prepara una respuesta con redirección usando HTMX
+        page_update = HttpResponse("")
+        page_update["HX-Redirect"] = self.get_success_url()
+        return page_update
 
 
 class ListSendingCommandsTemplate(
-    PermissionRequiredMixin, LoginRequiredMixin, generic.ListView
-):
+    PermissionRequiredMixin, LoginRequiredMixin, ListView):
     """
     Vista de lista para mostrar los comandos de envío.
 
@@ -1212,7 +1496,24 @@ class ListSendingCommandsTemplate(
         Returns:
             int: El número de elementos a mostrar por página.
         """
-        return get_paginate_by(self.request)
+        paginate_by = self.request.POST.get('paginate_by', None)  # Obtener paginate_by de los parámetros GET
+
+        if paginate_by is None:
+            session_filters = self.request.session.get(
+                f"filters_sorted_sendcommands_{self.request.user.id}", {}
+            )
+            paginate_by = session_filters.get("paginate_by", 20)
+            # Convertir a entero si es una lista
+            try:
+                paginate_by = int(
+                    paginate_by[0]
+                )  # Convertir el primer elemento de la lista a entero
+            except (TypeError, ValueError):
+                paginate_by = int(paginate_by) if paginate_by else 20
+            # Añadir paginate_by a self.request.GET para asegurar que esté presente
+            self.request.POST = self.request.POST.copy()
+            self.request.POST['paginate_by'] = paginate_by
+        return int(self.request.POST['paginate_by'])
 
     def get_queryset(self):
         """
@@ -1223,7 +1524,36 @@ class ListSendingCommandsTemplate(
         """
         user = self.request.user
         company = user.company_id
-        return fetch_all_sending_commands(company, user.id)
+        params = self.request.GET if self.request.method == 'GET' else self.request.POST
+        query = params.get("query", "").lower()
+        search = params.get("q", query).lower()
+        if 'order_by' not in params and 'paginate_by' not in params and 'page' not in params:
+            # Limpiar los filtros de la sesión
+            if f"filters_sorted_sendcommands_{user.id}" in self.request.session:
+                del self.request.session[f"filters_sorted_sendcommands_{user.id}"]
+                self.request.session.modified = True
+        session_filters = self.request.session.get(f'filters_sorted_sendcommands_{user.id}', {})
+        order_by = params.get('order_by', session_filters.get('order_by', ['id'])[0])
+        direction = params.get('direction', session_filters.get('direction',['desc'])[0])
+        # Actualizar los filtros con los parámetros actuales de la solicitud GET
+        session_filters.update(params)
+        # Actualizar los filtros de la sesión con los nuevos parámetros
+        self.request.session[f'filters_sorted_sendcommands_{user.id}'] = session_filters
+        self.request.session.modified = True
+        # Obtener los planes de datos a través de la función fetch_all_dataplan.
+        send_commands = fetch_all_sending_commands(company, user.id, search)
+        # Determinar si es orden descendente
+        reverse = direction == "desc"
+
+        try:
+            sorted_queryset = sorted(send_commands, key=sort_key_commands_datetime(order_by), reverse=reverse)
+        except KeyError:
+            # Ordenamiento por defecto si la clave no existe
+            sorted_queryset = sorted(
+                send_commands, key=lambda x: x["id"].lower(), reverse=reverse
+            )
+
+        return sorted_queryset
 
     def get_context_data(self, **kwargs):
         """
@@ -1236,14 +1566,36 @@ class ListSendingCommandsTemplate(
             dict: El contexto de datos para renderizar la vista.
         """
         context = super().get_context_data(**kwargs)
+        paginate_by = self.get_paginate_by(None)
+        context["paginate_by"] = paginate_by
         # Simplificación directa para calcular start_number
         page_number = context.get("page_obj").number if context.get("page_obj") else 1
         context["start_number"] = (page_number - 1) * self.get_paginate_by(None)
+        session_filters = self.request.session.get(f'filters_sorted_sendcommands_{self.request.user.id}', {})
+        # Obtener el ordenamiento desde la solicitud actual
+        order_by = self.request.GET.get('order_by') or self.request.POST.get('order_by') or session_filters.get('order_by', ['answer_date'])[0]
+        direction = self.request.GET.get('direction') or self.request.POST.get('direction') or session_filters.get('direction', ['desc'])[0]
+        context['order_by'] = order_by
+        context['direction'] = direction
         return context
+    
+    @method_decorator(csrf_protect)
+    def post(self, request, *args, **kwargs):
+        # Obtén el número de página desde la solicitud POST
+        page_number = request.POST.get('page', 1)
+        # Modifica la consulta para aplicar la paginación
+        self.object_list = self.get_queryset()
+        paginator = Paginator(self.object_list, self.get_paginate_by(None))
+        page_obj = paginator.get_page(page_number)
+        context = self.get_context_data(object_list=page_obj.object_list, page_obj=page_obj)
+        return self.render_to_response(context)
 
 
 class AddSendingCommandsView(
-    PermissionRequiredMixin, LoginRequiredMixin, generic.CreateView
+    PermissionRequiredMixin,
+    LoginRequiredMixin,
+    CreateAuditLogAsyncMixin,
+    generic.CreateView,
 ):
     """
     Vista de creación para agregar comandos de envío.
@@ -1277,6 +1629,21 @@ class AddSendingCommandsView(
         # Asegúrate de que el nombre de la URL sea correcto y esté definido en tus archivos de URL.
         return reverse("realtime:commands")
 
+    def get_context_data(self, **kwargs):
+        """
+        Obtiene el contexto de datos para renderizar la vista.
+
+        Args:
+            **kwargs: Argumentos clave adicionales.
+
+        Returns:
+            dict: El contexto de datos para renderizar la vista.
+        """
+        context = super().get_context_data(**kwargs)
+        button_color = self.request.user.company.theme_set.all().first().button_color
+        context["button_color"] = button_color
+        return context
+
     def form_valid(self, form):
         """
         Guarda el comando de envío en la base de datos y devuelve una respuesta HTTP.
@@ -1299,9 +1666,11 @@ class AddSendingCommandsView(
         Commands.created_by = self.request.user
         Commands.save()
 
-        page_update = HttpResponse(
-            ""
-        )  # O puedes enviar algún contenido si es necesario.
+        # Llama al método form_valid de la clase padre para registrar la acción en el log de auditoría
+        response = super().form_valid(form)
+
+        # Prepara una respuesta con redirección usando HTMX
+        page_update = HttpResponse("")
         page_update["HX-Redirect"] = self.get_success_url()
         return page_update
 
@@ -1314,7 +1683,7 @@ class AddSendingCommandsView(
         return kwargs
 
 
-class ListResponseCommandsTemplate(LoginRequiredMixin, generic.ListView):
+class ListResponseCommandsTemplate(LoginRequiredMixin, ListView):
 
     """
     Vista como clase que renderiza el template HTML que contiene el lsitado de comando enviados
@@ -1333,7 +1702,24 @@ class ListResponseCommandsTemplate(LoginRequiredMixin, generic.ListView):
         Returns:
             int: El número de elementos a mostrar por página.
         """
-        return get_paginate_by(self.request)
+        paginate_by = self.request.POST.get('paginate_by', None)  # Obtener paginate_by de los parámetros GET
+
+        if paginate_by is None:
+            session_filters = self.request.session.get(
+                f"filters_sorted_responsecommands_{self.request.user.id}", {}
+            )
+            paginate_by = session_filters.get("paginate_by", 20)
+            # Convertir a entero si es una lista
+            try:
+                paginate_by = int(
+                    paginate_by[0]
+                )  # Convertir el primer elemento de la lista a entero
+            except (TypeError, ValueError):
+                paginate_by = int(paginate_by) if paginate_by else 20
+            # Añadir paginate_by a self.request.GET para asegurar que esté presente
+            self.request.POST = self.request.POST.copy()
+            self.request.POST['paginate_by'] = paginate_by
+        return int(self.request.POST['paginate_by'])
 
     def get_queryset(self):
         """
@@ -1344,7 +1730,40 @@ class ListResponseCommandsTemplate(LoginRequiredMixin, generic.ListView):
         """
         user = self.request.user
         company = user.company_id
-        return fetch_all_response_commands(company, user.id)
+        params = self.request.GET if self.request.method == 'GET' else self.request.POST
+        query = params.get("query", "").lower()
+        search = params.get("q", query).lower()
+        if 'order_by' not in params and 'paginate_by' not in params and 'page' not in params:
+            # Limpiar los filtros de la sesión
+            if f"filters_sorted_responsecommands_{user.id}" in self.request.session:
+                del self.request.session[f"filters_sorted_responsecommands_{user.id}"]
+                self.request.session.modified = True
+        session_filters = self.request.session.get(f'filters_sorted_responsecommands_{user.id}', {})
+        order_by = params.get('order_by', session_filters.get('order_by', ['answer_date'])[0])
+        direction = params.get('direction', session_filters.get('direction',['desc'])[0])
+        # Actualizar los filtros con los parámetros actuales de la solicitud GET
+        session_filters.update(params)
+
+        # Actualizar los filtros de la sesión con los nuevos parámetros
+        self.request.session[f'filters_sorted_responsecommands_{user.id}'] = session_filters
+        self.request.session.modified = True
+        # Obtener los planes de datos a través de la función fetch_all_dataplan.
+        response_commands = fetch_all_response_commands(company, user.id, search)
+
+        # Función para convertir los valores a minúsculas y extraer números cuando sea necesario
+        key_function = sort_key(order_by)
+        # Determinar si es orden descendente
+        reverse = direction == "desc"
+
+        try:
+            sorted_queryset = sorted(response_commands, key=key_function, reverse=reverse)
+        except KeyError:
+            # Ordenamiento por defecto si la clave no existe
+            sorted_queryset = sorted(
+                response_commands, key=lambda x: x["id"].lower(), reverse=reverse
+            )
+
+        return sorted_queryset
 
     def get_context_data(self, **kwargs):
         """
@@ -1357,42 +1776,33 @@ class ListResponseCommandsTemplate(LoginRequiredMixin, generic.ListView):
             dict: El contexto de datos para renderizar la vista.
         """
         context = super().get_context_data(**kwargs)
+        paginate_by = self.get_paginate_by(None)
+        context["paginate_by"] = paginate_by
         # Simplificación directa para calcular start_number
         page_number = context.get("page_obj").number if context.get("page_obj") else 1
         context["start_number"] = (page_number - 1) * self.get_paginate_by(None)
+        session_filters = self.request.session.get(f'filters_sorted_responsecommands_{self.request.user.id}', {})
+        # Obtener el ordenamiento desde la solicitud actual
+        order_by = self.request.GET.get('order_by') or self.request.POST.get('order_by') or session_filters.get('order_by', ['answer_date'])[0]
+        direction = self.request.GET.get('direction') or self.request.POST.get('direction') or session_filters.get('direction', ['desc'])[0]
+        context['order_by'] = order_by
+        context['direction'] = direction
         return context
-
-
-class ApiGeozonesView(LoginRequiredMixin, generic.TemplateView):
-    """
-    A class-based view that displays a list of geozones.
-    It requires the 'realtime.view_geozones' permission and filters geozones by the company of the
-    currently authenticated user.
-    """
-
-    template_name = "realtime/geozones/API_geozone.html"
-
-
-class GeozoneListCreateAPIView(generics.ListCreateAPIView):
-    queryset = Geozones.objects.all()
-    serializer_class = GeozonesSerializer
-
-
-class GeozoneRetrieveUpdateAPIView(generics.RetrieveUpdateAPIView):
-    queryset = Geozones.objects.all()
-    serializer_class = GeozonesSerializer
-
-
-class GeozonesListAPIView(generics.ListAPIView):
-    serializer_class = GeozonesSerializer
-
-    def get_queryset(self):
-        company_id = self.kwargs["company_id"]
-        return Geozones.objects.filter(company_id=company_id)
+    
+    @method_decorator(csrf_protect)
+    def post(self, request, *args, **kwargs):
+        # Obtén el número de página desde la solicitud POST
+        page_number = request.POST.get('page', 1)
+        # Modifica la consulta para aplicar la paginación
+        self.object_list = self.get_queryset()
+        paginator = Paginator(self.object_list, self.get_paginate_by(None))
+        page_obj = paginator.get_page(page_number)
+        context = self.get_context_data(object_list=page_obj.object_list, page_obj=page_obj)
+        return self.render_to_response(context)
 
 
 class ListGeozonesTemplate(
-    PermissionRequiredMixin, LoginRequiredMixin, generic.ListView
+    PermissionRequiredMixin, LoginRequiredMixin, ListView
 ):
     """
     Vista como clase que renderiza el template HTML que contiene la lista de planes de datos.
@@ -1412,7 +1822,24 @@ class ListGeozonesTemplate(
         Returns:
             int: El número de elementos a mostrar por página.
         """
-        return get_paginate_by(self.request)
+        paginate_by = self.request.POST.get('paginate_by', None)  # Obtener paginate_by de los parámetros POST
+
+        if paginate_by is None:
+            session_filters = self.request.session.get(
+                f"filters_sorted_geofence_{self.request.user.id}", {}
+            )
+            paginate_by = session_filters.get("paginate_by", 20)
+            # Convertir a entero si es una lista
+            try:
+                paginate_by = int(
+                    paginate_by[0]
+                )  # Convertir el primer elemento de la lista a entero
+            except (TypeError, ValueError):
+                paginate_by = int(paginate_by) if paginate_by else 20
+            # Añadir paginate_by a self.request.GET para asegurar que esté presente
+            self.request.POST = self.request.POST.copy()
+            self.request.POST['paginate_by'] = paginate_by
+        return int(self.request.POST['paginate_by'])
 
     def get_queryset(self):
         """
@@ -1423,7 +1850,40 @@ class ListGeozonesTemplate(
         """
         user = self.request.user
         user_company_id = self.request.user.company_id
-        return fetch_all_geozones(user_company_id, user.id)
+        params = self.request.GET if self.request.method == 'GET' else self.request.POST
+        query = params.get("query", "").lower()
+        search = params.get("q", query).lower()
+        if 'order_by' not in params and 'paginate_by' not in params and 'page' not in params:
+            # Limpiar los filtros de la sesión
+            if f"filters_sorted_geofence_{user.id}" in self.request.session:
+                del self.request.session[f"filters_sorted_geofence_{user.id}"]
+                self.request.session.modified = True
+        session_filters = self.request.session.get(f'filters_sorted_geofence_{user.id}', {})
+        order_by = params.get('order_by', session_filters.get('order_by', ['company'])[0])
+        direction = params.get('direction', session_filters.get('direction',['asc'])[0])
+        # Actualizar los filtros con los parámetros actuales de la solicitud GET
+        session_filters.update(params)
+
+        # Actualizar los filtros de la sesión con los nuevos parámetros
+        self.request.session[f'filters_sorted_geofence_{user.id}'] = session_filters
+        self.request.session.modified = True
+        # Obtener los planes de datos a través de la función fetch_all_dataplan.
+        geofence = fetch_all_geozones(user_company_id, user.id, search)
+
+        # Función para convertir los valores a minúsculas y extraer números cuando sea necesario
+        key_function = sort_key(order_by)
+        # Determinar si es orden descendente
+        reverse = direction == "desc"
+
+        try:
+            sorted_queryset = sorted(geofence, key=key_function, reverse=reverse)
+        except KeyError:
+            # Ordenamiento por defecto si la clave no existe
+            sorted_queryset = sorted(
+                geofence, key=lambda x: x["company"].lower(), reverse=reverse
+            )
+
+        return sorted_queryset
 
     def get_context_data(self, **kwargs):
         """
@@ -1436,40 +1896,31 @@ class ListGeozonesTemplate(
             dict: El contexto de datos para renderizar la vista.
         """
         context = super().get_context_data(**kwargs)
+        paginate_by = self.get_paginate_by(None)
+        context["paginate_by"] = paginate_by
         # Simplificación directa para calcular start_number
         page_number = context.get("page_obj").number if context.get("page_obj") else 1
         context["start_number"] = (page_number - 1) * self.get_paginate_by(None)
+        session_filters = self.request.session.get(f'filters_sorted_geofence_{self.request.user.id}', {})
+        # Obtener el ordenamiento desde la solicitud actual
+        order_by = self.request.GET.get('order_by') or self.request.POST.get('order_by') or session_filters.get('order_by', ['company'])[0]
+        direction = self.request.GET.get('direction') or self.request.POST.get('direction') or session_filters.get('direction', ['asc'])[0]
+        context['order_by'] = order_by
+        context['direction'] = direction
         return context
+    
+    @method_decorator(csrf_protect)
+    def post(self, request, *args, **kwargs):
+        # Obtén el número de página desde la solicitud POST
+        page_number = request.POST.get('page', 1)
+        # Modifica la consulta para aplicar la paginación
+        self.object_list = self.get_queryset()
+        paginator = Paginator(self.object_list, self.get_paginate_by(None))
+        page_obj = paginator.get_page(page_number)
+        context = self.get_context_data(object_list=page_obj.object_list, page_obj=page_obj)
+        return self.render_to_response(context)
 
-
-class ListGeozonesView(PermissionRequiredMixin, LoginRequiredMixin, generic.ListView):
-    """
-    Este código define una vista de clase que muestra los planes de datos creados, permitiendo la
-    edición y adición. Requiere que el usuario tenga el permiso 'realtime.view_dataplan'.
-    La lista de planes de datos se filtra para mostrar solo los planes pertenecientes a la
-    compañía del usuario actualmente autenticado.
-    """
-
-    template_name = "realtime/geozones/list_geozone_created.html"
-    context_object_name = "list_geozone"
-    login_url = "login"
-    success_url = reverse_lazy("index")
-    permission_required = "realtime.view_geozones"
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        user = self.request.user
-        user_company_id = self.request.user.company_id
-        list_geozone = fetch_all_geozones(user_company_id, user.id)
-        # Usa la función personalizada para obtener las geozonas
-        context["list_geozone"] = list_geozone
-        return context
-
-    def get_queryset(self):
-        return Geozones.objects.filter(company=self.request.user.company_id)
-
-
-class AddGeozonesView(PermissionRequiredMixin, LoginRequiredMixin, generic.CreateView):
+class AddGeozonesView(PermissionRequiredMixin, LoginRequiredMixin, CreateAuditLogAsyncMixin, generic.CreateView):
     """ """
 
     template_name = "realtime/geozones/add_geozone.html"
@@ -1480,24 +1931,54 @@ class AddGeozonesView(PermissionRequiredMixin, LoginRequiredMixin, generic.Creat
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        if self.request.user.company_id == 1:
-            companies = Company.objects.filter(
-            visible=True, actived=True)
-        # Caso 2: Si el usuario tiene compañías para monitorear, mostrar solo esas
-        elif self.request.user.companies_to_monitor.exists():
-            companies = self.request.user.companies_to_monitor.filter(visible=True, actived=True)  
+        user = self.request.user
+        companies = get_user_companies(user)
+        if user.company_id == 1:
+            context["form"].fields["company"].choices = companies
         else:
-            companies = Company.objects.filter(
-                Q(id=self.request.user.company_id)
-                | Q(provider_id=self.request.user.company_id),
-                visible=True,
-                actived=True,
-            )
-        # Ordenar el queryset
-        companies = companies.order_by('company_name')
+            context["form"].fields["company"].queryset = companies
 
-        # Asignar el queryset ordenado al campo del formulario
-        context["form"].fields["company"].queryset = companies
+        button_color = self.request.user.company.theme_set.all().first().button_color
+        context["button_color"] = button_color
+        return context
+
+    def get_success_url(self):
+        # Asegúrate de que el nombre de la URL sea correcto y esté definido en tus archivos de URL.
+        return reverse("realtime:geozones")
+
+    def form_valid(self, form):
+        save = form.save(commit=False)
+        save.created_by = self.request.user
+        save.modified_by = self.request.user
+        save.save()
+        # Llama al método form_valid de la clase padre para registrar la acción en el log de auditoría
+        response = super().form_valid(form)
+
+        # Prepara una respuesta con redirección usando HTMX
+        page_update = HttpResponse("")
+        page_update["HX-Redirect"] = self.get_success_url()
+        return page_update
+
+
+class UpdateGeozonesView(
+    PermissionRequiredMixin, LoginRequiredMixin, generic.UpdateView
+):
+
+    """ """
+
+    model = Geozones
+    template_name = "realtime/geozones/update_geozone.html"
+    login_url = reverse_lazy("login")
+    permission_required = "realtime.change_geozones"
+    success_url = reverse_lazy("login")
+    form_class = GeozonesForm
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        company_id = self.request.user.company_id
+        context["form"].fields["company"].queryset = Company.objects.filter(
+            Q(id=company_id) | Q(provider_id=company_id), visible=True, actived=True
+        )
         return context
 
     def get_success_url(self):
@@ -1514,120 +1995,70 @@ class AddGeozonesView(PermissionRequiredMixin, LoginRequiredMixin, generic.Creat
         return response
 
 
-class UpdateGeozonesView(
-    PermissionRequiredMixin, LoginRequiredMixin, generic.UpdateView
-):
-    model = Geozones
-    template_name = "realtime/geozones/update_geozone.html"
-    login_url = reverse_lazy("login")
-    permission_required = "realtime.change_geozones"
-    success_url = reverse_lazy("login")
-    form_class = GeozonesForm
-
-    def get_initial(self):
-        initial = super().get_initial()
-        # Obtener el ID desde los kwargs del URL
-        geozone_id = self.kwargs.get("pk")
-        # Utilizar la función para obtener los datos de la geozone
-        geozone_data = get_geozone_by_id(geozone_id)
-        if geozone_data:
-            initial.update(geozone_data)
-        return initial
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        if self.request.user.company_id == 1:
-            companies = Company.objects.filter(
-            visible=True, actived=True)
-        # Caso 2: Si el usuario tiene compañías para monitorear, mostrar solo esas
-        elif self.request.user.companies_to_monitor.exists():
-            companies = self.request.user.companies_to_monitor.filter(visible=True, actived=True)  
-        else:
-            companies = Company.objects.filter(
-                Q(id=self.request.user.company_id)
-                | Q(provider_id=self.request.user.company_id),
-                visible=True,
-                actived=True,
-            )
-        # Ordenar el queryset
-        companies = companies.order_by('company_name')
-
-        # Asignar el queryset ordenado al campo del formulario
-        context["form"].fields["company"].queryset = companies
-        return context
-
-    def form_valid(self, form):
-        # Asegúrate de que la instancia del formulario se guarda correctamente
-        self.object = form.save(commit=False)
-        self.object.modified_by = (
-            self.request.user
-        )  # Actualizar el usuario que modificó
-        self.object.save()
-        response = HttpResponse("")  # O puedes enviar algún contenido si es necesario.
-        response["HX-Redirect"] = self.get_success_url()
-        return response
-
-
 class DeleteGeozonesView(LoginRequiredMixin, generic.UpdateView):
     """ """
 
-    model = VehicleGroup
-    template_name = "realtime/group_vehicles/delete_group_vehicles.html"
-    success_url = reverse_lazy("realtime:list_group_vehicles_created")
+    model = Geozones
+    template_name = "realtime/geozones/delete_geozone.html"
     fields = ["visible"]
+
+    def get_success_url(self):
+        # Asegúrate de que el nombre de la URL sea correcto y esté definido en tus archivos de URL.
+        return reverse("realtime:geozones")
 
     def form_valid(self, form):
         vehicle = form.save(commit=False)
         vehicle.visible = False
         vehicle.save()
-        return HttpResponse(status=204, headers={"HX-Trigger": "ListgroupChanged"})
+        # Llama al método form_valid de la clase padre para registrar la acción en el log de auditoría
+        response = super().form_valid(form)
+
+        # Prepara una respuesta con redirección usando HTMX
+        page_update = HttpResponse("")
+        page_update["HX-Redirect"] = self.get_success_url()
+        return page_update
 
 
 class ConfigurationReportView(
     PermissionRequiredMixin, LoginRequiredMixin, TemplateView
 ):
     model = Io_items_report
-    template_name = "realtime/custom_report/add_configuration_report.html"
+    template_name = "realtime/custom_report/main_configuration_report.html"
     permission_required = "realtime.view_io_items_report"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        if self.request.user.company_id == 1:
-            companies = Company.objects.filter(
-            visible=True, actived=True)
-        # Caso 2: Si el usuario tiene compañías para monitorear, mostrar solo esas
-        elif self.request.user.companies_to_monitor.exists():
-            companies = self.request.user.companies_to_monitor.filter(visible=True, actived=True)   
+        user = self.request.user
+        companies = get_user_companies(user)
+        if user.company_id == 1:
+            context["companies"] = companies
         else:
-            companies = Company.objects.filter(
-                Q(id=self.request.user.company_id)
-                | Q(provider_id=self.request.user.company_id),
-                visible=True,
-                actived=True,
-            )
-        companies = list(companies)
-        companies.sort(key=lambda x: x.company_name)
-
-        context["companies"] = companies
-
+            # Convertir el queryset en una lista de tuplas (id, company_name)
+            companies_list = list(companies.values_list("id", "company_name"))
+            context["companies"] = companies_list
+        context["button_color"] = (
+            self.request.user.company.theme_set.all().first().button_color
+        )
         return context
 
 
-class UpdateConfigurationReportView(View):
+class UpdateConfigurationReportView(
+    PermissionRequiredMixin, LoginRequiredMixin, UpdateAuditLogSyncMixin, View
+):
     template_name = "realtime/custom_report/update_configuration_report.html"
-    permission_required = "realtime.add_io_items_report"
+    permission_required = "realtime.change_io_items_report"
 
     def get(self, request, company_id, *args, **kwargs):
         # Obtener o crear una instancia de Io_elements para la compañía actual
         instance, created = Io_items_report.objects.get_or_create(company_id=company_id)
 
-        # Cargar la información de instance.info_widgets si está presente, de lo contrario, asignar una lista vacía
-        selected_widgets = json.loads(instance.info_widgets)
+        selected_widgets = (
+            json.loads(instance.info_widgets) if instance.info_widgets else []
+        )
+        selected_reports = (
+            json.loads(instance.info_reports) if instance.info_reports else []
+        )
 
-        # Cargar la información de instance.info_reports si está presente, de lo contrario, asignar una lista vacía
-        selected_reports = json.loads(instance.info_reports)
-
-        # Obtener los datos de Last_Avl para la compañía actual
         last_avls = Last_Avl.objects.filter(company=company_id)
         # Crear un conjunto para almacenar eventos únicos
         unique_events = set()
@@ -1654,7 +2085,9 @@ class UpdateConfigurationReportView(View):
         instance.info_io = json.dumps(updated_events)
         unique_events.update(updated_events)
 
-        # Guardar la instancia
+        # Guardar el estado antes de actualizar la instancia
+        self.obj_before = instance.__class__.objects.get(pk=instance.pk)
+
         instance.save()
 
         # Crear la lista de opciones para los campos widgets y reports
@@ -1703,7 +2136,10 @@ class UpdateConfigurationReportView(View):
         # Obtener o crear una instancia de Io_elements para la compañía actual
         instance, created = Io_items_report.objects.get_or_create(company_id=company_id)
         company_name = Company.objects.get(id=company_id).company_name
-        # Procesar los datos del formulario
+
+        # Guardar el estado anterior antes de actualizar la instancia
+        self.obj_before = instance.__class__.objects.get(pk=instance.pk)
+
         widgets = request.POST.getlist("widgets")
         reports = request.POST.getlist("reports")
 
@@ -1718,5 +2154,20 @@ class UpdateConfigurationReportView(View):
         # Guardar la instancia
         instance.save()
 
-        messages.success(request, f"{company_name}")
+        # Guardar el estado después de actualizar la instancia
+        self.obj_after = instance
+
+        self.log_action()
+
+        messages.success(request, f"{company_name} actualizada correctamente.")
         return redirect("realtime:add_configuration_report")
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        if self.action == "create" or self.action == "update":
+            self.obj_after = form.instance
+        elif self.action == "delete":
+            self.obj_after = {}
+
+        self.log_action()
+        return response

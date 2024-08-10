@@ -1,0 +1,101 @@
+.scrollable-container {
+    max-height: 200px;
+    overflow-y: auto;
+}
+.custom-rating-modal .modal-dialog {
+    max-width: 60vh; /* Ajusta el valor según lo necesites */
+    margin: 1.75rem auto;
+    max-height: 20vh;
+}
+.rating-stars {
+    display: inline-block;
+}
+
+.star {
+    font-size: 2em;
+    color: gray;
+    cursor: pointer;
+}
+
+.highlighted-red {
+    color: #C80036;
+}
+
+.highlighted-orange {
+    color: #FF7F3E;
+}
+
+.highlighted-yellow {
+    color: #FFBF00;
+}
+
+.highlighted-green {
+    color: #97BE5A;
+}
+
+.stars {
+    display: flex;
+    justify-content: space-between;
+    background-color: white; /* Fondo blanco solo para las estrellas */
+    border-radius: 1px;
+    padding: 2.5px;
+    width: 100%; /* Ajusta el tamaño del contenedor */
+}
+
+.border-red {
+    border: 2px solid #C80036 !important;
+}
+
+.border-orange {
+    border: 2px solid #FF7F3E !important;
+}
+
+.border-yellow {
+    border: 2px solid #FFBF00 !important;
+}
+
+.border-green {
+    border: 2px solid #97BE5A !important;
+}
+
+.star-rating {
+    color: gray;
+    font-size: 1em;
+}
+
+.star-rating.red {
+    color: #C80036;
+}
+
+.star-rating.orange {
+    color: #FF7F3E;
+}
+
+.star-rating.yellow {
+    color: #FFBF00
+}
+
+.star-rating.green {
+    color: #97BE5A;
+}
+
+.rate-ticket-btn {
+    width: 100px;
+    padding: 10px;
+    text-align: center;
+    display: inline-block;
+}
+
+.rate-ticket-btn .stars {
+    display: flex;
+    justify-content: space-between;
+}
+
+.btn-secondary.rate-ticket-btn.rated {
+    background-color: white;
+    border: none; /* Eliminar el borde */
+}
+
+.btn-secondary.rate-ticket-btn.rated:focus {
+    box-shadow: none; /* Eliminar el borde de enfoque */
+}

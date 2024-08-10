@@ -1,46 +1,55 @@
-{% load i18n static %} {{form.media}}
-<div id="dialog" class="modal-dialog" hx-target="this">
-  <div class="modal-dialog">
-    <div class="modal-content bg-light">
-      <div class="modal-body">
-        <div class="card">
+{% load i18n static %}
+{{ form.media }}
+<div class="modal-content bg-light">
+  <div class="modal-body">
+    <div class="card">
       <div class="modal-header">
-        <h3>
-          {% trans "Key Maps: " %} {{company.company_name}}
-        </h3>
+        <h3>{% trans "Key Maps: " %} {{ company.company_name }}</h3>
         <button type="button" id="cerrarVenta" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <form hx-post="{{ request.path }}" enctype="multipart/form-data">
+      <form hx-post="{{ request.path }}" hx-target="#modal-content" enctype="multipart/form-data">
         {% csrf_token %}
         <div class="row">
           <div class="input-group input-group-static mb-6 justify-content-center">
-            {% for map in maps %}
-              {% if map.map_type_id != 1 %}
-                <div class="col-md-4 mx-4">
-                {{ map }}
-                {{ form.key_map }}
-                <div hidden>
-                  <select name="id">
-                    <option value="{{ map.id }}">{{ map.id }}</option>
-                  </select>
-                  <select name="map_type">
-                    <option value="{{ map.map_type_id }}">{{ map }}</option>
-                  </select>
-                </div>
-                </div>
-              {% endif %}
+            {% for form in forms %}
+            <div class="col-md-4 mx-4">
+              <h4>{{ form.instance.map_type }}</h4>
+              <br>
+              <label>{% trans "Current key" %}</label>
+              <p>{{ form.instance.get_obscured_key }}</p>
+              <label>{% trans "New key" %}</label>
+              {{ form.key_map }}
+            </div>
+            <div hidden>{{ form.id }} {{ form.map_type }}</div>
             {% endfor %}
           </div>
+        </div>
+        <div class="row">
+          <div class="d-grid gap-2 col-2 mx-2">
+            <button type="submit" class="btn btn-primary">{% trans "Save" %}</button>
           </div>
-          <div class="row">
-            <div class="d-grid gap-2 col-2 mx-2">
-              <button type="submit" class="btn btn-primary">{% trans "Save" %}</button>
-            </div>
         </div>
       </form>
     </div>
+    <head>
+      <link rel="stylesheet" type="text/css" href="{% static 'assets/css/estilos_templates.css' %}" />
+    </head>
   </div>
 </div>
-<head>
-  <link rel="stylesheet" type="text/css" href="{% static 'assets/css/estilos_templates.css' %}">
-</head>
+<style>
+  p{
+    background:whitesmoke
+
+  }
+</style>
+<script>
+  function clearKeyMapInputs() {
+    const keyMapInputs = document.querySelectorAll('input[name$="key_map"]');
+    keyMapInputs.forEach(input => {
+        input.value = "";
+    });
+    console.log("Inputs key_map vaciados");
+}
+// Llamamos a la función directamente
+clearKeyMapInputs();
+</script>

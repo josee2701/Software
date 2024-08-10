@@ -707,10 +707,9 @@
     --bs-gutter-x: 2.5rem;
     --bs-gutter-y: 2.5rem;
     width: 100%;
-    padding-right: calc(var(--bs-gutter-x) * 1);
-    padding-left: calc(var(--bs-gutter-x) * 1);
-    margin-right: auto;
-    margin-left: 20px;
+    padding-right: calc(var(--bs-gutter-x) * 0.2);
+    padding-left: calc(var(--bs-gutter-x) * 0.5);
+
   }
 
   @media (min-width: 576px) {
@@ -817,7 +816,7 @@
 
   .col-4 {
     flex: 0 0 auto;
-    width: 33.33333333%;
+    width: 47.33333333%;
   }
 
   .col-5 {
@@ -4323,6 +4322,8 @@
     align-items: center;
     justify-content: space-between;
     padding: var(--bs-navbar-padding-y) var(--bs-navbar-padding-x);
+    overflow-x: hidden;
+    overflow-y: auto;
   }
   .navbar > .container,
   .navbar > .container-fluid,
@@ -5905,7 +5906,7 @@
 
   .modal {
     --bs-modal-zindex: 1050;
-    --bs-modal-width: 500px;
+    --bs-modal-width: 60%;
     --bs-modal-padding: 1rem;
     --bs-modal-margin: 0.5rem;
     --bs-modal-color: ;
@@ -5936,6 +5937,39 @@
     overflow-y: auto;
     outline: 0;
   }
+
+  /* Clase para desactivar el scroll en el fondo */
+.modal-open {
+  overflow: hidden !important;
+}
+/* Scrollbar personalizado para navegadores WebKit (Chrome, Safari) */
+.modal-content::-webkit-scrollbar {
+  width: 12px; /* Ancho del scrollbar */
+}
+
+.modal-content::-webkit-scrollbar-track {
+  background: #f1f1f1; /* Color de fondo del track del scrollbar */
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+  background: #888; /* Color del thumb del scrollbar */
+  border-radius: 10px; /* Bordes redondeados del thumb */
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover {
+  background: #555; /* Color del thumb del scrollbar cuando se pasa el mouse sobre él */
+}
+
+/* Scrollbar personalizado para Firefox */
+.modal-content {
+  scrollbar-width: thin; /* Ancho del scrollbar */
+  scrollbar-color: #888 #f1f1f1; /* Colores del thumb y del track del scrollbar */
+}
+
+/* Estilos adicionales opcionales para el scrollbar */
+.modal-content::-webkit-scrollbar-corner {
+  background: transparent; /* Color de la esquina del scrollbar */
+}
   @media (max-width: 767.98px) {
     .modal {
       --bs-modal-zindex: 1050;
@@ -6091,6 +6125,7 @@
     .modal {
       --bs-modal-margin: 1.75rem;
       --bs-modal-box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --bs-modal-width: 70%; /* Cambia el valor para hacerlo más pequeño */
     }
     .modal-dialog {
       max-width: var(--bs-modal-width);
@@ -20190,9 +20225,7 @@
     border-right: 1px solid #dee2e6;
   }
 
-  .navbar {
-    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.16);
-  }
+
   .navbar .navbar-brand {
     color: #344767;
     font-size: 0.875rem;
@@ -20393,7 +20426,6 @@
   }
   .navbar-vertical.navbar-expand-xs .navbar-collapse {
     display: block;
-    overflow: auto;
     height: calc(115vh - 360px);
   }
   .navbar-vertical.navbar-expand-xs > [class*=container] {
@@ -21185,9 +21217,7 @@
       transform: translateX(17.125rem);
     }
 
-    .g-sidenav-show .sidenav.fixed-start + .main-content {
-      margin-left: 0 !important;
-    }
+
     .g-sidenav-show.g-sidenav-pinned .sidenav {
       transform: translateX(0);
     }
@@ -24003,7 +24033,6 @@
    * Container style
    */
   .ps {
-    overflow: hidden !important;
     overflow-anchor: none;
     -ms-overflow-style: none;
     touch-action: auto;
@@ -24022,7 +24051,6 @@
     /* there must be 'bottom' or 'top' for ps__rail-x */
     bottom: 0px;
     /* please don't change 'position' */
-    position: absolute;
   }
 
   .ps__rail-y {
@@ -24039,7 +24067,6 @@
 
   .ps--active-x > .ps__rail-x,
   .ps--active-y > .ps__rail-y {
-    display: block;
     background-color: transparent;
   }
 
@@ -24074,7 +24101,6 @@
     /* there must be 'bottom' for ps__thumb-x */
     bottom: 2px;
     /* please don't change 'position' */
-    position: absolute;
   }
 
   .ps__thumb-y {

@@ -1,0 +1,24 @@
+{% load i18n static %} {% block content %}
+
+<!-- Un formulario que pregunta al usuario si está seguro de querer eliminar la empresa. -->
+<div class="modal-content">
+  <div class="row">
+    <div class="modal-body-md-1">
+      <div class="col" >
+        <div class="card align-items-center">
+          <div class="card-body">
+            <form hx-post="{{ request.path }}" hx-target="#modal-content">
+              {% csrf_token %}
+              <p>{% trans '¿Are you sure you want to delete the Geozone' %} "{{ object }}" ?</p>
+              <div class="d-grid col-4 mx-auto">
+                <button type="submit" class="btn btn-primary">{% trans "Confirm" %}</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">{% trans 'Cancel' %}</button>
+              </div>
+              </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}

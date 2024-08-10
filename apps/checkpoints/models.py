@@ -306,3 +306,76 @@ class Report(models.Model):
     # No necesitas definir permisos en la clase Meta para los permisos básicos
     class Meta:
         verbose_name_plural = "reports"
+
+
+class Advanced_Analytical(models.Model):
+    user = models.ForeignKey(
+        "authentication.User",
+        on_delete=models.CASCADE,
+        verbose_name=_("user"),
+        null=True,
+    )
+    id_workspace = models.CharField(
+        max_length=50,
+        verbose_name=_("ID Workspace"),
+    )
+
+    id_report = models.CharField(
+        max_length=30,
+        verbose_name=_("id_report"),
+    )
+    workspace = models.CharField(
+        max_length=30,
+        verbose_name=_("workspace"),
+    )
+    report = models.CharField(
+        max_length=30,
+        verbose_name=_("report"),
+    )
+
+    coin = models.ForeignKey(
+        "whitelabel.Coin",
+        on_delete=models.CASCADE,
+        verbose_name=_("coin"),
+        null=True,
+    )
+    price = models.DecimalField(
+        max_digits=10,  # Ajusta estos valores según tus necesidades
+        decimal_places=2,  # Ajusta estos valores según tus necesidades
+        verbose_name=_("price"),
+        blank=True,
+        null=True,
+    )
+    modified_by = models.ForeignKey(
+        "authentication.User",
+        on_delete=models.CASCADE,
+        verbose_name=_("modified by"),
+        related_name="modified_advanced_analytic",
+        null=True,
+    )
+    created_by = models.ForeignKey(
+        "authentication.User",
+        on_delete=models.CASCADE,
+        verbose_name=_("created by"),
+        related_name="created_advanced_analytic",
+        null=True,
+    )
+    create_date = models.DateField(
+        verbose_name=_("create date"),
+        auto_now_add=True,
+        null=True,
+        blank=True,
+    )
+    last_update = models.DateTimeField(
+        verbose_name=_("last update"),
+        auto_now=True,
+    )
+    is_report = models.BooleanField(default=False, verbose_name=_("is_report"))
+    demo = models.BooleanField(default=False, verbose_name=_("demo"))
+
+    def __str__(self):
+        return f"{self.user} --> {self.report}"
+
+    class Meta:
+        db_table = 'PowerBI"."advanced_analytical'
+        managed = False

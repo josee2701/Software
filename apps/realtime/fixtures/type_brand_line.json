@@ -1,0 +1,947 @@
+[
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 1,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 1,
+            "line_asset": 1
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 2,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 1,
+            "line_asset": 2
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 3,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 1,
+            "line_asset": 3
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 4,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 1,
+            "line_asset": 4
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 5,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 1,
+            "line_asset": 5
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 6,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 2,
+            "line_asset": 6
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 7,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 2,
+            "line_asset": 7
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 8,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 2,
+            "line_asset": 8
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 9,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 2,
+            "line_asset": 9
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 10,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 2,
+            "line_asset": 10
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 11,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 3,
+            "line_asset": 11
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 12,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 3,
+            "line_asset": 12
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 13,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 3,
+            "line_asset": 13
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 14,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 3,
+            "line_asset": 14
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 15,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 3,
+            "line_asset": 15
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 16,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 4,
+            "line_asset": 16
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 17,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 4,
+            "line_asset": 17
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 18,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 4,
+            "line_asset": 18
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 19,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 4,
+            "line_asset": 19
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 20,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 4,
+            "line_asset": 20
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 21,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 5,
+            "line_asset": 21
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 22,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 5,
+            "line_asset": 22
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 23,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 5,
+            "line_asset": 23
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 24,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 5,
+            "line_asset": 24
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 25,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 5,
+            "line_asset": 25
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 26,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 6,
+            "line_asset": 26
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 27,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 6,
+            "line_asset": 27
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 28,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 6,
+            "line_asset": 28
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 29,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 6,
+            "line_asset": 29
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 30,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 6,
+            "line_asset": 30
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 31,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 7,
+            "line_asset": 31
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 32,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 7,
+            "line_asset": 32
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 33,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 7,
+            "line_asset": 33
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 34,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 7,
+            "line_asset": 34
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 35,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 7,
+            "line_asset": 35
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 36,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 8,
+            "line_asset": 36
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 37,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 8,
+            "line_asset": 37
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 38,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 8,
+            "line_asset": 38
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 39,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 8,
+            "line_asset": 39
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 40,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 8,
+            "line_asset": 40
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 41,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 9,
+            "line_asset": 41
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 42,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 9,
+            "line_asset": 42
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 43,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 9,
+            "line_asset": 43
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 44,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 9,
+            "line_asset": 44
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 45,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 9,
+            "line_asset": 45
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 46,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 10,
+            "line_asset": 46
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 47,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 10,
+            "line_asset": 47
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 48,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 10,
+            "line_asset": 48
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 49,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 10,
+            "line_asset": 49
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 50,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 10,
+            "line_asset": 50
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 51,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 11,
+            "line_asset": 51
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 52,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 11,
+            "line_asset": 52
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 53,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 11,
+            "line_asset": 53
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 54,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 11,
+            "line_asset": 54
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 55,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 11,
+            "line_asset": 55
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 56,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 12,
+            "line_asset": 56
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 57,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 12,
+            "line_asset": 57
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 58,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 12,
+            "line_asset": 58
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 59,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 12,
+            "line_asset": 59
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 60,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 12,
+            "line_asset": 60
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 61,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 13,
+            "line_asset": 61
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 62,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 13,
+            "line_asset": 62
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 63,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 13,
+            "line_asset": 63
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 64,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 13,
+            "line_asset": 64
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 65,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 13,
+            "line_asset": 65
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 66,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 14,
+            "line_asset": 66
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 67,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 14,
+            "line_asset": 67
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 68,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 14,
+            "line_asset": 68
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 69,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 14,
+            "line_asset": 69
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 70,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 14,
+            "line_asset": 70
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 71,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 15,
+            "line_asset": 71
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 72,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 15,
+            "line_asset": 72
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 73,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 15,
+            "line_asset": 73
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 74,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 15,
+            "line_asset": 74
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 75,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 15,
+            "line_asset": 75
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 76,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 16,
+            "line_asset": 76
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 77,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 16,
+            "line_asset": 77
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 78,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 16,
+            "line_asset": 78
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 79,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 16,
+            "line_asset": 79
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 80,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 16,
+            "line_asset": 80
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 81,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 17,
+            "line_asset": 81
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 82,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 17,
+            "line_asset": 82
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 83,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 17,
+            "line_asset": 83
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 84,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 17,
+            "line_asset": 84
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 85,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 17,
+            "line_asset": 85
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 86,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 18,
+            "line_asset": 86
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 87,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 18,
+            "line_asset": 87
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 88,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 18,
+            "line_asset": 88
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 89,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 18,
+            "line_asset": 89
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 90,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 18,
+            "line_asset": 90
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 91,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 19,
+            "line_asset": 91
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 92,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 19,
+            "line_asset": 92
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 93,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 19,
+            "line_asset": 93
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 94,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 19,
+            "line_asset": 94
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 95,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 19,
+            "line_asset": 95
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 96,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 20,
+            "line_asset": 96
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 97,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 20,
+            "line_asset": 97
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 98,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 20,
+            "line_asset": 98
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 99,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 20,
+            "line_asset": 99
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 100,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 20,
+            "line_asset": 100
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 101,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 21,
+            "line_asset": 101
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 102,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 21,
+            "line_asset": 102
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 103,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 21,
+            "line_asset": 103
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 104,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 21,
+            "line_asset": 104
+        }
+    },
+    {
+        "model": "realtime.Type_brand_line",
+        "pk": 105,
+        "fields": {
+            "type_asset": 1,
+            "brand_asset": 21,
+            "line_asset": 105
+        }
+    }
+]
