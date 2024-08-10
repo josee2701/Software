@@ -1,0 +1,54 @@
+{% load i18n static %}
+
+{%block content %}
+{{form.media}}
+
+    <div class="modal-content">
+        <div class="modal-body">
+            <div class="card">
+            <div class="modal-header">
+                <h3> {% trans "Add Event" %}</h3>
+                <button type="button" id="cerrarVenta" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="card-body">
+                <form hx-post="{{ request.path }}"> {% csrf_token %}
+                    <div class="row">
+                        <div class="col">
+                            <p>
+                                <div class="input-group input-group-static mb-4">
+                                    <label for="id_number" class="ms-0 mt-0"> {% trans "Event number" %} </label>
+                                    {{form.number}}
+                                </div>
+                                <div id="form-errors">
+                                    {{form.number.errors}}
+                                </div>
+                            </p>
+                        </div>
+                        <div class="col">
+                            <p>
+                                <div class="input-group input-group-static mb-4">
+                                    <label for="id_event" class="ms-0 mt-0"> {% trans "Event Predefined" %} </label>
+                                    {{form.name}}
+                                </div>
+                                <div id="form-errors">
+                                    {{form.name.errors}}
+                                </div>
+                            </p>
+                        </div>
+                        <div class="row">
+                            <div class="col">
+                                <button class="btn btn-primary mt-3" type="submit"> <i class="fa-solid  fa-floppy-disk me-2"></i> {% trans "Save" %} </button>
+                            </div>
+                            <div class="col">
+                                <button type="button" class="btn btn-primary mt-3" data-bs-dismiss="modal">{% trans "Return" %}</button>
+                            </div>
+                        </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <head>
+        <link rel="stylesheet" type="text/css" href="{% static 'assets/css/estilos_templates.css' %}">
+    </head>
+
+{% endblock content %}

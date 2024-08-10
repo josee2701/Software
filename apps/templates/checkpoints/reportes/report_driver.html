@@ -1,0 +1,191 @@
+{% extends "layouts/base.html" %}
+{% load i18n static %}
+
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Driver Qualification Report</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/estilos_templates.css' %}">
+</head>
+<body>
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card my-4">
+                <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
+                    <div class="bg-gradient-primary shadow-primary border-radius-lg pt-4 pb-3">
+                        <div class="col">
+                            <h5 class="text-white text-capitalize ps-3">{% trans "Report Driver" %}</h5>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="row">
+                                <div class="col-3">
+                                    <div class="input-group input-group-static mb-4">
+                                        <label for="id_company">{% trans "Company:" %} <span style="color: red">*</span></label>
+                                        {{ form.company }}
+                                    </div>
+                                        <!-- Lista de checkboxes con conductores -->
+                                    <div class="input-group input-group-static mb-4">
+                                        <label for="id_driver">{% trans "Driver:" %}<span style="color: red">*</span></label>
+                                        <div class="scroll-overflow" style="block-size:100px">
+                                            {{ form.driver}}
+                                        </div>
+                                    </div>
+
+                                </div>
+                                <div class="col-3">
+                                    <div class="input-group input-group-static mb-4">
+                                        <label>{% trans "Start date:" %}<span style="color: red"> *</span></label>
+                                        {{ form.start_date}}
+                                    </div>
+                                    <div class="input-group input-group-static mb-4">
+                                        <label>{% trans "Ending date:" %}<span style="color: red"> *</span></label>
+                                        {{ form.end_date}}
+                                    </div>
+                                </div>
+                                <div class="col card" >
+                                    <div class="table-responsive">
+                                        <!-- Se realiza la tabla en la cual se estipulan los nombres de cada columna -->
+                                        <table class="table align-items-center">
+                                            <thead>
+                                                <tr>
+                                                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 align-middle text-center text-sm"> {% trans 'Item to evaluate' %} </th>
+                                                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2 align-middle text-center text-sm"> {% trans "points by items" %}  </th>
+                                                  <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 align-middle text-center text-sm"> {% trans "Points to subtract for violation" %}</th>
+                                                </tr>
+                                              </thead>
+                                            <tbody>
+                                                {% for score in lest_item %}
+                                                    <tr>
+                                                        <td class="align-middle text-center text-sm">{{ score.item}}</td>
+                                                        <td class="align-middle text-center text-sm">{{ score.points_item_score}}</td>
+                                                        <td class="align-middle text-center text-sm"> {{ score.subtract_points}}</td>
+                                                    </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col">
+                                    <button class="btn btn-primary mt-3" type="submit">
+                                        <i class="fa-solid fa-floppy-disk me-2"></i> {% trans "Generate Report" %}
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                        <!-- Es la opcion del buscador de la platilla de Driver -->
+                        <div class="col d-flex">
+                            <form id="searchValue" method="GET" onsubmit="return false">
+                                <div class="input-group input-group-outline">
+                                    <label class="form-label">{% trans "Search..." %}</label>
+                                    <input
+                                        id="search-input"
+                                        type="text"
+                                        class="form-control"
+                                        onkeyup="filterTable(this.value)"
+                                        name="q"
+                                        autocomplete="off"
+                                    />
+                                </div>
+                            </form>
+                        </div>
+                        <div class="table-responsive p-0">
+                            <table class="table align-items-center mb-0">
+                                <thead>
+                                    <tr>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Driver" %}</th>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "License" %}</th>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Date" %}</th>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Total points" %}</th>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Distance" %} <br> {% trans "(Km)" %} </th>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Engine On" %}</th>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Max Speed" %}</th>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                            {% trans "Excess Speed Time" %}
+                                        </th>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Speeding Score" %} <br> {% trans "Time" %} </th>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Idle Time" %}</th>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Idle Time Score" %} <br> {% trans "Time" %}</th>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                            {% trans "Harsh Accelerations" %}
+                                        </th>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Harsh Acceleration Score" %}<br> {% trans "Time" %}</th>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                            {% trans "Speeding" %}
+                                        </th>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Speeding Score" %}<br> {% trans "Time" %}</th>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                            {% trans "Speeding Time" %}<br> {% trans "(Excess Speed)" %}
+                                        </th>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Active" %}</th>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Address" %}</th>
+                                    </tr>
+                                </thead>
+                            </table>
+                                <tbody>
+                                    {% for control in controls %}
+                                    <tr>
+                                        <td class="align-middle text-center text-sm">{{ control.driver }}</td>
+                                        <td class="align-middle text-center text-sm">{{ control.vehicle }}</td>
+                                        <td class="align-middle text-center text-sm">{{ control.server_date|date:"d-m-Y" }}</td>
+                                        <td class="align-middle text-center text-sm">{{control.total_point}}</td>
+                                        <td class="align-middle text-center text-sm">{{ control.odometer }}</td>
+                                        <td class="align-middle text-center text-sm">{{ control.total_hours }}</td>
+                                        <td class="align-middle text-center text-sm">{{ control.calculated_speed }}</td>
+                                        <td class="align-middle text-center text-sm">{{ control.calculated_speed }}</td>
+                                        <td class="align-middle text-center text-sm">{{ control.calculated_speed }}</td>
+                                        <td class="align-middle text-center text-sm">{{ control.calculated_speed }}</td>
+                                        <td class="align-middle text-center text-sm">{{ control.calculated_speed }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                    {% if not controls %}
+                                    <tr>
+                                      <td colspan="4">{{ "No se encontraron resultados." }}</td>
+                                    </tr>
+                                  {% endif %}
+                                </tbody>
+
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
+{% endblock content %}
+{% block scripts %}
+
+<script>
+    function filterTable(searchValue) {
+        const rows = document.querySelector("tbody").querySelectorAll("tr");
+        searchValue = searchValue.toLowerCase();
+
+        rows.forEach((row) => {
+            const cellTexts = Array.from(row.querySelectorAll("td")).map((cell) =>
+                cell.textContent.toLowerCase()
+            );
+
+            if (cellTexts.some((text) => text.includes(searchValue))) {
+                row.hidden = false;
+            } else {
+                row.hidden = true;
+            }
+        });
+    }
+
+    const input = document.getElementById("search-input");
+    input.addEventListener("keyup", (e) => {
+        filterTable(e.target.value);
+    });
+</script>
+{% endblock scripts %}

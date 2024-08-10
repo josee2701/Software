@@ -1,0 +1,81 @@
+<!-- prettier-ignore -->
+
+{% extends 'authentication/base.html' %}
+{% load i18n static %}
+
+{% block title %}{% trans "Authentication" %}{% endblock title %}
+
+{% block content %}
+<!-- Asumimos que FontAwesome y HTMX se incluyen en la plantilla base o de manera global en el proyecto -->
+<main class="main-content mt-0" id="dialog">
+  <div class="page-header align-items-start min-vh-100" style="background-image: url({{ MEDIA_URL }}{{ theme }});">
+    <span class="mask bg-gradient-dark opacity-6"></span>
+    <div class="container my-auto">
+      <div class="row">
+        <div class="col-lg-4 col-md-8 col-12 mx-auto">
+          <div class="card z-index-0 fadeIn3 fadeInBottom">
+            <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
+              <div class="border-radius-lg py-0 px-1" style="padding-top: 25%; position: relative; background-color: {{ color_theme }}; border-color: {{ color_theme }};">
+                <div class="card-body text-center">
+                  <div style="width: 200px; height: 200px; position: relative; margin: 0 auto; overflow: hidden; border-radius: 50%;">
+                    <img src="{% if profile_picture %}{{ profile_picture }}{% else %}{% static 'Perfil/Perfil.png' %}{% endif %}" alt="Profile Picture" class="rounded-circle" onerror="this.onerror=null;this.src='{% static 'assets/img/team-2.jpg' %}'" style="object-fit: cover; width: 100%; height: 100%;" />
+                  </div>
+                  <h4 class="card-description text-center text-white">
+                    {% blocktrans with f=first_name|capfirst l=last_name|capfirst %} Hi, {{ f }} {{ l }} {% endblocktrans %}
+                  </h4>
+                  <h5 class="card-description text-center text-white">{{ user.username }}</h5>
+                </div>
+              </div>
+            </div>
+            <div class="card-body">
+              <form role="form" class="text-start needs-validation" method="post" novalidate>
+                {% csrf_token %}
+                <p class="card-description text-center">{% trans "Please enter the password for the email:" %} <strong>{{ email }}</strong></p>
+                {% if form.password.errors %}
+                <div id="form-errors">{{ form.password.errors }}</div>
+                {% endif %}
+                <div class="input-group input-group-outline mb-4">{{ form.password }}</div>
+
+                <div class="text-center">
+                  <button type="submit" class="btn btn-success w-100 my-4 mb-2" style="background-color: {{ color_theme }}; border-color: {{ color_theme }};">{% trans "Log in" %} </button>
+                </div>
+
+                <p class="mt-4 text-sm text-center">
+                  {% trans "Forgot your password?" %}
+                  <a href="{% url 'password_reset' %}" class="font-weight-bold" style="color: {{ color_theme }} ;">{% trans "Recover" %}</a>
+                </p>
+                <div class="text-center">
+                  <!-- El contenido actualizado por HTMX aparecerá aquí -->
+                  <button type="button" class="btn btn-primary" hx-get="{% url 'clear_email' %}" hx-target="#dialog" hx-push-url="/es/" style="background-color: {{ color_theme }}; border-color: {{ color_theme }};">
+                    <i class="fa-solid fa-reply"></i>
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+{% endblock content %}
+<script>
+  document.body.addEventListener('htmx:afterOnLoad', function(event) {
+    if (event.detail.path === "{% url 'clear_email' %}") {
+      history.pushState({}, "", "");
+    }
+  });
+  </script>
+
+
+<script>
+  // Esperamos a que el DOM esté cargado completamente
+  document.addEventListener('DOMContentLoaded', function () {
+      // Comprobamos si hay errores en el formulario
+      var errors = document.getElementById('form-errors');
+      if (errors && errors.textContent.includes('CSRF')) {
+          // Si hay errores relacionados con CSRF, recargamos la página
+          window.location.reload(true);
+      }
+  });
+  </script>

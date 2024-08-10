@@ -1,0 +1,38 @@
+{% extends "layouts/base.html" %}
+
+{% load i18n static %}
+
+{% block title %} {% trans "Geozones" %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+  <!-- No es necesario incluir la etiqueta doctype ni las etiquetas html y body aquí, ya que estas deberían estar en tu plantilla base -->
+
+  <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no" />
+      <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBQCROrMdrexN00HA_2cXyjJwlQZVHph8Y&libraries=drawing,places,geometry">alert("withApikey")</script>
+      <link href="{% static 'assets/scripts/geozone/geozone.css' %}" rel="stylesheet">
+  </head>
+  <div class="row">
+      <div class="col-12">
+          <div class="card my-4">
+              <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
+                  <div class="bg-gradient-primary shadow-primary border-radius-lg pt-4 pb-3">
+                      <div class="col">
+                          <h5 class="text-white text-capitalize ps-3"> {% trans "Geozones" %} </h5>
+                      </div>
+                  </div>
+              </div>
+              <div class="card-body">
+                  <body>
+                    <noscript>Usted necesita tener javascript activado para poder usar este modulo</noscript>
+                    <div id="root"></div> <!-- Este es el contenedor donde React montará tu aplicación -->
+                    <script src="{% static 'assets/scripts/geozone/geozone.js' %}"></script>
+                </body>
+              </div>
+          </div>
+      </div>
+  </div>
+</div>
+{% endblock %}

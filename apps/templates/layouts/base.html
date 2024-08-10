@@ -1,0 +1,95 @@
+<!-- Base utilizada para renderizar los templates de logueo a la aplicación. -->
+{% load staticfiles %}
+{% comment %} {% load staticfiles %} {% endcomment %}
+
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    {% block style %}
+    {% include 'layouts/estilos.html' %}
+    <!-- Fonts and icons -->
+    <link
+      rel="apple-touch-icon"
+      sizes="76x76"
+      href="{% static 'assets/img/apple-icon.png' %}"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      href="{% static 'assets/img/favicon.png' %}"
+    />
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700,900|Roboto+Slab:400,700"
+    />
+
+    <!-- Font Awasome Icons -->
+    <script
+      src="https://kit.fontawesome.com/35be38064a.js"
+      crossorigin="anonymous"
+    ></script>
+
+    <!-- Nucleo Icons -->
+    <link href="{% static 'assets/css/nucleo-icons.css' %}" rel="stylesheet" />
+    <link href="{% static 'assets/css/nucleo-svg.css' %}" rel="stylesheet" />
+
+    <!-- Material Icons -->
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons+Round"
+      rel="stylesheet"
+    />
+
+
+    {% comment %} <script src="https://unpkg.com/dropzone@6.0.0-beta.1/dist/dropzone-min.js"></script>
+    <link href="https://unpkg.com/dropzone@6.0.0-beta.1/dist/dropzone.css" rel="stylesheet" type="text/css" /> {% endcomment %}
+
+    <!-- CSS Files -->
+    {% comment %} <link
+      id="pagestyle"
+      href="{% static '\assets\css\material-dashboard.css' %}"
+      rel="stylesheet"
+    /> {% endcomment %}
+    {% endblock style %}
+
+    <!-- prettier-ignore -->
+    {% block stylesheets %}{% endblock stylesheets %}
+    <title>{% block title %}{% endblock title %}</title>
+  </head>
+
+  <body class="g-sidenav-show bg-gray-200 g-sidenav-hidden">
+    {% include "layouts/navbar.html" %}
+    <div class="container-fluid">
+    {% block content %}{% endblock content %}
+    </div>
+
+    <div id="modal" class="modal fade">
+      <div id="dialog" class="modal-dialog modal-xl" hx-target="this">
+
+      </div>
+    </div>
+
+    <!-- Core JS Files -->
+    <script src="{% static 'assets/js/core/popper.min.js' %}"></script>
+    <script src="{% static 'assets/js/core/bootstrap.min.js' %}"></script>
+    <script src="{% static 'assets/js/plugins/perfect-scrollbar.min.js' %}"></script>
+    <script src="{% static 'assets/js/plugins/smooth-scrollbar.min.js' %}"></script>
+    <script src="https://unpkg.com/htmx.org@1.8.4"></script>
+    <script src="{% static 'assets/js/dialog.js' %}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.1/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js" integrity="sha384-oBqDVmMz9ATKxIep9tiCxS/Z9fNfEXiDAYTujMAeBAsjFuCZSmKbSSUnQlmh/jp3" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.min.js" integrity="sha384-IDwe1+LCz02ROU9k972gdyvl+AESN10+x7tBKgc9I5HFtuNz0wWnPclzo6p9vxnk" crossorigin="anonymous"></script>
+
+    <!-- Github buttons -->
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+    <!-- Control Center for Material Dashboard: parallax effects, scripts for the example pages etc -->
+    <script src="{% static 'assets/js/material-dashboard.min.js' %}"></script>
+    <!-- prettier-ignore -->
+    {% block scripts %}
+    {% endblock scripts %}
+  </body>
+</html>

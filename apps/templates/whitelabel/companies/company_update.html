@@ -1,0 +1,103 @@
+{% load i18n static %}
+{% block content %}
+  {{ form.media }}
+  <div class="modal-content">
+    <div class="modal-body">
+      <div class="card">
+        <div class="modal-header">
+          <h3>
+            {% trans "Update:" %} {{ object.company_name }}
+          </h3>
+          <button type="button" id="cerrarVenta" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="card-body">
+            <form hx-post="{{ request.path }}">
+              {% csrf_token %}
+              <div class="row">
+                {% for field in form %}
+                  {% if field.html_name == "nit" or field.html_name == "company_name" or field.html_name == "legal_representative" or field.html_name == "address" %}
+                  <div class="col">
+                    <div class="input-group input-group-static mb-4">
+                      <label for="{{ field.id_for_label }}"
+                        >{{field.label_tag|capfirst}} <span style="color:red;"> *</span> </label
+                      >
+                      {{ field }} {{ field.errors }}
+                    </div>
+                  </div>
+                  {% endif %}
+                {% endfor %}
+              </div>
+              <div class="row">
+                {% for field in form %}
+                  {% if field.html_name == "country" or field.html_name == "city" or field.html_name == "phone_number" or field.html_name == "consultant"  %}
+                  <div class="col">
+                    <div class="input-group input-group-static mb-4">
+                      <label for="{{ field.id_for_label }}"
+                        >{{field.label_tag|capfirst}}</label
+                      >
+                      {{ field }} {{ field.errors }}
+                    </div>
+                  </div>
+                  {% endif %}
+
+                {% endfor %}
+              </div>
+              <div class="row">
+                {% for field in form %}
+                  {% if field.html_name == "seller" %}
+                    <div class="col">
+                        <div class="input-group input-group-static mb-4">
+                            <label for="{{ field.id_for_label }}">{{field.label_tag|capfirst}}</label>
+                            {{ field }} {{ field.errors }}
+                        </div>
+                    </div>
+                  {% elif field.html_name == "coin" %}
+                      <div class="col">
+                          <div class="input-group input-group-static mb-4">
+                              <label for="{{ field.id_for_label }}">{{field.label_tag|capfirst}}<span style="color:red;"> *</span></label>
+                              {{ field }} {{ field.errors }}
+                          </div>
+                      </div>
+                  {% endif %}
+                  {% if field.html_name == "signed_contract" or field.html_name == "actived" %}
+                    <div class="col">
+                      <label class="custom-control-label" for="{{ field.id_for_label }}">
+                        {% trans field.label_tag %}
+                      </label>
+                      <div class="form-check form-switch">
+                        {{ field }} {{ field.errors }}
+                      </div>
+                    </div>
+                  {% endif %}
+                {% endfor %}
+              </div>
+              <div class="row">
+                {% for field in form %}
+                    {% if field.html_name == "type_map" or field.html_name == "modules" %}
+                        <div class="col">
+                            {{ field.errors }}
+                            <label class="form-check-label" for="{{ field.id_for_label }}">
+                                {% trans field.label_tag %}
+                                <span style="color:red;"> *</span>
+                            </label>
+                            <div class="scroll-overflow">
+                                {{ field }}
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+              <div class="row mt-10 d-grid gap-2 col-2 mx-2">
+                <input type="submit" value="{% trans "Save" %}" class="btn btn-primary" />
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <head>
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/estilos_templates.css' %}">
+  </head>
+{% endblock content %}

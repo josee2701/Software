@@ -1,0 +1,56 @@
+{% load i18n static %} 
+{% block content %} 
+{{ form.media }}
+<div class="modal-content" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-body">
+    <div class="card">
+      <div class="modal-header">
+        <div class="col">
+          <h3>{% trans "Update Billing: " %} {{ company.company_name }}</h3>
+        </div>
+        <div class="col">
+          <h5>{% trans "Coin: " %} {{company.coin}}</h5>
+        </div>
+        <button type="button" id="cerrarVenta" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form hx-post="{{ request.path }}" enctype="multipart/form-data">
+        <div class="card-body scrollable-content" id="dynamic-scrollable-content1"style="overflow-y: auto;">
+          <div class="row">
+            <div class="col">
+              {% csrf_token %} 
+              {% for form in forms %}
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="title">{{ form.instance.group }}</label>
+                </div>
+                <div class="col-md-5">
+                  <div class="input-group input-group-static mb-1">
+                    <label for="price"></label>
+                    {{ form.price }}
+                    <div hidden>
+                      <select name="id">
+                        <option value="{{ form.instance.id }}">{{ form.instance.id }}</option>
+                      </select>
+                      <select name="group">
+                        <option value="{{ form.instance.group_id }}">{{ form.instance.group_id }}</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <button class="btn btn-primary" type="submit">{% trans "Save" %}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<head>
+  <script src="{% static 'assets/js/dynamic-scrollable-content.js' %}"></script>
+  <link rel="stylesheet" type="text/css" href="{% static 'assets/css/estilos_templates.css' %}" />
+</head>
+{% endblock content %}

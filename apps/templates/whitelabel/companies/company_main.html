@@ -1,0 +1,368 @@
+{% extends "layouts/base.html" %}
+{% load i18n static %}
+{% block title %} {% trans "Companies" %} {% endblock %}
+{% block content %}
+{% if user.company.id == 1 %}
+<!-- Esta es la informacion o plantilla que va a poder ver la compañia con id = 1 -->
+<div class="container-fluid py-4">
+  <div class="row">
+    <div class="col-12">
+      <div class="card my-4">
+        <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
+          <div class="row bg-gradient-primary shadow-primary border-radius-lg pt-4">
+            <div class="col">
+              <h5 class="text-white text-capitalize ps-3">{% trans 'Companies' %}</h5>
+            </div>
+            <div class="col d-flex justify-content-end">
+              <button class="btn btn-success" type="button" hx-get="{% url 'companies:updateCompanyLogo' user.company.id %}" hx-target="#dialog"><i class="fa-solid fa-pencil"></i> {% trans 'Edit' %} {{ user.company.company_name }}</button>
+            </div>
+          </div>
+      </div>
+      <div class="card-body">
+        <div class="row">
+         <div class="col d-flex">
+            <!-- Es la opcion del buscador de la platilla de Companies -->
+            <form id="search-form" method="GET" onsubmit="return false">
+              <div class="input-group input-group-outline">
+                <label class="form-label">{% trans "Search..." %}</label>
+                <input id="search-input" type="text" class="form-control" onfocus="focused(this)" onfocusout="defocused(this)" name="q" autocomplete="off">
+              </div>
+            </form>
+          </div>
+          <!-- Contenido de la vista para usuarios con permiso -->
+          {% if perms.whitelabel.add_company %}
+            <div class="col d-flex justify-content-end">
+              <button class="btn btn-primary mx-2" type="button" hx-get="{% url 'companies:createDistributionCompany' %}" hx-target="#dialog"><i class="fa-solid fa-plus"></i> {% trans "Add Distributor" %} </button>
+              <button class="btn btn-primary mx-2" type="button" hx-get="{% url 'companies:createCustomerAzCompany' %}" hx-target="#dialog"><i class="fa-solid fa-plus"></i>{% trans "Add final customer" %} </button>
+              <button type="button" hx-get="{% url 'companies:process' %}"  class="btn btn-primary mx-2" hx-target="#dialog"><i class="fa-solid fa-plus"></i> {% trans "Lists Process" %}</button>
+            </div>
+          {% endif %}
+        </div>
+        <form method="GET">
+          <label>{% trans "Show entries" %}</label>
+          <select name="paginate_by" id="paginate-by" onchange="this.form.submit()">
+              <option value="10" {% if request.GET.paginate_by == '10' %} selected {% endif %}>10</option>
+              <option value="25" {% if request.GET.paginate_by == '25' %} selected {% endif %}>25</option>
+              <option value="50" {% if request.GET.paginate_by == '50' %} selected {% endif %}>50</option>
+              <option value="100" {% if request.GET.paginate_by == '100' %} selected {% endif %}>100</option>
+          </select>
+          <input type="hidden" name="q" value="{{ request.GET.q }}">
+      </form>
+        <div class="scrollable-content" id="dynamic-scrollable-content" style="overflow-y: auto;">
+          <div class="table-responsive">
+            <!-- Se realiza la tabla en la cual se estipulan los nombres de cada columna -->
+            <table class="table align-items-center">
+              <thead>
+                <tr>
+                  <th></th>
+                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Nit" %}</th>
+                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Company" %}</th>
+                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Legal Representative" %}</th>
+                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Type" %}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in object_list %}
+                  <tr id="{{item.id}}">
+                    <td>
+                      <div class="row">
+                        <div class="col d-flex justify-content">
+                          {% if perms.whitelabel.change_company %}
+                            {% if item.provider is None %}
+                            <button
+                              type="button"
+                              class="btn btn-primary mx-2"
+                              hx-get="{% url 'companies:updateDistributionCompany' item.id %}"
+                              hx-target="#dialog"
+                            >
+                              <i class="fa-solid fa-pencil"></i>
+                            </button>
+                            {% else %}
+                            <button
+                              type="button"
+                              class="btn btn-primary mx-2"
+                              hx-get="{% url 'companies:UpdateCustomerCompanyView' item.id %}"
+                              hx-target="#dialog"
+                            >
+                              <i class="fa-solid fa-pencil"></i>
+                            </button>
+                            {% endif %}
+                          {% endif %}
+
+                          {% if perms.whitelabel.delete_company %}
+                          <button
+                          type="button"
+                          class="btn btn-danger"
+                          hx-get="{% url 'companies:deleteCompany' item.id %}"
+                          hx-target="#dialog"
+                          >
+                          <i class="fa-solid fa-trash"></i>
+                          </button>
+                          {% endif %}
+                          {% if perms.whitelabel.change_company and item.show_map_button %}
+                            <!-- Muestra el botón de mapa según la lógica de la vista -->
+                            <button
+                              type="button"
+                              class="btn btn-primary mx-2"
+                              hx-get="{% url 'companies:KeyMapView' item.id %}"
+                              hx-target="#dialog">
+                              <i class="fa-solid fa-map"></i>
+                            </button>
+                          {% endif %}
+                        </div>
+                      </div>
+                    </td>
+                    <td>{{ item.nit }}</td>
+                    <td>{{ item.company_name }}</td>
+                    <td>{{ item.legal_representative }}</td>
+                    {% if user.company.id == 1 %}
+                      {% if item.provider_id is None %}
+                      <td>{% trans "Distributor" %}</td>
+                      {% else %}
+                      <td>{% trans "Final client" %}</td>
+                      {% endif %}
+                    {% endif %}
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="row mt-4">
+          <div class ="col-6 d-flex justify-content-start">
+            <nav aria-label="Page navigation">
+              <ul class="pagination">
+                  {% if page_obj.has_previous %}
+                      <li class="page-item"><a class="page-link" href="?page=1&paginate_by={{ request.GET.paginate_by }}&q={{ request.GET.q }}">{% trans 'Home' %}</a></li>
+                      <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&paginate_by={{ request.GET.paginate_by }}&q={{ request.GET.q }}">&laquo;</a></li>
+                  {% endif %}
+
+                  {% if page_obj.number|add:"-4" > 1 %}
+                      <li class="page-item"><span class="page-link">...</span></li>
+                  {% endif %}
+
+                  {% for num in page_obj.paginator.page_range %}
+                      {% if num > page_obj.number|add:"-4" and num < page_obj.number|add:"4" %}
+                          <li class="page-item {% if page_obj.number == num %}active{% endif %}"><a class="page-link" href="?page={{ num }}&paginate_by={{ request.GET.paginate_by }}&q={{ request.GET.q }}">{{ num }}</a></li>
+                      {% endif %}
+                  {% endfor %}
+
+                  {% if page_obj.number|add:"3" < page_obj.paginator.num_pages %}
+                      <li class="page-item"><span class="page-link">...</span></li>
+                  {% endif %}
+
+                  {% if page_obj.has_next %}
+                      <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&paginate_by={{ request.GET.paginate_by }}&q={{ request.GET.q }}">&raquo;</a></li>
+                      <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}&paginate_by={{ request.GET.paginate_by }}&q={{ request.GET.q }}">{% trans 'End' %}</a></li>
+                  {% endif %}
+              </ul>
+          </nav>
+          </div>
+          <div class ="col-6 d-flex justify-content-end">
+            <div class="pagination-info">
+                {% trans 'Displaying' %} {{ page_obj.start_index }} {% trans 'to' %} {{ page_obj.end_index }} {% trans 'of' %} {{ page_obj.paginator.count }} {% trans 'items.' %}
+            </div>
+        </div>
+    </div>
+  </div>
+</div>
+{% elif user.company.provider is null %}
+<!-- Esta es la informacion o plantilla que va a poder ver el proveedor -->
+<div class="container-fluid py-4">
+  <div class="row">
+    <div class="col-12">
+      <div class="card my-4">
+        <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
+          <div class="row bg-gradient-primary shadow-primary border-radius-lg pt-4 pb-3">
+            <div class="col">
+              <h5 class="text-white text-capitalize ps-3">{% trans "Companies" %}</h5>
+            </div>
+            <div class="col d-flex justify-content-end">
+              <button class="btn btn-success" type="button" hx-get="{% url 'companies:updateCompanyLogo' user.company.id %}" hx-target="#dialog"><i class="fa-solid fa-pencil"></i> Edit {{ user.company.company_name }}</button>
+            </div>
+          </div>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <!-- Es la opcion del buscador de la platilla de Companies -->
+          <div class="col d-flex">
+            <form id="search-form" method="GET" onsubmit="return false">
+              <div class="input-group input-group-outline">
+                <label class="form-label">{% trans "Search..." %}</label>
+                <input id="search-input" type="text" class="form-control" onfocus="focused(this)" onfocusout="defocused(this)" name="q" autocomplete="off">
+              </div>
+            </form>
+          </div>
+          <!-- Contenido de la vista para usuarios con permiso -->
+          {% if perms.whitelabel.add_company %}
+            <div class="col d-flex justify-content-end">
+              <button class="btn btn-primary" type="button" hx-get="{% url 'companies:createCustomerCompany' %}" hx-target="#dialog"><i class="fa-solid fa-plus"></i> {% trans "Add final customer" %}</button>
+              <button type="button" hx-get="{% url 'companies:process' %}"  class="btn btn-primary mx-2" hx-target="#dialog"><i class="fa-solid fa-plus"></i> {% trans "Lists Process" %}</button>
+            </div>
+          {% endif %}
+        </div>
+        <form method="GET">
+          <label>{% trans "Show entries" %}</label>
+          <select name="paginate_by" id="paginate-by" onchange="this.form.submit()">
+              <option value="10" {% if request.GET.paginate_by == '10' %} selected {% endif %}>10</option>
+              <option value="25" {% if request.GET.paginate_by == '25' %} selected {% endif %}>25</option>
+              <option value="50" {% if request.GET.paginate_by == '50' %} selected {% endif %}>50</option>
+              <option value="100" {% if request.GET.paginate_by == '100' %} selected {% endif %}>100</option>
+          </select>
+          <input type="hidden" name="q" value="{{ request.GET.q }}">
+      </form>
+        <div class="scrollable-content" id="dynamic-scrollable-content" style="overflow-y: auto;">
+          <div class="table-responsive">
+            <!-- Se realiza la tabla en la cual se estipulan los nombres de cada columna -->
+            <table class="table align-items-center">
+              <thead>
+                <tr>
+                  <th></th>
+                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Nit" %}</th>
+                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Company" %}</th>
+                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Legal Representative" %}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in object_list %}
+                  <tr id="{{item.id}}">
+                    <td>
+                      <div class="row">
+                        <div class="col d-flex justify-content">
+                          {% if perms.whitelabel.change_company %}
+                            {% if item.provider is None %}
+                            <button
+                              type="button"
+                              class="btn btn-primary mx-2"
+                              hx-get="{% url 'companies:updateDistributionCompany' item.id %}"
+                              hx-target="#dialog"
+                            >
+                              <i class="fa-solid fa-pencil"></i>
+                            </button>
+                            {% else %}
+                            <button
+                              type="button"
+                              class="btn btn-primary mx-2"
+                              hx-get="{% url 'companies:UpdateCustomerCompanyView' item.id %}"
+                              hx-target="#dialog"
+                            >
+                              <i class="fa-solid fa-pencil"></i>
+                            </button>
+                            {% endif %}
+                          {% endif %}
+
+                          {% if perms.whitelabel.delete_company %}
+                          <button
+                          type="button"
+                          class="btn btn-danger"
+                          hx-get="{% url 'companies:deleteCompany' item.id %}"
+                          hx-target="#dialog"
+                          >
+                          <i class="fa-solid fa-trash"></i>
+                          </button>
+                          {% endif %}
+                          {% if perms.whitelabel.change_company and item.show_map_button %}
+                            <!-- Muestra el botón de mapa según la lógica de la vista -->
+                            <button
+                              type="button"
+                              class="btn btn-primary mx-2"
+                              hx-get="{% url 'companies:KeyMapView' item.id %}"
+                              hx-target="#dialog">
+                              <i class="fa-solid fa-map"></i>
+                            </button>
+                          {% endif %}
+                        </div>
+                      </div>
+                    </td>
+                    <td>{{ item.nit }}</td>
+                    <td>{{ item.company_name }}</td>
+                    <td>{{ item.legal_representative }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="row mt-4">
+          <div class ="col-6 d-flex justify-content-start">
+              <nav aria-label="Page navigation"  >
+                  <ul class="pagination">
+                      {% if page_obj.has_previous %}
+                          <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&paginate_by={{ request.GET.paginate_by }}&q={{ request.GET.q }}">&laquo;</a></li>
+                      {% endif %}
+
+                      {% for num in page_obj.paginator.page_range %}
+                          <li class="page-item {% if page_obj.number == num %}active{% endif %}"><a class="page-link" href="?page={{ num }}&paginate_by={{ request.GET.paginate_by }}&q={{ request.GET.q }}">{{ num }}</a></li>
+                      {% endfor %}
+
+                      {% if page_obj.has_next %}
+                          <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&paginate_by={{ request.GET.paginate_by }}&q={{ request.GET.q }}">&raquo;</a></li>
+                      {% endif %}
+                  </ul>
+              </nav>
+          </div>
+          <div class ="col-6 d-flex justify-content-end">
+              <div class="pagination-info">
+                  {% trans 'Displaying' %} {{ page_obj.start_index }} {% trans 'to' %} {{ page_obj.end_index }} {% trans 'of' %} {{ page_obj.paginator.count }} {% trans 'items.' %}
+              </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% else %}
+<!-- La informacion que el cliente final podra observar al momento que desea editar el logo -->
+<div class="container-fluid py-4">
+  <div class="row">
+    <div class="col-12">
+      <div class="card my-4">
+        <div class="card-header p-0">
+          <div class="bg-gradient-primary shadow-primary border-radius-lg pt-4 pb-3">
+              <div class=col>
+                  <h5 class="text-white text-capitalize ps-3">{% trans "Company information" %}</h5>
+              </div>
+          </div>
+      </div>
+        <div class="card-body">
+          <p class="card-text">
+            {% if user.company.company_logo %}
+            <img src="{{ MEDIA_URL }}{{ user.company.company_logo }}" alt="{{ user.company.company_name }}" class="w-30 mt-n2 mx-auto">
+            {% else %}
+            <img src="{{ MEDIA_URL }}{{ user.company.provider.company_logo }}" alt="{{ user.company.provider.company_name }}" class="w-30 mt-n2 mx-auto">
+            {% endif %}
+            <br>
+            <!-- La informacion del cliente final -->
+            <strong>{% trans "NIT:" %}</strong> {{ user.company.nit }}<br>
+            <strong>{% trans "Name of the company: " %} </strong> {{ user.company.company_name }}<br>
+            <strong>{% trans "Legal representative:" %}</strong> {{ user.company.legal_representative }}<br>
+            <strong>{% trans "Address:" %}</strong> {{ user.company.address }}<br>
+            <strong>{% trans "Country:" %}</strong> {{ user.company.country }}<br>
+            <strong>{% trans "City:" %}</strong> {{ user.company.city }}<br>
+            <strong>{% trans "Phone number:" %}</strong> {{ user.company.phone_number }}<br>
+            <strong>{% trans "Signed contract:" %}</strong> {{ user.company.signed_contract }}<br>
+            <strong>{% trans "Map type:" %}</strong> {{ user.company.type_map }}<br>
+            <strong>{% trans "Modules:" %}</strong> {{ user.company.modules }}
+          </p>
+        </div>
+      </div>
+
+      <button class="btn btn-success" type="button" hx-get="{% url 'companies:updateCompanyLogo' user.company.id %}" hx-target="#dialog"><i class="fa-solid fa-pencil"></i>{% trans "Edit" %} {{ user.company.company_name }}</button>
+      <button type="button" hx-get="{% url 'companies:process' %}"  class="btn btn-primary mx-2" hx-target="#dialog"><i class="fa-solid fa-plus"></i> {% trans "Lists Process" %}</button>
+    </div>
+  </div>
+</div>
+{% endif %}
+<script src="{% static 'assets/js/dynamic-scrollable-content.js' %}"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="{% static 'assets/js/search.js' %}"></script>
+
+<script type="text/javascript">
+    var $ = jQuery.noConflict();
+    function delete_event_view(url){
+        $('#delete_event').load(url, function(){
+            $(this).modal('show');
+        });
+    };
+</script>
+{% endblock content %}

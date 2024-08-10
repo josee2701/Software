@@ -1,0 +1,229 @@
+{% load i18n static %} {% block content %}
+
+<div class="modal-content">
+  <div class="modal-body">
+    <div class="card">
+      <div class="modal-header">
+        <h3>{% trans "Add User" %}</h3>
+        <button type="button" id="cerrarVenta" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="card-body">
+        <form hx-post="{{ request.path }}">
+          {% csrf_token %}
+          <div class="row">
+            <div class="col">
+              <p></p>
+              <div class="input-group input-group-static mb-4">
+                <label for="id_username">{% trans "User Name:" %} <span style="color:red;">*</span> </label>
+                {{form.username}}
+              </div>
+              <div id="form-errors">{{form.username.errors}}</div>
+            </div>
+            <div class="col">
+              <p></p>
+              <div class="input-group input-group-static mb-4">
+                <label for="id_first_name">{% trans "Name:" %}<span style="color:red;">*</span> </label>
+                {{form.first_name}}
+              </div>
+              <div id="form-errors">{{form.first_name.errors}}</div>
+            </div>
+            <div class="col">
+              <p></p>
+              <div class="input-group input-group-static mb-4">
+                <label for="id_last_name">{% trans "Last Name:" %}</label>
+                {{form.last_name}}
+              </div>
+              <div id="form-errors">{{form.last_name.errors}}</div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col">
+              <p></p>
+              <div class="input-group input-group-static mb-4">
+                <label for="id_email">{% trans "Email:" %} <span style="color:red;">*</span> </label>
+                {{form.email}}
+              </div>
+              <div id="form-errors">{{form.email.errors}}</div>
+            </div>
+            <div class="col">
+              <p></p>
+              <div class="input-group input-group-static mb-4">
+                <label for="id_password1">{% trans "Password:" %}<span style="color:red;">*</span></label>
+                {{form.password1}}
+              </div>
+              <div id="form-errors">{{form.password1.errors}}</div>
+            </div>
+            <div class="col">
+              <p></p>
+              <div class="input-group input-group-static mb-4">
+                <label for="id_password2">{% trans "Confirm Password:" %}<span style="color:red;">*</span></label>
+                {{form.password2}}
+              </div>
+              <div id="form-errors">{{form.password2.errors}}</div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col">
+              <p></p>
+              <div class="input-group input-group-static mb-4">
+                <label for="company">{% trans "Company:" %} <span style="color:red;">*</span> </label>
+                {{form.company}}
+              </div>
+              <div id="form-errors">{{form.company.errors}}</div>
+            </div>
+            <div class="col">
+              <p></p>
+              <div class="input-group input-group-static mb-4">
+                <label for="id_alarm"> {% trans "Alarm:" %} </label>
+                {{form.alarm}}
+              </div>
+              <div id="form-errors">{{form.alarm.errors}}</div>
+            </div>
+            <div class="col">
+              <p></p>
+              <div class="input-group input-group-static mb-4">
+                <label for="company">{% trans "Area or process:" %} <span style="color:red;">*</span> </label>
+                {{form.process_type}}
+              </div>
+              <div id="form-errors">{{form.process_type.errors}}</div>
+            </div>
+
+            <div class="col">
+              <div class="form-check form-switch mb-3" style="padding-block-start: 18px">
+                <label for="id_is_active" class="form-check-label"> {% trans "Is active?" %} </label>
+                {{form.is_active}}
+              </div>
+              <div id="form-errors">{{form.is_active.errors}}</div>
+            </div>
+            <div class="row">
+              <div class="col">
+                <label class="form-check-label" for>
+                  <label class="form-check-label" for="{{ form.companies_to_monitor.label_tag|capfirst}}}">{% trans "Company to Monitor:" %}</label>
+                  <div class="input-group input-group-outline">
+                    <label class="form-label"></label>
+                    <input
+                    id="search-companies"
+                    type="text"
+                    class="form-control"
+                    onfocus="focused(this)"
+                    placeholder="Search"
+                    onfocusout="defocused(this)"
+                    name="q"
+                    autocomplete="off"
+                    />
+                  </div>
+                  <div class="scroll">
+                    {% for companies in form.companies_to_monitor %}
+                    <div class="form-check form-switch companies_to_monitor">
+                      <p></p>
+                      {{ companies}}
+                    </div>
+                    {% endfor %}
+                  </label>
+                  <div id="form-errors">{{form.companies.errors}}</div>
+                </div>
+              </div>
+              <div class="col">
+                <label class="form-check-label" for>
+                  <label>{% trans "Assets to Monitor:" %}</label>
+                  <div class="input-group input-group-outline">
+                    <label class="form-label"></label>
+                    <input
+                    id="search-vehicle"
+                    type="text"
+                    class="form-control"
+                    onfocus="focused(this)"
+                    placeholder="Search"
+                    onfocusout="defocused(this)"
+                    name="q"
+                    autocomplete="off"
+                    />
+                  </div>
+                  <div class="scroll">
+                  {% for vehicle in form.vehicles_to_monitor %}
+                  <div class="form-check form-switch vehicles_to_monitor">
+                    <!-- Aquí puedes incluir los detalles del vehículo que quieras mostrar -->
+                    <p></p>
+                    {{ vehicle}}
+                  </div>
+                  {% endfor %}
+                </label>
+                <div id="form-errors">{{form.vehicle.errors}}</div>
+              </div>
+            </div>
+            <div class="col">
+              <label class="form-check-label" for>
+                <label>{% trans "Group Assets:" %}</label>
+                <div class="input-group input-group-outline">
+                    <label class="form-label"></label>
+                    <input
+                    id="search-group"
+                    type="text"
+                    class="form-control"
+                      onfocus="focused(this)"
+                      placeholder="Search"
+                      onfocusout="defocused(this)"
+                      name="q"
+                      autocomplete="off"
+                    />
+                  </div>
+                  <div class="scroll">
+                  {% for group in form.group_vehicles %}
+                  <div class="form-check form-switch group_vehicles">
+                    <!-- Aquí puedes incluir los detalles del vehículo que quieras mostrar -->
+                    <p></p>
+                    {{ group}}
+                  </div>
+                  {% endfor %}
+                </label>
+                <div id="form-errors">{{form.group.errors}}</div>
+              </div>
+            </div>
+              <div class="row">
+                <div class="col">
+                  <button class="btn btn-primary mt-3" type="submit"><i class="fa-solid fa-floppy-disk me-2"></i> {% trans "Save" %}</button>
+                </div>
+              </div>
+            </div>
+            <head>
+              <link rel="stylesheet" type="text/css" href="{% static 'assets/css/estilos_templates.css' %}">
+            </head>
+
+
+            {% endblock content %}
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="{% static 'assets/js/user/filtro_process.js' %}"></script>
+
+<script>
+  // Función para filtrar las opciones de un campo de formulario
+  function filterOptions(searchInputId, optionsContainerClass) {
+    var searchInput = document.getElementById(searchInputId);
+    console.log("searchInput: ", searchInput);
+
+    searchInput.addEventListener("keyup", function (event) {
+      var query = event.target.value.toLowerCase();
+      // console.log("Query: ", query); // Imprime la consulta de búsqueda
+
+      var labels = document.querySelectorAll("." + optionsContainerClass + " label");
+      //console.log("Labels: ", labels);  Imprime las etiquetas de las opciones del campo de formulario
+
+      labels.forEach(function (label) {
+        if (label.textContent.toLowerCase().indexOf(query) === -1) {
+          label.style.display = "none";
+        } else {
+          label.style.display = "";
+        }
+      });
+    });
+  }
+
+  // Filtrar las opciones de los campos de formulario
+  filterOptions("search-companies", "companies_to_monitor");
+  filterOptions("search-vehicle", "vehicles_to_monitor");
+  filterOptions("search-group", "group_vehicles");
+</script>

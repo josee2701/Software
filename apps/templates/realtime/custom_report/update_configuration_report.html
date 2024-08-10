@@ -1,0 +1,128 @@
+{% extends "layouts/base.html" %}
+{% load i18n static %}
+
+{% block title %} {% trans "Edit Report Settings" %}{% endblock %}
+
+{% block content %}
+
+<head>
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/report_configuration.css' %}">
+</head>
+{% if user.company.theme_set.all.0.button_color %}
+<style>
+.custom-checkbox input:checked ~ .checkmark {
+    background-color: {{ user.company.theme_set.all.0.button_color }};
+    border-color: {{ user.company.theme_set.all.0.button_color }};
+}
+
+.search-input:focus {
+    border-color: transparent; /* Hacer el borde transparente */
+    box-shadow: 0 0 0 2px {{ user.company.theme_set.all.0.button_color }};
+}
+
+</style>
+{% endif %}
+
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card my-4">
+                <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
+                    <div class="bg-gradient-primary shadow-primary border-radius-lg pt-4 pb-3">
+                        <div class="col">
+                            <h5 class="text-white text-capitalize ps-3"> {% trans "Edit Report Settings" %} </h5>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="col">
+                    <h6>{% trans "Company" %}: {{ company_name }}</h6>
+                    </div>
+                    <form method="post" id="updateForm" onsubmit="return confirmSave()">
+                        {% csrf_token %}
+                        <div class="row">
+                            <!-- Columna para Widgets -->
+                            <div class="col">
+                                <h6>{% trans "Widgets" %}</h6>
+                                <!-- Campo de búsqueda para widgets -->
+                                <div class="search-container mb-2">
+                                    <input type="text" id="widgetSearch" class="search-input" placeholder="Search...">
+                                    <label for="widgetSearch" class="search-label">{% trans "Search..." %}</label>
+                                </div>
+                                <div id="widgetsContainer" class="draggable-container">
+                                    <!-- Iterar sobre elementos seleccionados primero -->
+                                    {% for widget_id, widget_label, selected in widget_choices %}
+                                    {% if selected %}
+                                        <div class="custom-checkbox draggable-item">
+                                            <input type="checkbox" class="form-check-input" name="widgets" value="{{ widget_id }}" id="widget_{{ widget_id }}" checked>
+                                            <label class="checkmark" for="widget_{{ widget_id }}"></label>
+                                            <label for="widget_{{ widget_id }}">{{ widget_label }}</label>
+                                        </div>
+                                    {% endif %}
+                                    {% endfor %}
+                                    <!-- Iterar sobre elementos no seleccionados después -->
+                                    {% for widget_id, widget_label, selected in widget_choices %}
+                                    {% if not selected %}
+                                        <div class="custom-checkbox draggable-item">
+                                            <input type="checkbox" class="form-check-input" name="widgets" value="{{ widget_id }}" id="widget_{{ widget_id }}">
+                                            <label class="checkmark" for="widget_{{ widget_id }}"></label>
+                                            <label for="widget_{{ widget_id }}">{{ widget_label }}</label>
+                                        </div>
+                                    {% endif %}
+                                    {% endfor %}
+
+                                </div>
+                            </div>
+                            <!-- Columna para Reports -->
+                            <div class="col">
+                                <h6>{% trans "Reports" %}</h6>
+                                <!-- Campo de búsqueda para Reports -->
+                                <div class="search-container mb-2">
+                                    <input type="text" id="reportSearch" class="search-input" placeholder="Search...">
+                                    <label for="reportSearch" class="search-label">{% trans "Search..." %}</label>
+                                </div>
+                                <div id="reportsContainer" class="draggable-container">
+                                    <!-- Iterar sobre elementos seleccionados primero -->
+                                    {% for report_id, report_label, selected in report_choices %}
+                                        {% if selected %}
+                                            <div class="custom-checkbox draggable-item">
+                                                <input type="checkbox" class="form-check-input" name="reports" value="{{ report_id }}" id="report_{{ report_id }}" checked>
+                                                <label class="checkmark" for="report_{{ report_id }}"></label>
+                                                <label for="report_{{ report_id }}">{{ report_label }}</label>
+                                            </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                    <!-- Iterar sobre elementos no seleccionados después -->
+                                    {% for report_id, report_label, selected in report_choices %}
+                                        {% if not selected %}
+                                            <div class="custom-checkbox draggable-item">
+                                                <input type="checkbox" class="form-check-input" name="reports" value="{{ report_id }}" id="report_{{ report_id }}">
+                                                <label class="checkmark" for="report_{{ report_id }}"></label>
+                                                <label for="report_{{ report_id }}">{{ report_label }}</label>
+                                            </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        </div>
+                        <div class="d-flex align-items-center px-3">
+                            <button type="submit" class="btn btn-primary me-2" onclick="confirmSubmit()">
+                                <i class="fa-solid fa-floppy-disk me-2"></i> {% trans "Save" %}
+                            </button>
+                            <a href="{% url 'realtime:add_configuration_report' %}" class="btn btn-danger">{% trans "Cancel" %}</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    var translations = {
+        confirmMessage: "{% trans 'Are you sure you want to save this configuration?' %}",
+    };
+</script>
+<script src="{% static 'assets/js/configuration_report/update_configuration_report.js' %}"></script>
+
+{% endblock %}

@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  django-rest:
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
+    image: acrazsub1.azurecr.io/djangofront:latest # django-rest
+    container_name: django-rest
+    restart: unless-stopped
+    env_file: .env
+    command: "/gps-mobile/entrypoint.sh"
+    depends_on:
+      - django-redis
+    links:
+     - "django-redis:redis_db"
+    volumes:
+      - .:/app
+    ports:
+      - '8000:8000'
+
+  django-redis:
+    image: redis/redis-stack:latest
+    container_name: django-redis
+    env_file: .env
+    ports:
+      - "6379:6379"
+      - "8001:8001"

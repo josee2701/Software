@@ -1,0 +1,45 @@
+{% load i18n static %}
+
+{% block content %}
+{{form.media}}
+<div class="modal-content">
+    <div class="modal-body">
+      <div class="card">
+      <div class="modal-header">
+                <h3>{% trans "Update process" %}</h3>
+                <button type="button" id="cerrarVenta" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+            <div class="card-body">
+                <form hx-post="{{ request.path}}">
+                    {% csrf_token %}
+                    <div class="row">
+                      <div class="col">
+                        <p></p>
+                        <div class="input-group input-group-static mb-4">
+                          <label for="id_company"> {% trans "Company" %} </label>
+                          {{form.company}}
+                        </div>
+                        <div id="form-errors">{{form.company.errors}}</div>
+                      </div>
+                      <div class="col">
+                        <p></p>
+                        <div class="input-group input-group-static mb-4">
+                          <label for="id_vehicle"> {% trans "Process" %} </label>
+                          {{form.process_type}}
+                        </div>
+                        <div id="form-errors">{{form.process_type.errors}}</div>
+                      </div>
+
+                      <div class="col" id="boton-process">
+                        <button class="btn btn-primary" type="submit"><i class="fa-solid fa-floppy-disk me-2"></i> {% trans "Save" %}</button>
+                      </div>
+                    </div>
+                  </form>
+            </div>
+        </div>
+    </div>
+</div>
+    <head>
+        <link rel="stylesheet" type="text/css" href="{% static 'assets/css/estilos_templates.css' %}">
+    </head>
+{% endblock content %}

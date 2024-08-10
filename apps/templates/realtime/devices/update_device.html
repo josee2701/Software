@@ -1,0 +1,175 @@
+{% load i18n static %} {% block content %} {{form.media}}
+
+<div class="modal-content">
+  <div class="modal-body">
+    <div class="card">
+    <div class="modal-header">
+      <h3>{% trans "Update Device" %}</h3>
+      <button type="button" id="cerrarVenta" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    </div>
+    <div class="card-body">
+      <form hx-post="{{ request.path }}">
+        {% csrf_token %}
+        <div class="row">
+          <div class="col">
+            <p></p>
+            <div class="input-group input-group-static mb-4">
+              <label for="id_imei">{% trans "Imei:" %} <span style="color:red;">*</span> </label>
+              {{ form.imei }}
+            </div>
+            {% if form.imei.errors %}
+              <div class="text-danger">{{ form.imei.errors }}</div>
+            {% endif %}
+          </div>
+          <div class="col">
+            <p>
+                <div class="input-group input-group-static mb-4">
+                    <label for="company">{% trans "Company:" %} <span style="color:red;">*</span> </label>
+                    {{form.company}}
+                </div>
+                <div id="form-errors">
+                    {{form.company.errors}}
+                </div>
+              </p>
+        </div>
+            <div class="col">
+              <p></p>
+              <div class="input-group input-group-static mb-4">
+                <label for="id_simcard">{% trans "Simcard:" %} <span style="color:red;">*</span> </label>
+                {{ form.simcard }}
+              </div>
+              {% if form.simcard.errors %}
+                <div class="text-danger">{{ form.simcard.errors }}</div>
+              {% endif %}
+            </div>
+        </div>
+        <div class="row">
+          <div class="col">
+            <p></p>
+            <div class="input-group input-group-static mb-4">
+              <label for="id_manufacture">{% trans "Manufacture:" %} <span style="color:red;">*</span> </label>
+              <select name="manufacture" class="form-control" required id="id_manufacture">
+                {% for manufacture in manufactures %}
+                <option value="{{manufacture.id}}">{{manufacture.name}}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="col">
+            <p></p>
+            <div class="input-group input-group-static mb-4">
+              <label for="id_model">{% trans "Model:" %} <span style="color:red;">*</span> </label>
+              <select name="familymodel" class="form-control" required id="id_model"></select>
+            </div>
+          </div>
+          <div class="col">
+            <p></p>
+            <div class="input-group input-group-static mb-4">
+              <label for="id_serial_number">{% trans "Serial number:" %}<span style="color:red;">*</span></label>
+              {{form.serial_number}}
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-3">
+            <p></p>
+            <div class="form-check form-switch" style="padding-block-start: 35px">
+              <label for="id_is_active" class="form-check-label"> {% trans "Is active?" %} </label>
+              {{form.is_active}}
+            </div>
+          </div>
+          <div class="col-6">
+            <p></p>
+            <div class="input-group input-group-static mb-2">
+              <label for="id_firmware">{% trans "Firmware:" %} <span style="color:red;">*</span> </label>
+              {{form.firmware}}
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col">
+            <button class="btn btn-primary mt-3" type="submit"><i class="fa-solid fa-floppy-disk me-2"></i> {% trans "Save" %}</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<head>
+  <link rel="stylesheet" type="text/css" href="{% static 'assets/css/estilos_templates.css' %}">
+</head>
+<script >
+
+  $(document).ready(function() {
+    var simcardSelect = $('#id_simcard');
+    var deviceIMEI = $('#id_imei').val(); // IMEI del dispositivo en modo edición
+
+    function loadSimcards(companyId, imei) {
+        var endpoint = imei ? `/es/realtime/devices/api/available-simcards/${companyId}/${imei}/` : `/es/realtime/devices/api/available-simcards/${companyId}/`;
+
+        fetch(endpoint)
+            .then(response => {
+                if (!response.ok) throw new Error("Network response was not ok");
+                return response.json();
+            })
+            .then(data => {
+                simcardSelect.empty();
+                var foundCurrent = false;
+
+                // Primero agregar la SIM card actualmente asignada como primera opción
+                data.forEach(function(simcard) {
+                    if (imei && !foundCurrent && $('#current_simcard_id').val() == simcard.id) {
+                        simcardSelect.append(new Option(simcard.phone_number, simcard.id, false, true)); // Añadir y seleccionar
+                        foundCurrent = true;
+                    } else {
+                        simcardSelect.append(new Option(simcard.phone_number, simcard.id));
+                    }
+                });
+
+                if (!foundCurrent && imei) {
+                    // Si la SIM actual no está en la lista, obtener sus detalles y agregarla
+                    fetch(`/path/to/simcard/details/${$('#current_simcard_id').val()}`) // Asume que tienes una ruta para obtener detalles
+                        .then(response => response.json())
+                        .then(simcard => {
+                            simcardSelect.prepend(new Option(simcard.phone_number, simcard.id, false, true)); // Añadir al principio y seleccionar
+                        });
+                }
+            })
+            .catch(error => {
+                console.error("Error loading the simcards:", error);
+            });
+    }
+
+    $('#id_company').change(function() {
+        var companyId = $(this).val();
+        loadSimcards(companyId, deviceIMEI);
+    });
+
+    // Cargar al inicio si estás en modo de edición
+    if ($('#id_company').val() && deviceIMEI) {
+        $('#id_company').change();
+    }
+});
+
+</script>
+<script>
+  $(document).ready(function() {
+    $("#id_manufacture").change(updateModels);
+    updateModels();
+
+    function updateModels() {
+      var selected_manufacture = $("#id_manufacture").val();
+      $("#id_model").empty();
+      {% for family_model in family_models %}
+        if (selected_manufacture == {{ family_model.manufacture.id }}) {
+          $("#id_model").append(
+            '<option value="{{ family_model.id }}" {% if model_assigned and family_model.id == model_assigned.id %}selected{% endif %}>{{ family_model.model.name }} - {{ family_model.model.network_type }}</option>'
+          );
+        }
+      {% endfor %}
+    }
+  });
+</script>
+
+{% endblock content %}

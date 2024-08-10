@@ -1,0 +1,13 @@
+{% extends "layouts/base.html" %} {% block content %}
+
+<!-- Un formulario que pregunta al usuario si está seguro de querer eliminar la empresa. -->
+<form method="POST">{% csrf_token %}
+    <p>¿Are you sure you want to delete the company "{{ object }}" ?</p>
+    {{ form }}
+    <button type="submit" class="btn btn-light">Confirm</button>
+    <button class="btn btn-light">
+        <a href="{% url 'companies:permissions' %}">Cancel</a>
+    </button>
+</form>
+
+{% endblock content %}

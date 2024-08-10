@@ -1,0 +1,32 @@
+.modal-content {
+    max-width: 600px;
+    margin: 40px auto;
+    border: 1px solid #dee2e6; /* Sutil borde para definir el modal */
+    border-radius: 0.25rem; /* Bordes ligeramente redondeados para suavidad */
+    overflow: hidden; /* Asegura que nada se desborde del contenedor */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra suave para profundidad */
+    background-color: #f0f8ff; /* Color de fondo suave de la compañía para el contenido */
+  }
+
+  .modal-body {
+    padding: 20px;
+    text-align: center;
+  }
+
+  .modal-body h2 {
+    font-size: 1.5rem; /* Tamaño de fuente significativo para el título */
+    margin-bottom: 1rem;
+  }
+
+  .modal-body p {
+    font-size: 1rem; /* Tamaño adecuado para la legibilidad del texto */
+    color: #343a40; /* Gris oscuro para el texto para mejor legibilidad */
+  }
+
+  .modal-body p.lead {
+    font-weight: 500; /* Un poco más de peso para el mensaje principal */
+  }
+
+  .modal-body p.text-muted {
+    color: #6c757d; /* Gris más claro para información secundaria */
+  }

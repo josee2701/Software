@@ -1,0 +1,48 @@
+{% extends "./base_checkpoints.html" %}
+
+{% load i18n static %}
+{% block title %} Add drivers {% endblock %}
+
+{% block content %}
+{{form.media}}
+
+{{form.non_field_errors}}
+<div class="p-4">
+    <form method="POST" > {% csrf_token %}
+        <div class="mt-5 mp-5 container">
+            <div class="row">
+                <div class="col">
+                    <p>
+                        <div class="input-group input-group-static mb-4">
+                            <label for="id_vehicle"> {% trans "Vehicle" %} </label>
+                            {{form.vehicle}}
+                        </div>
+                    </p>
+                </div>
+
+                <div class="col">
+                    <p>
+                        <div class="input-group input-group-static my-3">
+                            <label for="id_date_joined"> {% trans "Date joined" %} </label>
+                            {{form.date_joined}}
+                        </div>
+                    </p>
+                </div>
+
+                <div class="col">
+                    <p>
+                        <div class="input-group input-group-static my-3">
+                            <label for="id_date_leaving"> {% trans "Date leaving" %} </label>
+                            {{form.date_leaving}}
+                        </div>
+                    </p>
+                </div>
+            </div>
+            <div>
+                <button class="btn btn-primary" type="submit"> <i class="fa-solid fa-paper-plane"></i> {% trans "Save" %}</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+{% endblock %}

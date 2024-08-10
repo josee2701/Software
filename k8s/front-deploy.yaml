@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      role: frontend
+  template:
+    metadata:
+      labels:
+        role: frontend
+        code: django
+        test: debug
+    spec:
+      containers:
+      - name: django-frontend
+        # image: django-frontend:latest
+        # imagePullPolicy: Never
+        image: acrnp.azurecr.io/djangofront:0.0.5
+        imagePullPolicy: Always
+        command: ["/gps-mobile/entrypoint.sh"]
+        envFrom:
+          - secretRef:
+              name: azure-sql-secret
+        env:
+        - name: PORT
+          value: "8000"
+        resources:
+          limits:
+            cpu: "1000m"
+            memory: "3000Mi"
+          requests:
+            cpu: "900m"
+            memory: "2500Mi"
+
+        ports:
+        - containerPort: 8000
+          name: frontend-port
+
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: frontend-cip
+#   labels:
+#     role: frontend-cip
+# spec:
+#   selector:
+#     role: frontend
+#   ports:
+#   - port: 8000
+#     targetPort: frontend-port
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-srv
+spec:
+  type: LoadBalancer
+  ports:
+  - name: http
+    port: 80
+    targetPort: frontend-port
+  selector:
+    role: frontend

@@ -1,0 +1,24 @@
+{% load i18n static %}
+
+{% block content %}
+<link rel="stylesheet" type="text/css" href="{% static 'assets/css/bug_bd_postgresql.css' %}">
+<style>
+{% if user.company.theme_set.all.0.button_color %}
+.modal-header {
+  background-color:{{ user.company.theme_set.all.0.button_color }};
+  color: #fff;
+  padding: 10px 20px;
+  text-align: center;
+}
+</style>
+{% endif %}
+<div class="modal-content">
+  <div class="modal-header">
+    <h2>¡Comunícate con el administrador!</h2>
+  </div>
+  <div class="modal-body">
+    <p class="lead">Por favor, ponte en contacto con el administrador del sitio web para obtener ayuda.</p>
+    <p class="text-muted">Lamentablemente, estamos experimentando problemas técnicos en este momento.</p>
+  </div>
+</div>
+{% endblock content %}

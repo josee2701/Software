@@ -1,0 +1,47 @@
+# byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+
+# migrations
+[0-9]*.py
+# !apps/whitelabel/migrations/0001_initial.py
+
+# conda files
+conda-env.yml
+conda-requirements.txt
+
+# docker & git files
+Dockerfile
+docker-compose.yml
+.dockerignore
+.git
+.gitignore
+.pre-commit-config.yaml
+
+# javascript
+package-lock.json
+
+# staticfiles/*
+!staticfiles/.gitkeep
+.vscode/symbols.json
+
+apps/static/assets/node_modules
+apps/static/assets/yarn.lock
+apps/static/assets/.temp
+
+# tests and coverage
+*.pytest_cache
+.coverage
+
+# database & logs
+*.db
+*.sqlite3
+*.log
+
+# venv
+env/
+venv/
+
+# other
+.DS_Store
+.vscode/

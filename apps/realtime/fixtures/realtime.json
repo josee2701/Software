@@ -1,0 +1,292 @@
+[
+    {
+        "model": "realtime.MobileOperator",
+        "pk": 1,
+        "fields": {
+            "name": "Claro CO"
+        }
+    },
+    {
+        "model": "realtime.MobileOperator",
+        "pk": 2,
+        "fields": {
+            "name": "Movistar CO"
+        }
+    },
+    {
+        "model": "realtime.MobileOperator",
+        "pk": 3,
+        "fields": {
+            "name": "Telefonia M2M"
+        }
+    },
+    {
+        "model": "realtime.MobileOperator",
+        "pk": 4,
+        "fields": {
+            "name": "Telcel"
+        }
+    },
+    {
+        "model": "realtime.MobileOperator",
+        "pk": 5,
+        "fields": {
+            "name": "M2M RUS"
+        }
+    },
+    {
+        "model": "realtime.Manufacture",
+        "pk": 1,
+        "fields": {
+            "name": "Teltonika"
+        }
+    },
+    {
+        "model": "realtime.Manufacture",
+        "pk": 2,
+        "fields": {
+            "name": "Jointech"
+        }
+    },
+    {
+        "model": "realtime.Manufacture",
+        "pk": 3,
+        "fields": {
+            "name": "SigFox"
+        }
+    },
+    {
+        "model": "realtime.ModelUEC",
+        "pk": 1,
+        "fields": {
+            "name": "FMB120",
+            "family_uec": "FMBXXX",
+            "network_type": "2G"
+        }
+    },
+    {
+        "model": "realtime.ModelUEC",
+        "pk": 2,
+        "fields": {
+            "name": "FMB125",
+            "family_uec": "FMBXXX",
+            "network_type": "2G"
+        }
+    },
+    {
+        "model": "realtime.ModelUEC",
+        "pk": 3,
+        "fields": {
+            "name": "FMB920",
+            "family_uec": "FMBXXX",
+            "network_type": "2G"
+        }
+    },
+    {
+        "model": "realtime.ModelUEC",
+        "pk": 4,
+        "fields": {
+            "name": "FMB910",
+            "family_uec": "FMBXXX",
+            "network_type": "2G"
+        }
+    },
+    {
+        "model": "realtime.ModelUEC",
+        "pk": 5,
+        "fields": {
+            "name": "FMB202",
+            "family_uec": "FMBXXX",
+            "network_type": "2G"
+        }
+    },
+    {
+        "model": "realtime.ModelUEC",
+        "pk": 6,
+        "fields": {
+            "name": "FMB130",
+            "family_uec": "FMBXXX",
+            "network_type": "2G"
+        }
+    },
+    {
+        "model": "realtime.ModelUEC",
+        "pk": 7,
+        "fields": {
+            "name": "FMB001",
+            "family_uec": "FMBXXX",
+            "network_type": "2G"
+        }
+    },
+    {
+        "model": "realtime.ModelUEC",
+        "pk": 8,
+        "fields": {
+            "name": "FMC130",
+            "family_uec": "FMCXXX",
+            "network_type": "4G"
+        }
+    },
+    {
+        "model": "realtime.ModelUEC",
+        "pk": 9,
+        "fields": {
+            "name": "FMC920",
+            "family_uec": "FMCXXX",
+            "network_type": "4G"
+        }
+    },
+    {
+        "model": "realtime.ModelUEC",
+        "pk": 10,
+        "fields": {
+            "name": "FMC125",
+            "family_uec": "FMCXXX",
+            "network_type": "4G"
+        }
+    },
+    {
+        "model": "realtime.ModelUEC",
+        "pk": 11,
+        "fields": {
+            "name": "FMU130",
+            "family_uec": "FMUXXX",
+            "network_type": "3G"
+        }
+    },
+    {
+        "model": "realtime.ModelUEC",
+        "pk": 12,
+        "fields": {
+            "name": "FMU125",
+            "family_uec": "FMUXXX",
+            "network_type": "3G"
+        }
+    },
+    {
+        "model": "realtime.ModelUEC",
+        "pk": 13,
+        "fields": {
+            "name": "FMM130",
+            "family_uec": "FMMXXX",
+            "network_type": "2G"
+        }
+    },
+    {
+        "model": "realtime.ModelUEC",
+        "pk": 14,
+        "fields": {
+            "name": "FMM125",
+            "family_uec": "FMMXXX",
+            "network_type": "2G"
+        }
+    },
+    {
+        "model": "realtime.ModelUEC",
+        "pk": 15,
+        "fields": {
+            "name": "TMT250",
+            "family_uec": "TMTXXX",
+            "network_type": "2G"
+        }
+    },
+    {
+        "model": "realtime.ModelUEC",
+        "pk": 16,
+        "fields": {
+            "name": "FMB640",
+            "family_uec": "FMBXXX",
+            "network_type": "2G"
+        }
+    },
+    {
+        "model": "realtime.ModelUEC",
+        "pk": 17,
+        "fields": {
+            "name": "FMB630",
+            "family_uec": "FMBXXX",
+            "network_type": "2G"
+        }
+    },
+    {
+        "model": "realtime.ModelUEC",
+        "pk": 18,
+        "fields": {
+            "name": "FM6300",
+            "family_uec": "FMXXXX",
+            "network_type": "3G"
+        }
+    },
+    {
+        "model": "realtime.ModelUEC",
+        "pk": 19,
+        "fields": {
+            "name": "FM1000",
+            "family_uec": "FMXXXX",
+            "network_type": "2G"
+        }
+    },
+    {
+        "model": "realtime.ModelUEC",
+        "pk": 20,
+        "fields": {
+            "name": "FM1100",
+            "family_uec": "FMXXXX",
+            "network_type": "2G"
+        }
+    },
+    {
+        "model": "realtime.ModelUEC",
+        "pk": 21,
+        "fields": {
+            "name": "FM1120",
+            "family_uec": "FMXXXX",
+            "network_type": "2G"
+        }
+    },
+    {
+        "model": "realtime.ModelUEC",
+        "pk": 22,
+        "fields": {
+            "name": "FMM640",
+            "family_uec": "FMMXXX",
+            "network_type": "2G"
+        }
+    },
+    {
+        "model": "realtime.ModelUEC",
+        "pk": 23,
+        "fields": {
+            "name": "FMC640",
+            "family_uec": "FMCXXX",
+            "network_type": "4G"
+        }
+    },
+    {
+        "model": "realtime.ModelUEC",
+        "pk": 24,
+        "fields": {
+            "name": "FMC641",
+            "family_uec": "FMCXXX",
+            "network_type": "4G"
+        }
+    },
+    {
+        "model": "realtime.ModelUEC",
+        "pk": 25,
+        "fields": {
+            "name": "FM1110",
+            "family_uec": "FMXXXX",
+            "network_type": "2G"
+        }
+    },
+    {
+        "model": "realtime.ModelUEC",
+        "pk": 26,
+        "fields": {
+            "name": "FMC150",
+            "family_uec": "FMCXXX",
+            "network_type": "4G"
+        }
+    }
+]

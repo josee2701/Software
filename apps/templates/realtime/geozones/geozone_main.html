@@ -1,0 +1,173 @@
+{% extends "layouts/base.html" %} {% load i18n static %} {% block extrastyle %}
+<!-- Este bloque debería estar definido en tu plantilla base para estilos adicionales -->
+
+{% endblock %} {% block title %} {% trans "Geozones" %} {% endblock %} {% block content %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="{% static 'assets/css/estilos_templates.css' %}" type="text/css" />
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBQCROrMdrexN00HA_2cXyjJwlQZVHph8Y&callback=iniciarMap">
+  </script>
+  <title>Document</title>
+</head>
+<div class="container-fluid py-4">
+  <div class="row">
+    <div class="col">
+      <div class="card my-4">
+        <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
+          <div class="bg-gradient-primary shadow-primary border-radius-lg pt-4 pb-3">
+            <h5 class="text-white text-capitalize ps-3">{% trans "Geozones" %}</h5>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-3">
+              <div class="card-header">
+                <div class="button-group">
+                  <input type="radio" id="btnVisualizar" name="form-action" onclick="mostrarFormulario('Visualizar')" />
+                  <label for="btnVisualizar" class="button">Visualizar</label>
+                  <input type="radio" id="btnNuevo" name="form-action" onclick="mostrarFormulario('nuevo')" />
+                  <label for="btnNuevo" class="button">Nuevo</label>
+
+                  <input type="radio" id="btnEditar" name="form-action" onclick="mostrarFormulario('editar')" />
+                  <label for="btnEditar" class="button">Editar</label>
+
+                  <input type="radio" id="btnEliminar" name="form-action" onclick="mostrarFormulario('eliminar')" />
+                  <label for="btnEliminar" class="button">Eliminar</label>
+                </div>
+              </div>
+
+              <form id="formNuevo" class="form-hidden" hx-post="{% url 'realtime:add_geozones' %}" hx-trigger="load">{% csrf_token %}</form>
+              <form id="formVisualizar" class="form-hidden" hx-post="realtime:add_geozones">
+                {% csrf_token %}
+                <label for="empresaEditar">Selecciona la empresa:</label>
+                <select id="empresaEditar" name="empresaEditar">
+                  {% for company in companies %}
+                  <option value="{{ company.id }}">{{ company.company_name }}</option>
+                  {% endfor %}
+                </select>
+              </form>
+              <form id="formEditar" class="form-hidden" method="post">
+                {% csrf_token %}
+                <label for="empresaVisualizar">Selecciona la empresa:</label>
+                <select id="empresaVisualizar" name="empresaVisualizar" >
+                  {% for company in companies %}
+                  <option value="{{ company.id }}">{{ company.company_name }}</option>
+                  {% endfor %}
+                </select>
+
+                <label for="geozonaVisualizar">Selecciona la geozona:</label>
+                <select id="geozonaVisualizar" name="geozonaVisualizar" >
+                  {% for geozones in geozone %}
+                  <option value="{{ geozones.id }}">{{ geozones.name }}</option>
+                  {% endfor %}
+                </select>
+                <button type="submit">Guardar</button>
+              </form>
+
+
+              <form id="formEliminar" class="form-hidden" hx-post="">
+                {% csrf_token %}
+                <label for="empresaEditar">Selecciona la empresa:</label>
+                <select id="empresaEditar" name="empresaEditar">
+                  {% for company in companies %}
+                  <option value="{{ company.id }}">{{ company.company_name }}</option>
+                  {% endfor %}
+                </select>
+              </form>
+            </div>
+            <div class="col-md-8">
+
+              <div id="map"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</html>
+
+<
+
+{% endblock %} {% block scripts %}
+<script>
+  function mostrarFormulario(tipo) {
+    // Lista de todos los tipos de formularios
+    const tiposDeFormularios = ["nuevo", "visualizar", "editar", "eliminar"];
+
+    // Ocultar todos los formularios y remover la clase 'selected'
+    tiposDeFormularios.forEach(function (formulario) {
+      const formElement = document.getElementById("form" + formulario.charAt(0).toUpperCase() + formulario.slice(1));
+      const buttonElement = document.getElementById("btn" + formulario.charAt(0).toUpperCase() + formulario.slice(1));
+      if (formElement && buttonElement) {
+        formElement.classList.add("form-hidden");
+        buttonElement.classList.remove("selected");
+      }
+    });
+
+    // Mostrar el formulario correspondiente al tipo seleccionado y agregar la clase 'selected'
+    const formAMostrar = document.getElementById("form" + tipo.charAt(0).toUpperCase() + tipo.slice(1));
+    const buttonAMostrar = document.getElementById("btn" + tipo.charAt(0).toUpperCase() + tipo.slice(1));
+    if (formAMostrar && buttonAMostrar) {
+      formAMostrar.classList.remove("form-hidden");
+      buttonAMostrar.classList.add("selected");
+    }
+  }
+
+  // Inicializar la página con el formulario 'Nuevo' visible
+  document.addEventListener("DOMContentLoaded", function () {
+    mostrarFormulario("visualizar");
+  });
+
+  function cargarGeozonas() {
+    const empresaId = document.getElementById('empresaVisualizar').value;
+    // Aquí pondrías tu código para hacer una petición AJAX a tu servidor
+    // y recuperar las geozonas basadas en la empresa seleccionada.
+
+    // A continuación hay un ejemplo de cómo podrías actualizar el segundo select:
+    fetch('/ruta-para-geozonas?empresa_id=' + empresaId)
+      .then(response => response.json())
+      .then(data => {
+        const selectGeozona = document.getElementById('geozonaVisualizar');
+        data.geozonas.forEach(geozone => {
+          const option = document.createElement('option');
+          option.value = geozone.id;
+          option.textContent = geozone.name;
+          selectGeozona.appendChild(option);
+        });
+      });
+  }
+
+
+  // Actualizar la acción del formulario cuando cambie la geozona seleccionada
+  document.addEventListener("DOMContentLoaded", function () {
+    const selectGeozona = document.getElementById('geozonaVisualizar');
+    if (selectGeozona) {
+      selectGeozona.addEventListener('change', function() {
+        const geozonaId = this.value;
+        const formEditar = document.getElementById('formEditar');
+        if (geozonaId) {
+          formEditar.action = `{% url 'realtime:update_geozones' 0 %}`.replace('0', geozonaId);
+        }
+      });
+    }
+  });
+
+  function iniciarMap(){
+    var coord = {lat:-34.5956145 ,lng: -58.4431949};
+    var map = new google.maps.Map(document.getElementById('map'),{
+      zoom: 10,
+      center: coord
+    });
+    var marker = new google.maps.Marker({
+      position: coord,
+      map: map
+    });
+}
+</script>
+{% endblock scripts %}

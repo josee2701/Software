@@ -1,0 +1,237 @@
+
+#cerrarVenta {
+  background-color: black;
+  color: black;
+  padding: 5px;
+  margin: 5px;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: bold;
+  text-align: center;
+  text-decoration: none;
+  outline: none;
+
+
+}
+.circular-image {
+    inline-size: 200px;
+    block-size: 200px;
+    overflow: hidden;
+    border-radius: 100%;
+}
+.circular-image img {
+    inline-size: 100%;
+    block-size: auto;
+}
+
+.language{
+    inline-size: 100%;
+    block-size: 100%;
+    overflow: hidden;
+    border-radius: 10%;
+}
+.table-items-center {
+    inline-size: 100%;
+}
+
+table {
+  inline-size: 100%;
+  border-collapse: collapse;
+}
+.scroll {
+  max-height: 210px; /* Altura máxima antes de que aparezca el scroll */
+  overflow-y: auto; /* Habilita el desplazamiento vertical si el contenido excede la altura máxima */
+  padding: 10px; /* Opcional: añade algo de padding para mejorar la apariencia */
+}
+
+.permission-row td {
+  text-align: end;
+}
+th {
+  margin-inline-start: 20px;
+  padding-inline-start: 25px;
+}
+.errorlist {
+  color: red;
+  /* Puedes añadir más estilos aquí */
+}
+.mt-5
+
+
+.boton-process{
+  padding-top: 50px
+}
+.myImage {
+  inline-size: 75px;
+  block-size: 75px;
+}
+
+ /* Estilo para el enlace "Modificar" */
+ .password-toggle a {
+   color: blue;
+   text-decoration: underline;
+ }
+ /* Estilo para los campos de contraseña */
+ .password-fields {
+   margin-block-start: 10px;
+ }
+
+ /* Estilo para realizar el loader*/
+
+.loader-container{
+  position: relative;
+  inline-size: 60%;
+  block-size: 60%;
+  margin: 10px;
+}
+.loader-container .loader{
+  position:absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  border: solid 4px transparent;
+  border-top-color: #3498db;
+  border-left-color: #3498db;
+  border-radius: 50%;
+  animation: loader 1.2s linear infinite;
+}
+.loader-container .loader2{
+  position:absolute;
+  top: 50%;
+  left: 50%;
+  width: 70%;
+  height: 70%;
+  border: solid 4px transparent;
+  border-top-color: #db343c;
+  border-left-color: #db343c;
+  border-radius: 50%;
+  animation: loader2 1.2s linear infinite;
+}
+@keyframes loader{
+  0%{
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  100%{
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+@keyframes loader2{
+  0%{
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  100%{
+    transform: translate(-50%, -50%) rotate(-360deg);
+  }
+
+/* Estilo para el mensaje del ticket */
+}
+.message-container {
+  border: 1px solid #ccc; /* Ajustar el color del borde */
+  margin-bottom: 10px;
+  padding: 10px;
+  background-color: #f9f9f9; /* Ajustar el color de fondo */
+}
+
+.message-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5px;
+}
+
+.message-sender,
+.message-role,
+.message-date {
+  margin-right: 10px;
+  font-weight: bold;
+}
+
+.message-body {
+  margin-left: 10px;
+}
+
+.message-text {
+  margin-bottom: 10px;
+}
+
+.message-attachments {
+  font-style: italic;
+}
+
+/* Estilo para el boton para las geozonas */
+.button-group {
+  gap: 10px;
+  margin-left: 15px;
+}
+.button{
+  margin-right: 10px
+}
+
+.selected {
+  background-color: var(--bs-card-bg);
+}
+
+.form-hidden {
+  display: none;
+}
+
+.form-shown {
+  display: block;
+}
+
+.map{
+  inline-size: 100%;
+  block-size: 100%;
+  margin: 10px;
+}
+
+/* Estilos para el overlay */
+#overlay {
+  display: none;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+  color: white;
+  font-size: 24px;
+  text-align: center;
+  padding-top: 200px;
+}
+#overlay p {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.has-error input, .has-error select, .has-error textarea {
+  border-color: #dc3545; /* Rojo de Bootstrap para errores */
+}
+
+/* estilos_templates.css */
+body.modal-open {
+  overflow: hidden !important;
+}
+
+.scrollable-content {
+  max-height: 60vh; /* Ajusta esto según tus necesidades */
+  overflow-y: auto;
+  padding: 10px; /* Ajusta según el diseño */
+  box-sizing: border-box;
+}
+
+.card-footer {
+  background: white; /* O el color de fondo que prefieras */
+  padding: 10px;
+  border-top: 1px solid #ddd; /* Ajusta según tu diseño */
+  position: sticky;
+  bottom: 0;
+  width: 100%;
+}
+
+
+
+

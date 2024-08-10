@@ -1,0 +1,9 @@
+/* Estilos para el menú desplegable de opciones en la barra de navegación */
+#sidenav-main {
+    overflow: visible !important;
+}
+
+/* Ajustar el margen del menú desplegable */
+.dropdown-menu {
+    margin-left: 0px; /* Ajusta este valor según lo necesites */
+}

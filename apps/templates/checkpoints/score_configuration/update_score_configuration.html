@@ -1,0 +1,177 @@
+{% load i18n static %} {% block content %}
+
+{{form.media}}
+<div class="modal-content">
+    <div class="modal-body">
+      <div class="card">
+      <div class="modal-header">
+                <h3 class="">{% trans "Driver Qualification" %}</h3>
+                <button type="button" id="cerrarVenta" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="card-body">
+                <form hx-post="{{ request.path }}"> {% csrf_token %}
+                        <div class=row>
+                            <p class="mb-0" align="justify">
+                                {% trans "In the Minimum score and Maximum score fields, please indicate the score range with which you wish to rate your drivers. The maximum score is assigned to the best driver." %}
+                            </p>
+                        </div>
+                        <div class=row>
+                            <div class=col>
+                                <p>
+                                <div >
+                                    <label for="Company"> {% trans "Company" %} </label>
+                                        <h6>{{company.company_name}}</h6>
+                                </div>
+                            </p>
+                            </div>
+
+                            <div class=col>
+                                <p>
+                                    <div type="date" class="input-group input-group-static mb-4">
+                                        <label for="id_min_score"> {% trans "Minimum score" %} </label>
+                                        {{form.min_score}}
+                                    </div>
+                                    <div id="form-errors">
+                                        {{form.min_score.errors}}
+                                    </div>
+                                </p>
+                            </div>
+                            <div class=col>
+                                <p>
+                                    <div class="input-group input-group-static mb-4">
+                                        <label for="id_max_score"> {% trans "Maximum score" %} </label>
+                                        {{form.max_score}}
+                                    </div>
+                                    <div id="form-errors">
+                                        {{form.max_score.errors}}
+                                    </div>
+                                </p>
+                            </div>
+                            <div class=col>
+                                <p>
+                                    <div class="input-group input-group-static mb-4">
+                                        <label for="id_cotoff_date"> {% trans "Cutoff date" %} </label>
+                                        {{form.cotoff_date}}
+                                    </div>
+                                    <div id="form-errors">
+                                        {{form.cotoff_date.errors}}
+                                    </div>
+                                </p>
+                            </div>
+                        </div>
+                        <div class=row>
+                            <p class="mb-0 ">
+                                {% trans "the items of greatest importance in the rating should have the highest percentages. Drivers with indicators close to the permitted limit will have the lowest scores." %}
+                            </p>
+                        </div>
+                        <div class="card">
+                            <div class="table-responsive">
+                              <table class="table align-items-center mb-0 container">
+                                <thead>
+                                  <tr>
+                                    <th class="text-secondary opacity-7"></th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 align-middle text-center text-sm"> {% trans 'Item to evaluate' %} </th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2 align-middle text-center text-sm"> {% trans "points by items" %}  </th>
+                                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 align-middle text-center text-sm"> {% trans "Maximum infractions in the month" %}</th>
+                                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 align-middle text-center text-sm"> {% trans "Points to subtract for violation" %}</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                        {{formset.management_form}}
+                                        <div id="form-errors">
+                                            {{formset.non_form_errors}}
+                                        </div>
+                                        {% for form in forms %}
+                                        <tr>
+                                            <td class="align-middle">
+                                                <div class="form-check form-switch ms-5">
+                                                    <label class="form-check-label" for="id_item {{forloop.counter0}}"></label>
+                                                    <input type="checkbox" name="activate_item" class="form-check-input" onclick="activate(this)" id="id_item {{forloop.counter0}}">
+                                                </div>
+                                            </td>
+                                            <td class="align-middle text-center text-sm">
+                                                {{form.0}}
+                                            </td>
+                                                {% for field in form.1.visible_fields %}
+                                                <td class="align-middle text-center text-sm">
+                                                        <div class="input-group mb-1">
+                                                             {{field.errors}}
+                                                            <label for="{{field.id_for_label}}">  </label>
+                                                             {{field}}
+                                                        </div>
+                                                    {% endfor %}
+                                                    {% for hidden_field in form.1.hidden_fields %}
+                                                            {{hidden_field.errors}}
+                                                            {{hidden_field}}
+                                                    {% endfor %}
+                                                </td>
+                                        </tr>
+                                       {% endfor %}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        <div class=row>
+                            <div class=col>
+                                <button class="btn btn-primary mt-3" type="submit"> <i class="fa-solid fa-floppy-disk me-2"></i> {% trans "Save" %} </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" type="text/css" href="{% static 'assets/css/estilos_templates.css'%} ">
+    </head>
+
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function activate(id_item)
+    {
+        var index = id_item.id
+        var it = index[index.length -1]
+        var ddl = document.getElementById("id_itemscoresetup_set-"+it+"-points_item_score");
+        var ddl_2 = document.getElementById("id_itemscoresetup_set-"+it+"-maximum_infractions");
+        var ddl_3 = document.getElementById("id_itemscoresetup_set-"+it+"-subtract_points");
+
+        if(id_item.checked == true){
+            ddl.disabled= false;
+            ddl_2.disabled= false;
+            ddl_3.disabled= false;
+
+        }else {
+            ddl.disabled= true;
+            ddl.value = 0;
+            ddl_2.disabled= true;
+            ddl_2.value = 0;
+            ddl_3.disabled= true;
+            ddl_3.value = 0;
+        }
+    }
+
+    function update_fields()
+    {
+        for (let it=0; it<6; it++){
+            var item = document.getElementById("id_item "+it);
+            var ddl = document.getElementById("id_itemscoresetup_set-"+it+"-points_item_score");
+            var ddl_2 = document.getElementById("id_itemscoresetup_set-"+it+"-maximum_infractions");
+            var ddl_3 = document.getElementById("id_itemscoresetup_set-"+it+"-subtract_points");
+
+            if(ddl.value != 0 & ddl_2.value != 0){
+                item.checked = true;
+                ddl.disabled = false;
+                ddl_2.disabled= false;
+                ddl_3.disabled= false;
+
+            }
+        }
+    }
+    update_fields()
+</script>
+{% endblock scripts %}

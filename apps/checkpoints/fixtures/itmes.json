@@ -1,0 +1,57 @@
+[
+
+    {
+        "model": "checkpoints.itemscore",
+        "pk": 1,
+        "fields": {
+            "item": "No. Exceso de Velocidad",
+            "modified_by_id": 1,
+            "created_by_id" :1
+        }
+    },
+    {
+        "model": "checkpoints.itemscore",
+        "pk": 2,
+        "fields": {
+            "item": "No. Ralenti",
+            "modified_by_id": 1,
+            "created_by_id" :1
+        }
+    },
+    {
+        "model": "checkpoints.itemscore",
+        "pk": 3,
+        "fields": {
+            "item": "No. Aceleraciones Bruscas",
+            "modified_by_id": 1,
+            "created_by_id" :1
+        }
+    },
+    {
+        "model": "checkpoints.itemscore",
+        "pk": 4,
+        "fields": {
+            "item": "No. Excesos de Velocidad.",
+            "modified_by_id": 1,
+            "created_by_id" :1
+        }
+    },
+    {
+        "model": "checkpoints.itemscore",
+        "pk": 5,
+        "fields": {
+            "item": "No. Frenadas Bruscas.",
+            "modified_by_id": 1,
+            "created_by_id" :1
+        }
+    },
+    {
+        "model": "checkpoints.itemscore",
+        "pk": 6,
+        "fields": {
+            "item": "No. Giros Bruscos.",
+            "modified_by_id": 1,
+            "created_by_id" :1
+        }
+    }
+]

@@ -1,0 +1,453 @@
+{% load  i18n staticfiles %}
+<style>
+  .navbar-nav .dropdown-menu {
+      position: absolute;
+      z-index: 1050;
+      box-shadow: 0px 0px 2.5px {{ user.company.theme_set.all.0.button_color }};
+  }
+
+</style>
+{% if user.company.theme_set.all.0.sidebar_image %}
+<aside
+  class="sidenav navbar navbar-vertical navbar-expand-xs fixed-start"
+  id="sidenav-main"
+  style='background-image: linear-gradient(to top,
+                                          {{user.company.theme_set.all.0.sidebar_color}}{{ user.company.theme_set.all.0.opacity }},
+                                          {{user.company.theme_set.all.0.sidebar_color}}{{ user.company.theme_set.all.0.opacity }}),
+                            url("{{ MEDIA_URL }}{{ user.company.theme_set.all.0.sidebar_image }}");
+                            background-position: center center;
+                            background-size: cover;'
+  data-scroll="true"
+>
+{% else %}
+<aside
+  class="sidenav navbar navbar-vertical navbar-expand-xs fixed-start"
+  id="sidenav-main"
+  style='background-image: linear-gradient(to top,
+                                          {{user.company.provider.theme_set.all.0.sidebar_color}}{{ user.company.provider.theme_set.all.0.opacity }},
+                                          {{user.company.provider.theme_set.all.0.sidebar_color}}{{ user.company.provider.theme_set.all.0.opacity }}),
+                            url("{{ MEDIA_URL }}{{ user.company.provider.theme_set.all.0.sidebar_image}}");
+                            background-position: center center;
+                            background-size: cover;'
+  data-scroll="true"
+>
+{% endif %}
+  <div class="sidenav-header">
+    <i
+      class="fas fa-times p-3 cursor-pointer text-white opacity-5 position-absolute end-0 top-0 d-none d-xl-none"
+      aria-hidden="true"
+      id="iconSidenav"
+    ></i>
+    <a
+      class="navbar-brand m-4"
+      href="{% url 'main' %}"
+    >
+    {% if user.company.company_logo %}
+    <img
+      src="{{ MEDIA_URL }}{{ user.company.company_logo }}"
+      alt="{{ user.company.company_name }}"
+      class="navbar-brand-img h-100"
+    />
+    {% elif user.company.company_logo == "" and user.company.provider is None %}
+    <br />
+      <span class="ms-1 font-weight-bold text-white">{{ user.company.company_name }}</span>
+    {% else %}
+    <img
+        src="{{ MEDIA_URL }}{{ user.company.provider.company_logo }}"
+        alt="{{ user.company.provider.company_name }}"
+        class="navbar-brand-img h-100"
+        alt="main_logo"
+      />
+    {% endif %}
+    </a>
+  </div>
+  <hr class="horizontal light mt-0 mb-2" />
+  <div class="collapse navbar-collapse w-auto" id="sidenav-collapse-main">
+    <ul class="navbar-nav">
+      <li class="nav-item">
+        <a
+          class="nav-link text-white active bg-gradient-primary"
+          href="{% url 'main' %}"
+        >
+          <div
+            class="text-white text-center me-2 d-flex align-items-center justify-content-center"
+          >
+            <i class="material-icons opacity-10">dashboard</i>
+          </div>
+          <span class="nav-link-text ms-1">{% trans "Real Time" %}</span>
+          </a>
+        </li>
+        {% if perms.whitelabel.view_company or perms.authentication.view_user %}
+        <li class="nav-item">
+            <div class="nav-link text-white dropdown-toggle" id="configurationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
+                    <i class="material-icons opacity-10" style="vertical-align: middle;">settings</i>
+                </div>
+                <span class="nav-link-text ms-1" style="vertical-align: middle;">{% trans "Configuration" %}</span>
+            </div>
+            <ul class="dropdown-menu" aria-labelledby="configurationDropdown">
+                {% if perms.whitelabel.view_company %}
+                    <li><a class="dropdown-item" href="{% url 'companies:companies' %}"><i class="material-icons opacity-10" style="vertical-align: middle;">apartment</i> {% trans "Companies" %}</a></li>
+                {% endif %}
+                {% if perms.authentication.view_user %}
+                    <li><a class="dropdown-item" href="{% url 'users' %}"><i class="material-icons opacity-10" style="vertical-align: middle;">person</i> {% trans "Users" %}</a></li>
+                {% endif %}
+                {% with theme=user.company.theme_set.first %} {% if theme %}
+                    <li><a class="dropdown-item" href="{% url 'companies:theme' theme.pk  %}"><i class="material-icons opacity-10" style="vertical-align: middle;">tune</i> {% trans "Custom" %}</a></li>
+                {% endif %} {% endwith %}
+            </ul>
+        </li>
+      {% endif %}
+
+      {% if perms.realtime.view_dataplan or perms.realtime.view_dataplan %}
+          <li class="nav-item">
+              <div class="nav-link text-white dropdown-toggle" id="plansDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                  <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
+                      <i class="material-icons opacity-10" style="vertical-align: middle;">sim_card</i>
+                  </div>
+                  <span class="nav-link-text ms-1" style="vertical-align: middle;">{% trans "Plans" %}</span>
+              </div>
+              <ul class="dropdown-menu" aria-labelledby="plansDropdown">
+                  {% if perms.whitelabel.view_module %}
+                      <li><a class="dropdown-item" href="{% url 'companies:module' %}"><i class="material-icons opacity-10" style="vertical-align: middle;">attach_money</i> {% trans "Billing" %}</a></li>
+                  {% endif %}
+                  {% if perms.realtime.view_dataplan %}
+                      <li><a class="dropdown-item" href="{% url 'realtime:dataplan' %}"><i class="material-icons opacity-10" style="vertical-align: middle;">sim_card</i> {% trans "DataPlans" %}</a></li>
+                  {% endif %}
+              </ul>
+          </li>
+      {% endif %}
+
+      {% if perms.realtime.view_simcard or perms.realtime.view_device or perms.realtime.view_vehicle %}
+          <li class="nav-item">
+              <div class="nav-link text-white dropdown-toggle" id="realtimeDataDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                  <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
+                      <i class="material-icons opacity-10" style="vertical-align: middle;">settings_input_antenna</i>
+                  </div>
+                  <span class="nav-link-text ms-1" style="vertical-align: middle;">{% trans "Device Management" %}</span>
+              </div>
+              <ul class="dropdown-menu" aria-labelledby="realtimeDataDropdown">
+                  {% if perms.realtime.view_simcard %}
+                      <li><a class="dropdown-item" href="{% url 'realtime:simcards' %}"><i class="material-icons opacity-10" style="vertical-align: middle;">sim_card</i> {% trans "Simcards" %}</a></li>
+                  {% endif %}
+                  {% if perms.realtime.view_device %}
+                      <li><a class="dropdown-item" href="{% url 'realtime:devices' %}"><i class="material-icons opacity-10" style="vertical-align: middle;">settings_input_antenna</i> {% trans "Devices" %}</a></li>
+                  {% endif %}
+                  {% if perms.realtime.view_vehicle %}
+                      <li><a class="dropdown-item" href="{% url 'realtime:vehicles' %}"><i class="material-icons opacity-10" style="vertical-align: middle;">local_shipping</i> {% trans "Assets" %}</a></li>
+                  {% endif %}
+              </ul>
+          </li>
+      {% endif %}
+
+      {% if perms.realtime.view_io_items_report or perms.checkpoints.view_report %}
+          <li class="nav-item">
+              <div class="nav-link text-white dropdown-toggle" id="reportsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                  <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
+                      <i class="material-icons opacity-10" style="vertical-align: middle;">rule</i>
+                  </div>
+                  <span class="nav-link-text ms-1" style="vertical-align: middle;">{% trans "Reports" %}</span>
+              </div>
+              <ul class="dropdown-menu" aria-labelledby="reportsDropdown">
+                  {% if perms.realtime.view_io_items_report %}
+                      <li><a class="dropdown-item" href="{% url 'realtime:add_configuration_report' %}"><i class="material-icons opacity-10" style="vertical-align: middle;">rule</i> {% trans "Customize Report" %}</a></li>
+                  {% endif %}
+                  {% if perms.checkpoints.view_report %}
+                      <li><a class="dropdown-item" href="{% url 'checkpoints:report_today' %}"><i class="material-icons opacity-10" style="vertical-align: middle;">summarize</i> {% trans "Today's Report" %}</a></li>
+                  {% endif %}
+              </ul>
+          </li>
+      {% endif %}
+
+      {% if perms.events.view_eventfeature or perms.realtime.view_geozones or perms.realtime.view_sending_commands or perms.checkpoints.view_driver %}
+          <li class="nav-item">
+              <div class="nav-link text-white dropdown-toggle" id="featuresDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                  <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
+                      <i class="material-icons opacity-10" style="vertical-align: middle;">more_horiz</i>
+                  </div>
+                  <span class="nav-link-text ms-1" style="vertical-align: middle;">{% trans "Features" %}</span>
+              </div>
+              <ul class="dropdown-menu" aria-labelledby="featuresDropdown">
+                  {% if perms.events.view_eventfeature %}
+                      <li><a class="dropdown-item" href="{% url 'events:list_user_events' %}"><i class="material-icons opacity-10" style="vertical-align: middle;">event</i> {% trans "Events" %}</a></li>
+                  {% endif %}
+                  {% if perms.realtime.view_geozones %}
+                      <li><a class="dropdown-item" href="{% url 'realtime:geozones' %}"><i class="material-icons opacity-10" style="vertical-align: middle;">share_location</i> {% trans "Geozones" %}</a></li>
+                  {% endif %}
+                  {% if perms.realtime.view_sending_commands %}
+                      <li><a class="dropdown-item" href="{% url 'realtime:commands' %}"><i class="material-icons opacity-10" style="vertical-align: middle;">forward_to_inbox</i> {% trans "Commands" %}</a></li>
+                  {% endif %}
+                  {% if perms.checkpoints.view_driver %}
+                      <li><a class="dropdown-item" href="{% url 'checkpoints:list_drivers' %}"><i class="material-icons opacity-10" style="vertical-align: middle;">contact_emergency</i> {% trans "Driver" %}</a></li>
+                  {% endif %}
+              </ul>
+          </li>
+      {% endif %}
+      {% if perms.whitelabel.view_ticket %}
+        <li class="nav-item">
+          <a class="nav-link text-white" href="{% url 'companies:main_ticket' %}">
+            <div
+            class="text-white text-center me-2 d-flex align-items-center justify-content-center"
+            >
+            <span class="material-icons">support_agent</span>
+            </div>
+            <span class="nav-link-text ms-1">{% trans "Helpdesk" %}</span>
+          </a>
+        </li>
+      {% endif %}
+    </ul>
+  </div>
+  <div class="sidenav-footer position-absolute w-100 bottom-0">
+    <div class="">
+      <a
+        class="btn bg-gradient-primary w-100"
+        href="{% url 'logout' %}"
+        type="button"
+        >
+        <i class="material-icons">login</i>
+      </a>
+    </div>
+  </div>
+</aside>
+<main
+  class="main-content position-relative max-height-vh-100 h-100 border-radius-lg"
+>
+  <!-- Navbar -->
+  <!-- <nav
+    class="navbar navbar-main navbar-expand-lg px-0 mx-4 shadow-none border-radius-xl"
+    id="navbarBlur"
+    data-scroll="true"
+  >
+    <div class="container-fluid py-1 px-3">
+
+      <div
+        class="collapse navbar-collapse mt-sm-0 mt-2 me-md-0 me-sm-4"
+        id="navbar"
+      >
+        <div class="ms-md-auto pe-md-3 d-flex align-items-center">
+          {% comment %} <div class="input-group input-group-outline">
+            <label class="form-label">Type here...</label>
+            <input type="text" class="form-control" />
+          </div> {% endcomment %}
+        </div>
+        <!-- <ul class="navbar-nav justify-content-end">
+          {% if user.is_authenticated %}
+              <li class="col d-flex justify-content-start">
+                  <a type="button" hx-get="{% url 'Profile' user.id %}" hx-target="#dialog">
+                      <i class="fa fa-user me-sm-1"></i>
+                      <span class="d-sm-inline d-none">{{user.first_name}}</span>
+                  </a>
+              </li>
+          {% endif %}
+          <li class="nav-item px-3 d-flex align-items-center">
+            <a href="javascript:;" class="nav-link text-body p-0">
+                <form action="{% url 'set_language' %}" method="post" class="d-inline">
+                    {% csrf_token %}
+                    <input name="next" type="hidden" value="{{ request.path }}" />
+                    <select name="language" onchange="this.form.submit()" class="form-select form-select-sm" style="display: inline-block; width: auto;">
+                        {% for lang_code, lang_name in LANGUAGES %}
+                            <option value="{{ lang_code }}" {% if lang_code == LANGUAGE_CODE %}selected{% endif %}>
+                                {{ lang_name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </form>
+            </a>
+        </li>
+
+           {% comment %} <li class="nav-item dropdown pe-2 d-flex align-items-center">
+            <a
+              href="javascript:;"
+              class="nav-link text-body p-0"
+              id="dropdownMenuButton"
+              data-bs-toggle="dropdown"
+              aria-expanded="false"
+            >
+              <i class="fa fa-bell cursor-pointer"></i>
+            </a> {% endcomment %}
+            {% comment %} <ul
+              class="dropdown-menu dropdown-menu-end px-2 py-3 me-sm-n4"
+              aria-labelledby="dropdownMenuButton"
+            >
+              <li class="mb-2">
+                <a class="dropdown-item border-radius-md" href="javascript:;">
+                  <div class="d-flex py-1">
+                    <div class="my-auto">
+                      <img
+                        src="{% static 'assets/img/team-2.jpg' %}"
+                        class="avatar avatar-sm me-3"
+                      />
+                    </div>
+                    <div class="d-flex flex-column justify-content-center">
+                      <h6 class="text-sm font-weight-normal mb-1">
+                        <span class="font-weight-bold">New message</span> from
+                        Laur
+                      </h6>
+                      <p class="text-xs text-secondary mb-0">
+                        <i class="fa fa-clock me-1"></i>
+                        13 minutes ago
+                      </p>
+                    </div>
+                  </div>
+                </a>
+              </li>
+              <li class="mb-2">
+                <a class="dropdown-item border-radius-md" href="javascript:;">
+                  <div class="d-flex py-1">
+                    <div class="my-auto">
+                      <img
+                        src="{% static 'assets/img/small-logos/logo-spotify.svg' %}"
+                        class="avatar avatar-sm bg-gradient-dark me-3"
+                      />
+                    </div>
+                    <div class="d-flex flex-column justify-content-center">
+                      <h6 class="text-sm font-weight-normal mb-1">
+                        <span class="font-weight-bold">New album</span> by
+                        Travis Scott
+                      </h6>
+                      <p class="text-xs text-secondary mb-0">
+                        <i class="fa fa-clock me-1"></i>
+                        1 day
+                      </p>
+                    </div>
+                  </div>
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item border-radius-md" href="javascript:;">
+                  <div class="d-flex py-1">
+                    <div
+                      class="avatar avatar-sm bg-gradient-secondary me-3 my-auto"
+                    >
+                      <svg
+                        width="12px"
+                        height="12px"
+                        viewBox="0 0 43 36"
+                        version="1.1"
+                        xmlns="http://www.w3.org/2000/svg"
+                        xmlns:xlink="http://www.w3.org/1999/xlink"
+                      >
+                        <title>credit-card</title>
+                        <g
+                          stroke="none"
+                          stroke-width="1"
+                          fill="none"
+                          fill-rule="evenodd"
+                        >
+                          <g
+                            transform="translate(-2169.000000, -745.000000)"
+                            fill="#FFFFFF"
+                            fill-rule="nonzero"
+                          >
+                            <g transform="translate(1716.000000, 291.000000)">
+                              <g transform="translate(453.000000, 454.000000)">
+                                <path
+                                  class="color-background"
+                                  d="M43,10.7482083 L43,3.58333333 C43,1.60354167 41.3964583,0 39.4166667,0 L3.58333333,0 C1.60354167,0 0,1.60354167 0,3.58333333 L0,10.7482083 L43,10.7482083 Z"
+                                  opacity="0.593633743"
+                                ></path>
+                                <path
+                                  class="color-background"
+                                  d="M0,16.125 L0,32.25 C0,34.2297917 1.60354167,35.8333333 3.58333333,35.8333333 L39.4166667,35.8333333 C41.3964583,35.8333333 43,34.2297917 43,32.25 L43,16.125 L0,16.125 Z M19.7083333,26.875 L7.16666667,26.875 L7.16666667,23.2916667 L19.7083333,23.2916667 L19.7083333,26.875 Z M35.8333333,26.875 L28.6666667,26.875 L28.6666667,23.2916667 L35.8333333,23.2916667 L35.8333333,26.875 Z"
+                                ></path>
+                              </g>
+                            </g>
+                          </g>
+                        </g>
+                      </svg>
+                    </div>
+                    <div class="d-flex flex-column justify-content-center">
+                      <h6 class="text-sm font-weight-normal mb-1">
+                        Payment successfully completed
+                      </h6>
+                      <p class="text-xs text-secondary mb-0">
+                        <i class="fa fa-clock me-1"></i>
+                        2 days
+                      </p>
+                    </div>
+                  </div>
+                </a>
+              </li>
+            </ul> {% endcomment %}
+          </li>
+        </ul> -->
+      </div>
+    </div>
+  </nav>
+  <link rel="stylesheet" type="text/css" href="{% static 'assets/css/navbar_options.css' %}">
+  <!-- End Navbar -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // JavaScript para desplegar el menú al lado derecho y ajustar su posición
+      document.querySelectorAll('.dropdown-toggle').forEach(item => {
+          let timeoutId;
+
+          item.addEventListener('click', event => {
+              const dropdownMenu = item.nextElementSibling;
+              const rect = item.getBoundingClientRect();
+              dropdownMenu.style.left = rect.left + item.offsetWidth + 'px'; // Ajuste para posicionar el menú a la derecha
+              dropdownMenu.style.top = rect.top + 'px'; // Ajuste para posicionar el menú al mismo nivel que el enlace
+              dropdownMenu.classList.toggle('show');
+          });
+
+          // Agregar evento para mostrar el menú al pasar el puntero sobre el elemento
+          item.addEventListener('mouseenter', event => {
+              timeoutId = setTimeout(() => {
+                  const dropdownMenu = item.nextElementSibling;
+                  const rect = item.getBoundingClientRect();
+                  dropdownMenu.style.left = rect.left + item.offsetWidth + 'px'; // Ajuste para posicionar el menú a la derecha
+                  dropdownMenu.style.top = rect.top + 'px'; // Ajuste para posicionar el menú al mismo nivel que el enlace
+                  dropdownMenu.classList.add('show');
+              }, 180); // Tiempo de espera en milisegundos (500ms en este caso)
+          });
+
+          // Agregar evento para ocultar el menú al quitar el puntero del elemento
+          item.addEventListener('mouseleave', event => {
+              clearTimeout(timeoutId); // Limpiar el temporizador si el puntero sale antes del tiempo de espera
+              const dropdownMenu = item.nextElementSibling;
+              const relatedTarget = event.relatedTarget || event.toElement;
+              if (!dropdownMenu.contains(relatedTarget)) {
+                  dropdownMenu.classList.remove('show'); // Ocultar el menú cuando el puntero sale del área del menú desplegable
+              }
+          });
+
+          // Agregar evento para mantener el menú desplegado mientras el puntero está dentro del área del menú
+          item.nextElementSibling.addEventListener('mouseenter', event => {
+              item.nextElementSibling.classList.add('show'); // Mantener el menú desplegado cuando el puntero está dentro del área del menú desplegable
+          });
+
+          // Agregar evento para ocultar el menú cuando el puntero está fuera del área del menú
+          item.nextElementSibling.addEventListener('mouseleave', event => {
+              item.nextElementSibling.classList.remove('show'); // Ocultar el menú cuando el puntero sale del área del menú desplegable
+          });
+      });
+
+      // JavaScript para cambiar el idioma
+      var languageSelect = document.getElementById('languageSelect');
+      if (languageSelect) {
+          languageSelect.addEventListener('change', function(event) {
+              var language = event.target.value;
+              var url = '/i18n/setlang/'; // La URL a tu view de Django para cambiar el idioma
+              var csrfToken = '{{ csrf_token }}'; // Asegúrate de tener disponible el token CSRF
+
+              // Crea los datos del formulario
+              var formData = new FormData();
+              formData.append('language', language);
+              formData.append('csrfmiddlewaretoken', csrfToken);
+
+              // Envía la solicitud POST al servidor para cambiar el idioma
+              fetch(url, {
+                  method: 'POST',
+                  body: formData,
+                  headers: {
+                      'X-CSRFToken': csrfToken
+                  }
+              }).then(function(response) {
+                  // Recarga la página para aplicar el cambio de idioma
+                  window.location.reload();
+              });
+          });
+      }
+  });
+
+  </script>

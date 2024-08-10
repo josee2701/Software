@@ -1,0 +1,262 @@
+{% extends "layouts/base.html" %}
+{% load i18n static dict_filters %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card my-4">
+                <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
+                    <div class="bg-gradient-primary shadow-primary border-radius-lg pt-4 pb-3">
+                        <h5 class="text-white text-capitalize ps-3">{% trans "Operation Report" %}</h5>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="search-form" onsubmit="handleSubmit(event)">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col">
+                                <div class="input-group input-group-static mb-4">
+                                    <label for="id_company">{% trans "Company:" %} <span style="color: red">*</span></label>
+                                    {{ form.Company_id }}
+                                </div>
+                                <div class="input-group input-group-static mb-4">
+                                    <label>{% trans "Vehicles:" %}<span style="color: red">*</span></label>
+                                    {{ form.Imei }}
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="input-group input-group-static mb-4">
+                                    <label for="id_start_date">{% trans "Start date:" %}<span style="color: red"> *</span></label>
+                                    {{ form.FechaInicial }}
+                                </div>
+                                <div class="col">
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <label for="search-event">{% trans "Event:" %}</label>
+                                        <input id="search-event" type="text" placeholder="{% trans "Search" %}" autocomplete="off" style="flex-grow: 1;">
+                                    </div>
+                                    <select id="id_event" name="event" class="input-group input-group-static mb-4">
+                                        <option value="">-----------</option>
+                                        {% if events %}
+                                            {% for event in events %}
+                                                <option value="{{ event.id }}">{{ event.event_name }}</option>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="input-group input-group-static mb-4">
+                                    <label for="id_end_date">{% trans "Ending date:" %}<span style="color: red"> *</span></label>
+                                    {{ form.FechaFinal }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col">
+                                <div class="d-flex justify-content-start align-items-center">
+                                    <!-- Boton "Generate Report" -->
+                                    <div>
+                                        <input type="hidden" name="paginate_by" id="input-paginate-by" value="{{ paginate_by }}">
+                                        <input type="hidden" name="page" id="input-page-by" value="{{ page_obj.number }}">
+                                        <button class="btn btn-primary mt-3" type="submit">
+                                            <i class="fa-solid fa-floppy-disk me-2"></i> {% trans "Generate Report" %}
+                                        </button>
+                                    </div>
+                                    <!-- Formulario de búsqueda -->
+                                    <div class="ms-3">
+                                        <form id="searchValue" method="GET" onsubmit="return false">
+                                            <div class="input-group input-group-outline">
+                                                <label class="form-label">{% trans "Search..." %}</label>
+                                                <input
+                                                    id="search-input"
+                                                    type="text"
+                                                    class="form-control"
+                                                    onkeyup="filterTable(this.value)"
+                                                    name="q"
+                                                    autocomplete="off"
+                                                />
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Botones de exportación -->
+                            <div class="col text-end">
+                                {% if data %}
+                                    <button class="btn btn-primary mt-3" id="exportExcelBtn" type="button">
+                                        <i class="fa-solid fa-file-excel me-2"></i> {% trans "Export to Excel" %}
+                                    </button>
+                                    <button class="btn btn-primary mt-3" id="exportCsvBtn" type="button">
+                                        <i class="fa-solid fa-file-csv me-2"></i> {% trans "Export to CSV" %}
+                                    </button>
+                                    {% comment %} <button class="btn btn-primary mt-3" id="exportPdfBtn" type="button">
+                                        <i class="fa-solid fa-file-pdf me-2"></i> {% trans "Export to PDF" %}
+                                    </button> {% endcomment %}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </form>
+
+                    {% if data %}
+                    <form method="GET">
+                        <label>{% trans "Show entries" %}</label>
+                        <select name="paginate_by" id="paginate-by" onchange="this.form.submit()">
+                            <option value="10" {% if paginate_by == '10' %} selected {% endif %}>10</option>
+                            <option value="25" {% if paginate_by == '25' %} selected {% endif %}>25</option>
+                            <option value="50" {% if paginate_by == '50' %} selected {% endif %}>50</option>
+                            <option value="100" {% if paginate_by == '100' %} selected {% endif %}>100</option>
+                        </select>
+                    </form>
+
+                    <div class="table-responsive p-0">
+                        <table class="table align-items-center mb-0">
+                            {% if data %}
+                            <thead>
+                                <tr>
+                                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "N°" %}</th>
+                                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Plate" %}</th>
+                                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Server date" %}</th>
+                                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Event date" %}</th>
+                                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Name of the event" %}</th>
+                                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Location" %}</th>
+                                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Speed" %}</th>
+                                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Odometer" %}</th>
+                                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Latitude" %}</th>
+                                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Longitude" %}</th>
+                                    {% for key in additional_keys %}
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{{ key }}</th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            {% endif %}
+                            <tbody>
+                                {% if data %}
+                                {% for control in data %}
+                                <tr>
+                                    <td class="align-middle text-center text-sm">{{ control.RowNum }}</td>
+                                    <td class="align-middle text-center text-sm">{{ control.license }}</td>
+                                    <td class="align-middle text-center text-sm"><span class="utc-date">{{ control.server_date }}</span></td>
+                                    <td class="align-middle text-center text-sm"><span class="utc-date">{{ control.signal_date }}</span></td>
+                                    <td class="align-middle text-center text-sm">{{ control.event_name }}</td>
+                                    <td class="align-middle text-center text-sm">{{ control.location }}</td>
+                                    <td class="align-middle text-center text-sm">{{ control.calculated_speed }}</td>
+                                    <td class="align-middle text-center text-sm">{{ control.odometer }}</td>
+                                    <td class="align-middle text-center text-sm">{{ control.latitude }}</td>
+                                    <td class="align-middle text-center text-sm">{{ control.longitude }}</td>
+                                    {% for key in additional_keys %}
+                                        <td class="align-middle text-center text-sm">{{ control|get_with_default:key }}</td>
+                                    {% endfor %}
+                                    </tr>
+                                </tr>
+                                {% endfor %}
+                                {% else %}
+                                <tr id="no-results-message">
+                                    <td colspan="12" class="text-center">{% trans "No results found." %}</td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-6 d-flex justify-content-start">
+                            <nav aria-label="Page navigation">
+                                <ul class="pagination">
+                                    {% if page_obj.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="#" data-page="1">{% trans 'Home' %}</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="#" data-page="{{ page_obj.previous_page_number }}">&laquo;</a>
+                                    </li>
+                                    {% endif %}
+
+                                    {% if page_obj.number|add:"-3" > 1 %}
+                                    <li class="page-item"><span class="page-link">...</span></li>
+                                    {% endif %}
+
+                                    {% for num in page_obj.paginator.page_range %}
+                                    {% if num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}
+                                    <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                                        <a class="page-link" href="#" data-page="{{ num }}">{{ num }}</a>
+                                    </li>
+                                    {% endif %}
+                                    {% endfor %}
+
+                                    {% if page_obj.number|add:"2" < page_obj.paginator.num_pages %}
+                                    <li class="page-item"><span class="page-link">...</span></li>
+                                    {% endif %}
+
+                                    {% if page_obj.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="#" data-page="{{ page_obj.next_page_number }}">&raquo;</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="#" data-page="{{ page_obj.paginator.num_pages }}">{% trans 'End' %}</a>
+                                    </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        </div>
+                        <div class="col-6 d-flex justify-content-end">
+                            <div class="pagination-info">
+                                {% trans 'Displaying' %} {{ current_start_item }} {% trans 'to' %} {{ current_end_item }} {% trans 'of' %} {{ total_registros }} {% trans 'items.' %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %} <!-- Fin de la condición de existencia de datos -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de progreso -->
+<div class="modal fade" id="downloadModal" tabindex="-1" aria-labelledby="downloadModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="downloadModalLabel">{% trans "Download Progress" %}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="progress">
+          <div id="downloadProgressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar">0%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Overlay para bloquear la pantalla y mostrar el spinner -->
+<div id="overlay" class="overlay d-none">
+    <div class="d-flex justify-content-center align-items-center vh-100">
+        <div>
+            <div class="spinner-border" role="status"></div>
+            <span class="visually-hidden">{% trans 'Loading...' %}</span>
+        </div>
+        <strong role="status" class="ms-2">{% trans 'Loading...' %}</strong>
+    </div>
+</div>
+
+<head>
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/report/report_today.css' %}">
+</head>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+
+<script src="{% static 'assets/js/report_today/exportar.js' %}"></script>
+<script src="{% static 'assets/js/report_today/lock_page.js' %}"></script>
+<script src="{% static 'assets/js/report_today/apis.js' %}"></script>
+<script src="{% static 'assets/js/report_today/paginate.js' %}"></script>
+<script src="{% static 'assets/js/report_today/utc_user.js' %}"></script>
+
+
+{% endblock %}

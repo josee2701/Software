@@ -1,0 +1,88 @@
+{% load i18n static %}
+<div id="dialog" class="modal-dialog" hx-target="this">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-body">
+        <div class="card">
+      <div class="modal-header">
+        <h3>
+          {% trans "update company logo" %}
+        </h3>
+        <button type="button" id="cerrarVenta" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      {% if company.company_logo %}
+      <img src="{{ company.company_logo.url }}" alt="Logo actual" class="w-40 mx-auto"/>
+      {% endif %}
+      <form hx-post="{{ request.path }}" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="text-center">
+          <label for="id_company_logo">{% trans "Select image" %}</label>
+          <input
+              type="file"
+              id="id_company_logo"
+              name="company_logo"
+              accept="image/*"
+          />
+          <p class="text-sm">
+              {% trans "The image should be in PNG, JPG format and weigh less than 2MB." %}
+              {% trans "Recommended size: 500x300 pixels to 1500x500 pixels." %}
+          </p>
+      </div>
+
+      <div id="preview" class="d-flex align-items-center"></div>
+      <br />
+        <div class="d-grid gap-2 col-6 mx-auto">
+          <button type="submit" class="btn btn-primary">{% trans "Save" %}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<head>
+  <link rel="stylesheet" type="text/css" href="{% static 'assets/css/estilos_templates.css' %}">
+</head>
+{% block scripts %}
+<script>
+  document.getElementById("id_company_logo").addEventListener("change", function () {
+    const file = this.files[0];
+    if (file) {
+      // Comprobar el tamaño del archivo en bytes (2MB máximo)
+      if (file.size > 2 * 1024 * 1024) {
+        alert("{% trans 'The file cannot be larger than 2MB' %}");
+        clearFileInput();
+        return;
+      }
+
+      // Crea un FileReader y define la función onload
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const img = new Image();
+        img.onload = function () {
+          // Validar dimensiones de la imagen
+          if (this.width < 500 || this.height < 300) {
+            alert("{% trans 'The image must be a minimum of 500x300 pixels.' %}");
+            clearFileInput();
+          } else if (this.width > 1500 || this.height > 500) {
+            alert("{% trans 'The image must be smaller than 1500x500 pixels' %}");
+            clearFileInput();
+          } else {
+            // Si todo está bien, muestra la vista previa
+            document.getElementById("preview").innerHTML = `<img src="${e.target.result}" alt="Vista previa" class="w-70 mx-auto">`;
+            document.getElementById("submitBtn").setAttribute("type", "submit"); // Cambia el tipo de botón a submit
+          }
+        };
+        img.src = e.target.result;
+      };
+
+      // Lee el archivo de imagen como DataURL
+      reader.readAsDataURL(file);
+    }
+  });
+
+  // Función para limpiar la selección del archivo
+  function clearFileInput() {
+    document.getElementById("id_company_logo").value = ""; // Limpia el valor del input file
+    document.getElementById("preview").innerHTML = ""; // Limpia la vista previa
+  }
+</script>
+{% endblock scripts %}

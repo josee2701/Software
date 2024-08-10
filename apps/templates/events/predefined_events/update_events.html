@@ -1,0 +1,43 @@
+{% load i18n static %}
+
+{%block content %}
+
+    <div class="modal-content">
+        <div class="modal-body">
+            <div class="card-header pb-0">
+                <h3 class=""> {% trans "Edit event" %} </h3>
+            </div>
+            <div class="card-body">
+                <form hx-post="{{ request.path }}">{% csrf_token %}
+                        <p>
+                            <div class="input-group input-group-static mb-4">
+                                <label for="id_number"> {% trans "Event name" %} </label>
+                                {{form.number}}
+                            </div>
+                            <div id="form-errors">
+                                {{form.number.errors}}
+                            </div>
+                            <div class="input-group input-group-static mb-4">
+                                <label for="id_name"> {% trans "Event name" %} </label>
+                                {{form.name}}
+                            </div>
+                            <div id="form-errors">
+                                {{form.name.errors}}
+                            </div>
+                        </p>
+                        <div class=row>
+                            <div class=col>
+                                <button class="btn btn-primary" type="submit"> <i class="fa-solid  fa-floppy-disk me-2"></i> {% trans "Save" %}</button>
+                            </div>
+                            <div class=col>
+                                <button type="button" class="btn btn-primary mt-3" data-bs-dismiss="modal">{% trans "Return" %}</button>
+                            </div>
+                        </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+
+{% endblock %}

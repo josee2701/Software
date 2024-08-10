@@ -1,0 +1,367 @@
+{% load i18n static %}
+
+{% block content %}
+    {{ form.media }}
+    <div class="modal-content">
+        <div class="modal-body">
+            <div class="card">
+                <div class="modal-header">
+                    <h3>{% trans "View Ticket" %}</h3>
+                    <button type="button" id="cerrarVenta" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="card-body">
+                    <form hx-post="{{ request.path }}" method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                    <div class="card-body scrollable-content" style="max-height: 490px; overflow-y: auto;">
+                        <div class="row justify-content-end">
+                            <div class="col">
+                                <!-- Sección de detalles del ticket (columna izquierda) -->
+                                <ul class="list-group list-group-flush text-start">
+                                    <li class="list-group-item"><strong>{% trans "# Ticket: " %}</strong> {{ ticket.id }}</li>
+                                    <li class="list-group-item"><strong>{% trans "Subject:" %}</strong> {{ ticket.subject }}</li>
+                                    <li class="list-group-item"><strong>{% trans "Priority: " %}</strong> {{ ticket.priority }}</li>
+                                    <li class="list-group-item d-flex align-items-center">
+                                        <strong>{% trans "Assigned To:" %}</strong>
+                                        <select id="assign-to" class="form-select form-select-sm" name="assign_to" style="width: 150px; border: none;" {% if not ticket.status or ticket.provider_company_id and has_provider %}disabled{% endif %}>
+                                            <option value=""></option> <!-- Espacio en blanco -->
+                                            <div class="flex-grow-1">
+                                                {% for user in form.assign_to.field.queryset %}
+                                                <option value="{{ user.id }}" {% if user.id == ticket.assign_to_id %} selected {% endif %}>{{ user.username }}</option>
+                                                {% endfor %}
+                                            </div>
+                                        </select>
+                                    </li>
+                                    <!-- Sección de detalles del ticket (columna izquierda) -->
+                                    <li class="list-group-item d-flex align-items-center">
+                                        <strong>{% trans "Scale Provider Company:" %}</strong>
+                                        <select id="provider-company" class="form-select form-select-sm" name="provider_company" style="width: 150px; border: none;" {% if not ticket.status or ticket.provider_company_id and has_provider %}disabled{% endif %}>
+                                            <option value=""></option>
+                                            {% for company in provider_companies %}
+                                                <option value="{{ company.id }}" {% if company.id == ticket.provider_company_id %} selected {% endif %}>{{ company.company_name }}</option>
+                                            {% endfor %}
+                                            {% if user.company.provider_id %}
+                                                {% if ticket.status and ticket.provider_company_id and has_provider %}
+                                                    <option value="distributor" selected>Distribuidor</option>
+                                                {% endif %}
+                                            {% endif %}
+                                        </select>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="col">
+                                <!-- Sección de detalles del ticket (columna derecha) -->
+                                <ul class="list-group list-group-flush text-start">
+                                    <li class="list-group-item"><strong>{% trans "Status: " %}</strong>
+                                        {% if ticket.status %}
+                                            <span class="text-secondary mb-0">{% trans "Open" %}</span>
+                                        {% else %}
+                                            <span class="text-secondary mb-0">{% trans "Closed" %}</span>
+                                        {% endif %}
+                                    </li>
+                                    <li class="list-group-item"><strong>{% trans "Created at:" %}</strong> {{ ticket.created_at }}</li>
+                                    <li class="list-group-item"><strong>{% trans "Created by:" %}</strong> {{ ticket.created_by.username }}</li>
+                                    <li class="list-group-item d-flex align-items-center">
+                                        <strong>{% trans "Scale Process:" %}</strong>
+                                        <select id="process-type" class="form-select form-select-sm" name="process_type" style="width: 100px; border: none;" {% if not ticket.status %}disabled{% endif %}>
+                                            <option value=""></option> <!-- Espacio en blanco -->
+                                            {% for process in form.fields.process_type.queryset %}
+                                                <option value="{{ process.id }}" {% if process.id == ticket.process_type.id %} selected {% endif %}>{{ process.process_type }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </li>
+                                    <li class="list-group-item d-flex align-items-center">
+                                        <strong>{% trans "Scale Customer Company:" %}</strong>
+                                        <select id="customer-company" class="form-select form-select-sm" name="customer_company" style="width: 100px; border: none;" {% if not ticket.status%}disabled{% endif %}>
+                                            <option value=""></option> <!-- Espacio en blanco -->
+                                            {% for company in customer_companies %}
+                                                <option value="{{ company.id }}" {% if company.id == ticket.customer_company_id %} selected {% endif %}>{{ company.company_name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <!-- Sección de mensajes -->
+                        <h6 class="text-center" style="margin-top: 2px;">{% trans "MESSAGE" %}</h6>
+                        <div class="card-body scrollable-content" style="max-height: 188px; overflow-y: auto;">
+                            {% for message in messages %}
+                            <!-- Detalles de cada mensaje -->
+                                <div class="message-entry">
+                                    <!-- Contenido del mensaje -->
+                                    <div class="message-container">
+                                        <div class="message-header">
+                                            <div class="message-role">{{ message.user.username }}</div>
+                                            <div class="message-sender">{{ message.sender_name }}</div>
+                                            <div class="message-date">{{ message.created_at }}</div>
+                                        </div>
+                                        <hr style="border: 1px solid #ccc; margin-top: 10px; margin-bottom: 10px;">
+                                        <div style="padding-top: 10px;">
+                                            {{ message.text|linebreaksbr }}
+                                            <p></p>
+                                            {% for attachment in message.attachments.all %}
+                                                <div class="attachment">
+                                                    {% if attachment.file %}
+                                                        <span class="material-icons" style="vertical-align: middle;">attach_file</span>
+                                                        <a href="{{ attachment.file.url }}" target="_blank" style="display: inline-block; vertical-align: middle; margin-left: 5px;">
+                                                            <span id="filename_{{ attachment.id }}">{{ attachment.file.name }}</span>
+                                                        </a>
+                                                    {% else %}
+                                                        <span></span>
+                                                    {% endif %}
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                        <!-- Fin del contenido scrollable -->
+                        <!-- Sección de agregar comentario y cerrar ticket -->
+                        
+                            <!-- Formulario para agregar comentarios -->
+                            {% if not ticket_closed %}
+                                <h6>{% trans "Add Comment" %}</h6>
+                                <form method="post" enctype="multipart/form-data" action="{% url 'companies:comment_ticket' ticket.id %}">
+                                    {% csrf_token %}
+                                    {{ message_form.text }}
+                                    <div style="margin-bottom: 5px;"></div>
+
+                                        <div class="input-group input-group-static mb-4">
+                                            <label for="id_file">{% trans "Attachments cannot exceed 7 MB : " %}</label>
+                                            <input type="file" name="file" id="id_file" multiple accept="image/*,.pdf,.docx,.doc,.txt,.xlsx,.xls,.jpg,.png,.jpeg,.msg,.mp4" />
+                                        </div>
+                                        <ul>
+                                            {% if attachment_error %}
+                                            <li style="color: red;">{{ attachment_error }}</li>
+                                            {% endif %}
+                                        </ul>
+                                    </p>
+                                    <div id="attachment-preview"></div>
+                                    <p></p>
+                                    <button type="submit" class="btn btn-primary float-start">{% trans "Send a Comment" %}</button>
+                                </form>
+
+                                <!-- Botón para cerrar el ticket -->
+                                <button type="submit" name="close_ticket" class="btn btn-danger float-end">
+                                    {% trans "Close Ticket" %}
+                                </button>
+                            {% endif %}
+                        </div>
+                    </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enlace a la hoja de estilos CSS -->
+    <head>
+        <script src="{% static 'assets/js/dynamic-scrollable-content.js' %}"></script>
+        <link rel="stylesheet" type="text/css" href="{% static 'assets/css/estilos_templates.css' %}">
+    </head>
+
+    <!-- Script para enviar el formulario cuando se seleccione un usuario -->
+    <script>
+        document.getElementById('assign-to').addEventListener('change', function() {
+            var userId = this.value;
+            var url = "{{ request.path }}";
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: new URLSearchParams({ 'assign_to': userId })
+            })
+            .then(response => {
+                if (response.ok) {
+                    console.log('User assigned successfully');
+                    setTimeout(function() {
+                        window.location.reload();
+                    }, 500);
+                } else {
+                    console.error('Failed to assign user');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    </script>
+    <script>
+        // Script para enviar el formulario cuando se seleccione una compañía proveedora
+        document.getElementById('provider-company').addEventListener('change', function() {
+            var companyId = this.value;
+            var url = "{{ request.path }}";
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: new URLSearchParams({ 'provider_company': companyId })
+            })
+            .then(response => {
+                if (response.ok) {
+                    console.log('Provider company selected successfully');
+                    // Actualizar el valor del select en el formulario
+                    const providerCompanySelect = document.getElementById('provider-company');
+                    const formData = new FormData();
+                    formData.append('provider_company', providerCompanySelect.value);
+
+                    fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        },
+                        body: formData
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            console.log('Form submitted successfully');
+                            // Recargar la página después de enviar el formulario
+                            setTimeout(() => window.location.reload(), 500);
+                        } else {
+                            console.error('Failed to submit form');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+                } else {
+                    console.error('Failed to select provider company');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    </script>
+
+    <!-- Script para enviar el formulario cuando se seleccione un proceso -->
+    <script>
+        document.getElementById('process-type').addEventListener('change', function() {
+            const processId = this.value;
+
+            const formData = new FormData();
+            formData.append('process_type', processId);
+
+            fetch("{{ request.path }}", {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: formData
+            })
+            .then(response => {
+            if (response.ok) {
+                console.log('Process selected successfully');
+                // Actualizar dinámicamente la columna "Assigned To User" en la lista de tickets
+                document.querySelectorAll('.assigned-to').forEach(element => {
+                    element.textContent = "{% trans 'Unassigned' %}";
+                });
+                // Recargar la página después de enviar el formulario
+                setTimeout(() => window.location.reload(), 500);
+            } else {
+                throw new Error('Failed to select process');
+            }
+            })
+            .catch(error => {
+            console.error(error);
+            });
+
+        });
+    </script>
+
+    <script>
+        // Script para enviar el formulario cuando se seleccione una compañía cliente
+        document.getElementById('customer-company').addEventListener('change', function() {
+            var companyId = this.value;
+            var url = "{{ request.path }}";
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: new URLSearchParams({ 'customer_company': companyId })
+            })
+            .then(response => {
+                if (response.ok) {
+                    console.log('Customer company selected successfully');
+                    setTimeout(function() {
+                        window.location.reload();
+                    }, 500);
+                } else {
+                    console.error('Failed to select customer company');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    </script>
+
+    <!-- Script para que no se muestre el nombre de la carpeta attachment  -->
+    <script>
+        $(document).ready(function() {
+            // Itera sobre cada enlace de archivo y actualiza el texto con el nombre del archivo
+            $('[id^="filename_"]').each(function() {
+                var originalText = $(this).text();
+                var filenameParts = originalText.split('_');
+                var filename = filenameParts.slice(3).join('_');
+                $(this).text(filename);
+            });
+
+            // Enviar el formulario cuando se seleccione un usuario
+            $('#id_assign_to').change(function() {
+                $('#assign-form').submit();
+            });
+        });
+    </script>
+    <script>
+        function initializeAttachmentHandler() {
+            const attachmentInput = document.getElementById("id_file");
+            const maxSizeMB = 7; // Tamaño máximo en megabytes
+            const allowedFormats = ["pdf", "docx", "doc", "txt", "xlsx", "xls", "zip", "exe", "jpg", "png", "jpeg", "msg", "cfg", "mp4", "rar", "xim", "eml"];
+
+            attachmentInput.addEventListener("change", handleFileSelect);
+
+            function handleFileSelect(event) {
+                const files = event.target.files;
+                const previewContainer = document.getElementById("attachment-preview");
+                previewContainer.innerHTML = ""; // Limpiar la vista previa antes de agregar nuevos archivos
+
+                for (const file of files) {
+                    const fileName = file.name;
+                    const fileSizeMB = file.size / (1024 * 1024); // Convertir a MB
+
+
+                    // Verificar si el archivo no está admitido o excede el tamaño máximo permitido
+                    const fileExtension = fileName.split(".").pop().toLowerCase();
+                    if (!allowedFormats.includes(fileExtension) || fileSizeMB > maxSizeMB) {
+                        // Mostrar el mensaje de alerta correspondiente
+                        if (!allowedFormats.includes(fileExtension)) {
+                            alert("El archivo " + fileName + " no está admitido. Los formatos permitidos son: " + allowedFormats.join(", "));
+                        } else {
+                            alert("El archivo " + fileName + " excede el tamaño máximo permitido de " + maxSizeMB + " MB.");
+                        }
+                        event.target.value = ""; // Limpiar el campo de entrada
+                        return;
+                    }
+
+                    const listItem = document.createElement("div");
+                    listItem.textContent = fileName + " (" + fileSizeMB.toFixed(2) + " MB)";
+                    previewContainer.appendChild(listItem);
+                }
+            }
+        }
+
+        // Llamar a la función de inicialización después de cargar la página
+        initializeAttachmentHandler();
+    </script>
+{% endblock %}

@@ -1,0 +1,136 @@
+{% load i18n static %}
+
+{% block content %}
+{{ form.media }}
+<div class="modal-content">
+    <div class="modal-body">
+        <div class="card">
+            <div class="modal-header">
+                <h3>{% trans "Add Ticket" %}</h3>
+                <button type="button" id="cerrarVenta" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="card-body scrollable-content" id="dynamic-scrollable-content1"style="overflow-y: auto;">
+                <form hx-post="{{ request.path }}" method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <p>
+                        <div class="input-group input-group-static mb-4">
+                            <label for="id_subject">{% trans "Subject:" %} <span style="color:red;">*</span> </label>
+                            {{ form.subject }}
+                        </div>
+                        <div id="form-errors">
+                            {{ form.subject.errors }}
+                        </div>
+                    </p>
+
+                    <div class="row">
+                        <div class="col">
+                            <p>
+                                <div class="input-group input-group-static mb-4">
+                                    <label for="id_priority">{% trans "Priority:" %} <span style="color:red;">*</span> </label>
+                                    {{ form.priority }}
+                                </div>
+                            </p>
+                        </div>
+                        <div class="col">
+                            <p>
+                                <div class="input-group input-group-static mb-4">
+                                    <label for="id_process_type">{% trans "Process:" %} <span style="color:red;">*</span> </label>
+                                    {{ form.process_type }}  <!-- Use process_form instead of form -->
+                                </div>
+                                <div id="form-errors">
+                                    {{ form.process_type.errors }}  <!-- Display any errors for the process_type field -->
+                                </div>
+                            </p>
+                        </div>
+                    </div>
+
+                <!--<p>
+                        <div class="input-group input-group-static mb-4">
+                            <label for="id_assign_to">{% trans "Assign to:" %} </label>
+                            {{ form.assign_to }}
+                        </div>
+                    </p>-->
+
+                    <p>
+                        <div class="input-group input-group-static mb-4">
+                            <label for="id_message">{% trans "Message:" %} <span style="color:red;">*</span> </label>
+                            {{ message_form.text }}  <!-- Nuevo formulario para el mensaje -->
+                        </div>
+                    </p>
+
+                    <p>
+                        <div class="input-group input-group-static mb-4">
+                            <label for="id_file">{% trans "Attachments cannot exceed 7 MB : " %} </label>
+                            <input type="file" name="file" id="id_file" multiple accept="image/*,.pdf,.docx,.doc,.txt,.xlsx,.xls,.jpg,.png,.jpeg,.msg,.mp4" />
+                        </div>
+                        {% if messages %}
+                            <ul>
+                                {% for message in messages %}
+                                <li style="color: red;">{{ message }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </p>
+
+                    <div id="attachment-preview"></div>
+                </div>
+                    <div class="row">
+                        <div class="col">
+                            <button class="btn btn-primary mt-3" type="submit"> <i class="fa-solid fa-floppy-disk me-2"></i> {% trans "Save" %} </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <head>
+        <script src="{% static 'assets/js/dynamic-scrollable-content.js' %}"></script>
+        <link rel="stylesheet" type="text/css" href="{% static 'assets/css/estilos_templates.css' %}">
+    </head>
+</div>
+{% endblock content %}
+
+{% block scripts %}
+<script>
+    function initializeAttachmentHandler() {
+        const attachmentInput = document.getElementById("id_file");
+        const maxSizeMB = 7; // Tamaño máximo en megabytes
+        const allowedFormats = ["pdf", "docx", "doc", "txt", "xlsx", "xls", "jpg", "png", "jpeg", "msg", "cfg", "mp4"];
+
+        attachmentInput.addEventListener("change", handleFileSelect);
+
+        function handleFileSelect(event) {
+            const files = event.target.files;
+            const previewContainer = document.getElementById("attachment-preview");
+            previewContainer.innerHTML = ""; // Limpiar la vista previa antes de agregar nuevos archivos
+
+            for (const file of files) {
+                const fileName = file.name;
+                const fileSizeMB = file.size / (1024 * 1024); // Convertir a MB
+
+
+                // Verificar si el archivo no está admitido o excede el tamaño máximo permitido
+                const fileExtension = fileName.split(".").pop().toLowerCase();
+                if (!allowedFormats.includes(fileExtension) || fileSizeMB > maxSizeMB) {
+                    // Mostrar el mensaje de alerta correspondiente
+                    if (!allowedFormats.includes(fileExtension)) {
+                        alert("El archivo " + fileName + " no está admitido. Los formatos permitidos son: " + allowedFormats.join(", "));
+                    } else {
+                        alert("El archivo " + fileName + " excede el tamaño máximo permitido de " + maxSizeMB + " MB.");
+                    }
+                    event.target.value = ""; // Limpiar el campo de entrada
+                    return;
+                }
+
+                const listItem = document.createElement("div");
+                listItem.textContent = fileName + " (" + fileSizeMB.toFixed(2) + " MB)";
+                previewContainer.appendChild(listItem);
+            }
+        }
+    }
+
+    // Llamar a la función de inicialización después de cargar la página
+    initializeAttachmentHandler();
+</script>
+
+{% endblock %}

@@ -1,0 +1,518 @@
+[
+    {
+        "model": "realtime.FamilyModelUEC",
+        "pk": 1,
+        "fields":{
+            "manufacture": 1,
+            "model": 1
+        }
+    },
+    {
+        "model": "realtime.FamilyModelUEC",
+        "pk": 2,
+        "fields":{
+            "manufacture": 1,
+            "model": 2
+        }
+    },
+    {
+        "model": "realtime.FamilyModelUEC",
+        "pk": 3,
+        "fields":{
+            "manufacture": 1,
+            "model": 3
+        }
+    },
+    {
+        "model": "realtime.FamilyModelUEC",
+        "pk": 4,
+        "fields":{
+            "manufacture": 1,
+            "model": 4
+        }
+    },
+    {
+        "model": "realtime.FamilyModelUEC",
+        "pk": 5,
+        "fields":{
+            "manufacture": 1,
+            "model": 5
+        }
+    },
+    {
+        "model": "realtime.FamilyModelUEC",
+        "pk": 6,
+        "fields":{
+            "manufacture": 1,
+            "model": 6
+        }
+    },
+    {
+        "model": "realtime.FamilyModelUEC",
+        "pk": 7,
+        "fields":{
+            "manufacture": 1,
+            "model": 7
+        }
+    },
+    {
+        "model": "realtime.FamilyModelUEC",
+        "pk": 8,
+        "fields":{
+            "manufacture": 1,
+            "model": 8
+        }
+    },
+    {
+        "model": "realtime.FamilyModelUEC",
+        "pk": 9,
+        "fields":{
+            "manufacture": 1,
+            "model": 9
+        }
+    },
+    {
+        "model": "realtime.FamilyModelUEC",
+        "pk": 10,
+        "fields":{
+            "manufacture": 1,
+            "model": 10
+        }
+    },
+    {
+        "model": "realtime.FamilyModelUEC",
+        "pk": 11,
+        "fields":{
+            "manufacture": 1,
+            "model": 11
+        }
+    },
+    {
+        "model": "realtime.FamilyModelUEC",
+        "pk": 12,
+        "fields":{
+            "manufacture": 1,
+            "model": 12
+        }
+    },
+    {
+        "model": "realtime.FamilyModelUEC",
+        "pk": 13,
+        "fields":{
+            "manufacture": 1,
+            "model": 13
+        }
+    },
+    {
+        "model": "realtime.FamilyModelUEC",
+        "pk": 14,
+        "fields":{
+            "manufacture": 1,
+            "model": 14
+        }
+    },
+    {
+        "model": "realtime.FamilyModelUEC",
+        "pk": 15,
+        "fields":{
+            "manufacture": 1,
+            "model": 15
+        }
+    },
+    {
+        "model": "realtime.FamilyModelUEC",
+        "pk": 16,
+        "fields":{
+            "manufacture": 1,
+            "model": 16
+        }
+    },
+    {
+        "model": "realtime.FamilyModelUEC",
+        "pk": 17,
+        "fields":{
+            "manufacture": 1,
+            "model": 17
+        }
+    },
+    {
+        "model": "realtime.FamilyModelUEC",
+        "pk": 18,
+        "fields":{
+            "manufacture": 1,
+            "model": 18
+        }
+    },
+    {
+        "model": "realtime.FamilyModelUEC",
+        "pk": 19,
+        "fields":{
+            "manufacture": 1,
+            "model": 19
+        }
+    },
+    {
+        "model": "realtime.FamilyModelUEC",
+        "pk": 20,
+        "fields":{
+            "manufacture": 1,
+            "model": 20
+        }
+    },
+    {
+        "model": "realtime.FamilyModelUEC",
+        "pk": 21,
+        "fields":{
+            "manufacture": 1,
+            "model": 21
+        }
+    },
+    {
+        "model": "realtime.FamilyModelUEC",
+        "pk": 22,
+        "fields":{
+            "manufacture": 1,
+            "model": 22
+        }
+    },
+    {
+        "model": "realtime.FamilyModelUEC",
+        "pk": 23,
+        "fields":{
+            "manufacture": 1,
+            "model": 23
+        }
+    },
+    {
+        "model": "realtime.FamilyModelUEC",
+        "pk": 24,
+        "fields":{
+            "manufacture": 1,
+            "model": 24
+        }
+    },
+    {
+        "model": "realtime.FamilyModelUEC",
+        "pk": 25,
+        "fields":{
+            "manufacture": 1,
+            "model":25
+        }
+    },
+    {
+        "model": "realtime.FamilyModelUEC",
+        "pk": 26,
+        "fields":{
+            "manufacture": 1,
+            "model": 26
+        }
+    },
+    {
+        "model": "realtime.Commands",
+        "pk": 1,
+        "fields":{
+            "model": 1,
+            "command": "ggps",
+            "name":"Solicitud de ubicación"
+        }
+    },
+    {
+        "model": "realtime.Commands",
+        "pk": 2,
+        "fields":{
+            "model": 2,
+            "command": "ggps",
+            "name":"Solicitud de ubicación"
+        }
+    },
+    {
+        "model": "realtime.Commands",
+        "pk": 3,
+        "fields":{
+            "model": 3,
+            "command": "ggps",
+            "name":"Solicitud de ubicación"
+        }
+    },
+    {
+        "model": "realtime.Commands",
+        "pk": 4,
+        "fields":{
+            "model": 4,
+            "command": "ggps",
+            "name":"Solicitud de ubicación"
+        }
+    },
+    {
+        "model": "realtime.Commands",
+        "pk": 5,
+        "fields":{
+            "model": 5,
+            "command": "ggps",
+            "name":"Solicitud de ubicación"
+        }
+    },
+    {
+        "model": "realtime.Commands",
+        "pk": 6,
+        "fields":{
+            "model": 6,
+            "command": "ggps",
+            "name":"Solicitud de ubicación"
+        }
+    },
+    {
+        "model": "realtime.Commands",
+        "pk": 7,
+        "fields":{
+            "model": 7,
+            "command": "ggps",
+            "name":"Solicitud de ubicación"
+        }
+    },
+    {
+        "model": "realtime.Commands",
+        "pk": 8,
+        "fields":{
+            "model": 8,
+            "command": "ggps",
+            "name":"Solicitud de ubicación"
+        }
+    },
+    {
+        "model": "realtime.Commands",
+        "pk": 9,
+        "fields":{
+            "model": 9,
+            "command": "ggps",
+            "name":"Solicitud de ubicación"
+        }
+    },
+    {
+        "model": "realtime.Commands",
+        "pk": 10,
+        "fields":{
+            "model": 10,
+            "command": "ggps",
+            "name":"Solicitud de ubicación"
+        }
+    },
+    {
+        "model": "realtime.Commands",
+        "pk": 11,
+        "fields":{
+            "model": 11,
+            "command": "ggps",
+            "name":"Solicitud de ubicación"
+        }
+    },
+    {
+        "model": "realtime.Commands",
+        "pk": 12,
+        "fields":{
+            "model": 12,
+            "command": "ggps",
+            "name":"Solicitud de ubicación"
+        }
+    },
+    {
+        "model": "realtime.Commands",
+        "pk": 13,
+        "fields":{
+            "model": 13,
+            "command": "ggps",
+            "name":"Solicitud de ubicación"
+        }
+    },
+    {
+        "model": "realtime.Commands",
+        "pk": 14,
+        "fields":{
+            "model": 14,
+            "command": "ggps",
+            "name":"Solicitud de ubicación"
+        }
+    },
+    {
+        "model": "realtime.Commands",
+        "pk": 15,
+        "fields":{
+            "model": 2,
+            "command": "setdigout 1",
+            "name":"Apagado remoto"
+        }
+    },
+    {
+        "model": "realtime.Commands",
+        "pk": 16,
+        "fields":{
+            "model": 3,
+            "command": "setdigout 1",
+            "name":"Apagado remoto"
+        }
+    },
+    {
+        "model": "realtime.Commands",
+        "pk": 17,
+        "fields":{
+            "model": 9,
+            "command": "setdigout 1",
+            "name":"Apagado remoto"
+        }
+    },
+    {
+        "model": "realtime.Commands",
+        "pk": 18,
+        "fields":{
+            "model": 10,
+            "command": "setdigout 1",
+            "name":"Apagado remoto"
+        }
+    },
+    {
+        "model": "realtime.Commands",
+        "pk": 19,
+        "fields":{
+            "model": 12,
+            "command": "setdigout 1",
+            "name":"Apagado remoto"
+        }
+    },
+    {
+        "model": "realtime.Commands",
+        "pk": 20,
+        "fields":{
+            "model": 2,
+            "command": "setdigout 0",
+            "name":"Encendido remoto"
+        }
+    },
+    {
+        "model": "realtime.Commands",
+        "pk": 21,
+        "fields":{
+            "model": 3,
+            "command": "setdigout 0",
+            "name":"Encendido remoto"
+        }
+    },
+    {
+        "model": "realtime.Commands",
+        "pk": 22,
+        "fields":{
+            "model": 9,
+            "command": "setdigout 0",
+            "name":"Encendido remoto"
+        }
+    },
+    {
+        "model": "realtime.Commands",
+        "pk": 23,
+        "fields":{
+            "model": 10,
+            "command": "setdigout 0",
+            "name":"Encendido remoto"
+        }
+    },
+    {
+        "model": "realtime.Commands",
+        "pk": 24,
+        "fields":{
+            "model": 12,
+            "command": "setdigout 0",
+            "name":"Encendido remoto"
+        }
+    },
+    {
+        "model": "realtime.Commands",
+        "pk": 25,
+        "fields":{
+            "model": 1,
+            "command": "setdigout ?1",
+            "name":"Apagado remoto"
+        }
+    },
+    {
+        "model": "realtime.Commands",
+        "pk": 26,
+        "fields":{
+            "model": 1,
+            "command": "setdigout ?0",
+            "name":"Encendido remoto"
+        }
+    },
+    {
+        "model": "realtime.Commands",
+        "pk": 27,
+        "fields":{
+            "model": 5,
+            "command": "setdigout ?1",
+            "name":"Apagado remoto"
+        }
+    },
+    {
+        "model": "realtime.Commands",
+        "pk": 28,
+        "fields":{
+            "model": 5,
+            "command": "setdigout ?0",
+            "name":"Encendido remoto"
+        }
+    },
+    {
+        "model": "realtime.Commands",
+        "pk": 29,
+        "fields":{
+            "model": 6,
+            "command": "setdigout ?1?",
+            "name":"Apagado remoto"
+        }
+    },
+    {
+        "model": "realtime.Commands",
+        "pk": 30,
+        "fields":{
+            "model": 6,
+            "command": "setdigout ?0?",
+            "name":"Encendido remoto"
+        }
+    },
+    {
+        "model": "realtime.Commands",
+        "pk": 31,
+        "fields":{
+            "model": 11,
+            "command": "setdigout ?1?",
+            "name":"Apagado remoto"
+        }
+    },
+    {
+        "model": "realtime.Commands",
+        "pk": 32,
+        "fields":{
+            "model": 11,
+            "command": "setdigout ?0?",
+            "name":"Encendido remoto"
+        }
+    },
+    {
+        "model": "realtime.Commands",
+        "pk": 33,
+        "fields":{
+            "model": 13,
+            "command": "setdigout ?1?",
+            "name":"Apagado remoto"
+        }
+    },
+    {
+        "model": "realtime.Commands",
+        "pk": 34,
+        "fields":{
+            "model": 13,
+            "command": "setdigout ?0?",
+            "name":"Encendido remoto"
+        }
+    }
+
+
+]

@@ -1,0 +1,97 @@
+{% load i18n static %}
+
+{%block content %}
+{{form.media}}
+{% load i18n static %}
+    <div class="modal-content">
+            <div class="modal-body">
+                <div class="card">
+                    <div class="modal-header">
+                    <h3 class="">{% trans "Edit Driver" %}</h3>
+                    <button type="button" id="cerrarVenta" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="card-body">
+                    <form hx-post="{{ request.path }}" > {% csrf_token %}
+                            <div class="input-group input-group-static mb-4">
+                                <label for="id_company"> {% trans "Company:" %} <span style="color:red;">*</span> </label>
+                                {{form.company}}
+                            </div>
+                            <div id="form-errors">
+                                {{form.company.errors}}
+                            </div>
+                        <div class="row">
+                            <div class="col">
+                                    <div class="input-group input-group-static mb-4">
+                                        <label for="id_personal_identification_number"> {% trans "Personal ID:" %} <span style="color:red;">*</span> </label>
+                                        {{form.personal_identification_number}}
+                                    </div>
+                                    <div id="form-errors">
+                                        {{form.personal_identification_number.errors}}
+                                    </div>
+
+                            </div>
+
+                            <div class="col">
+                                    <div class="input-group input-group-static mb-4">
+                                        <label for="id_first_name"> {% trans "First name:" %} <span style="color:red;">*</span> </label>
+                                        {{form.first_name}}
+                                    </div>
+                            </div>
+
+                            <div class="col">
+                                    <div class="input-group input-group-static mb-4">
+                                        <label for="id_last_name"> {% trans "Last name:" %} <span style="color:red;">*</span> </label>
+                                        {{form.last_name}}
+                                    </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col">
+                                    <div class="input-group input-group-static mb-4">
+                                        <label for="id_phone_number"> {% trans "Movil number:" %} <span style="color:red;">*</span> </label>
+                                        {{form.phone_number}}
+                                    </div>
+                            </div>
+                            <div class="col">
+                                    <div class="input-group input-group-static mb-4">
+                                        <label for="id_address"> {% trans "Address:" %} </label>
+                                        {{form.address}}
+                                    </div>
+                            </div>
+                            <div class="col">
+                                    <div class="input-group input-group-static mb-4">
+                                        <label for="id_password"> {% trans "Password:" %}</span> </label>
+                                        {{form.password}}
+                                    </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col">
+                                <div class="form-check form-switch" style="padding-block-start: 35px;">
+                                    <label for="id_is_active" class="form-check-label"> {% trans "Is active?" %} </label>
+                                    {{form.is_active}}
+                                </div>
+                            </div>
+
+                            <div class="col">
+                                    <div class="input-group input-group-static mt-3">
+                                        <label for="id_date_joined"> {% trans "Date joined:" %} <span style="color:red;">*</span> </label>
+                                        <input type="date" name="date_joined" class="form-control" required id="id_date_joined" value="{{form.date_joined.value | date:'c'}}">
+                                    </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col">
+                                <button class="btn btn-primary mt-3" type="submit"> <i class="fa-solid fa-floppy-disk me-2"></i> {% trans "Save" %} </button>
+                            </div>
+                            <head>
+                                <link rel="stylesheet" type="text/css" href="{% static 'assets/css/estilos_templates.css' %}">
+                            </head>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

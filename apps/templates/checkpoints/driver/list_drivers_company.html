@@ -1,0 +1,67 @@
+{% load i18n  static %}
+{% for driver in list_drivers %}
+    <tr>
+        {% if perms.checkpoints.change_driver %}
+            <td>
+                <button type="button" hx-get="{% url 'checkpoints:update_driver' driver.id %}" class="btn btn-primary"" hx-target="#dialog""><i class="fa-solid fa-pencil"></i></button>
+                <button type="button" hx-get="{% url 'checkpoints:button_view' driver.id %}" class="btn btn-primary"" hx-target="#dialog""><i class="fa-solid fa-car-side"></i> </button>
+                {% if perms.checkpoints.delete_driver %}
+                    <button type="button" hx-get="{% url 'checkpoints:delete_driver' driver.id %}" class="btn btn-danger"" hx-target="#dialog""><i class="fa-solid fa-trash"></i></button>
+                {% endif %}
+            </td>
+        {% endif %}
+        <td class="align-middle text-center text-sm">
+            <span class="font-weight-normal mb-0"> {{driver.personal_identification_number}} </span>
+        </td>
+        <td class="align-middle text-center text-sm">
+            <span class="font-weight-normal mb-0">{{driver.company}}</span>
+        </td>
+        <td class="align-middle text-center text-sm">
+            <span class="font-weight-normal mb-0">{{driver.first_name}} </span>
+        </td>
+        <td class="align-middle text-center text-sm">
+            <span class="text-secondary font-weight-normal mb-0">{{driver.last_name}} </span>
+        </td>
+        <td class="align-middle text-center text-sm">
+            <span class="text-secondary font-weight-normal mb-0">{{driver.phone_number}}</span>
+        </td>
+        <td class="align-middle text-center text-sm">
+            <span class="font-weight-normal mb-0"> {{driver.date_joined}}</span>
+        </td>
+        {% if driver.is_active %}
+        <td class="align-middle text-center text-sm">
+          <span class="text-secondary mb-0">{% trans "Active" %}</span>
+        </td>
+        {% else %}
+        <td class="align-middle text-center text-sm">
+          <span class="text-secondary mb-0">{% trans "Inactive" %}</span>
+        </td>
+        {% endif %}
+        <td class="align-middle text-center text-sm">
+            <span class="text-secondary font-weight-normal mb-0">{{driver.address}}</span>
+        </td>
+
+    </tr>
+{% endfor %} {% block scripts %}
+<script>
+  const input = document.getElementById("search-input");
+
+  input.addEventListener("keyup", (e) => {
+    const value = e.target.value.toLowerCase();
+    // Obtener todas las filas de la tabla
+    const rows = document.querySelector("tbody").querySelectorAll("tr");
+
+    rows.forEach((row) => {
+      // Obtener el texto de todas las celdas en la fila
+      const cellTexts = Array.from(row.querySelectorAll("td")).map(cell => cell.textContent.toLowerCase());
+
+      // Si alguna de las celdas contiene el valor buscado, mostrar la fila
+      if (cellTexts.some(text => text.includes(value))) {
+        row.hidden = false;
+      } else {
+        row.hidden = true;
+      }
+    });
+  });
+</script>
+{% endblock scripts %}

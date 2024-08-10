@@ -1,0 +1,82 @@
+{% load i18n static %} {% block content %} {{form.media}}
+<div class="modal-content">
+  <div class="modal-body">
+    <div class="card">
+    <div class="modal-header">
+      <h3>{% trans "Add Group" %}</h3>
+      <button type="button" id="cerrarVenta" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    </div>
+    <div class="card-body">
+      <form hx-post="{{ request.path }}" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="row">
+          <div class="col">
+            <p></p>
+            <div class="input-group input-group-static mb-4">
+              <label for="id_plate"
+                >{% trans "Name group" %}<span style="color: red">
+                  *</span
+                ></label
+              >
+              {{form.name}}
+            </div>
+          </div>
+          <div class="col">
+            <p></p>
+            <label for="{{ form.vehicles.auto_id }}">{% trans "Assets:" %}<span style="color: red"> *</span
+              ></label>
+              <div class="input-group input-group-outline">
+                <input
+                  id="search-assets"
+                  type="text"
+                  class="form-control"
+                  placeholder={% trans "Search" %}
+                  onfocus="focused(this)"
+                  onfocusout="defocused(this)"
+                  autocomplete="off"
+                />
+              </div>
+            <div class="scroll">
+              <label class="form-check-label vehicles" for>
+                {{ form.vehicles }}
+              </label>
+            </div>
+            {% if form.vehicles.errors %}
+                  <div class="mt-2" style="color: red;">
+                    {% for error in form.vehicles.errors %}
+                      <div>{{ error }}</div>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+          </div>
+        </div>
+        <div class="row">
+          <div class="col">
+            <button class="btn btn-primary mt-3" type="submit">
+              <i class="fa-solid fa-floppy-disk me-2"></i> {% trans "Save" %}
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<head>
+  <link rel="stylesheet" type="text/css" href="{% static 'assets/css/estilos_templates.css' %}">
+</head>
+<script>
+  function filterOptions(searchInputId, optionsContainerClass) {
+    var searchInput = document.getElementById(searchInputId);
+    searchInput.addEventListener("keyup", function (event) {
+      var query = event.target.value.toLowerCase();
+      var labels = document.querySelectorAll("." + optionsContainerClass + " label");
+      labels.forEach(function (label) {
+        label.style.display = label.textContent.toLowerCase().includes(query) ? "" : "none";
+      });
+    });
+  }
+
+  filterOptions("search-assets", "vehicles");
+</script>
+{% endblock content %}

@@ -1,0 +1,178 @@
+{% extends "layouts/base.html" %}
+
+{% load i18n static %}
+
+{% block title %}{% trans 'Help Desk' %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card my-4">
+                <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
+                    <div class="bg-gradient-primary shadow-primary border-radius-lg pt-4 pb-3">
+                        <div class="col">
+                            <h5 class="text-white text-capitalize ps-3"> {% trans "Case Management" %} </h5>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col d-flex">
+                            <!-- Es la opción del buscador de la plantilla de Ticket -->
+                            <form id="search-form" method="GET" onsubmit="return false">
+                                <div class="input-group input-group-outline">
+                                    <label class="form-label">{% trans "Search..." %}</label>
+                                    <input id="search-input" type="text" class="form-control" onfocus="focused(this)" onfocusout="defocused(this)" name="q" autocomplete="off">
+                                </div>
+                            </form>
+                        </div>
+                        <!-- Contenido de la vista para usuarios con permiso para poder agregar o crear -->
+                        <div class="col d-flex justify-content-end">
+                            <button type="button" hx-get="{% url 'companies:ticket_create' %}" class="btn btn-primary mx-2" hx-target="#dialog"><i class="fa-solid fa-plus"></i> {% trans "Create Ticket" %}</button>
+                            <!-- Botón para ir a la vista de tickets cerrados -->
+                            <a href="{% url 'companies:closed_tickets' %}" class="btn btn-primary mx-2" hx-target="#dialog"><i class="fa-solid fa-archive"></i> {% trans "Historic" %}</a>
+                        </div>
+                    </div>
+                    <form method="GET">
+                        <label>{% trans "Show entries" %}</label>
+                        <select name="paginate_by" id="paginate-by" onchange="this.form.submit()">
+                            <option value="10" {% if request.GET.paginate_by == '10' %} selected {% endif %}>10</option>
+                            <option value="25" {% if request.GET.paginate_by == '25' %} selected {% endif %}>25</option>
+                            <option value="50" {% if request.GET.paginate_by == '50' %} selected {% endif %}>50</option>
+                            <option value="100" {% if request.GET.paginate_by == '100' %} selected {% endif %}>100</option>
+                        </select>
+                        <input type="hidden" name="q" value="{{ request.GET.q }}">
+                    </form>
+                    <div class="scrollable-content" id="dynamic-scrollable-content" style="overflow-y: auto;">
+                        <div class="table-responsive p-0">
+                            <!-- Se realiza la tabla en la cual se estipulan los nombres de cada columna -->
+                            <table class="table align-items-center mb-0">
+                                <thead>
+                                    <tr>
+                                        <th></th>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Ticket" %}</th>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Created by User" %}</th>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Subject" %}</th>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Priority" %}</th>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Process" %}</th>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Assigned To User" %}</th>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Status" %}</th>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Assigned To Company" %}</th>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Created At" %}</th>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Last Comment" %}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for ticket in object_list %}
+                                    <tr>
+                                        <!-- Acciones o botones para el ticket (editar, eliminar, etc.) -->
+                                        <td>
+                                            <!-- Aquí puedes agregar botones u acciones para el ticket si es necesario -->
+                                            <!-- Botón para ver el ticket -->
+                                            <button type="button" hx-get="{% url 'companies:view_ticket' ticket.id %}" class="btn btn-primary" hx-target="#dialog">
+                                                <i class="fa-solid fa-eye"></i>
+                                            </button>
+                                        </td>
+                                        <!-- Columnas de información del ticket -->
+                                        <td class="align-middle text-center text-sm">
+                                            <span class="font-weight-normal mb-0">{{ ticket.id }}</span>
+                                        </td>
+                                        <td class="align-middle text-center text-sm">
+                                            <span class="font-weight-normal mb-0">{{ ticket.created_by }}</span>
+                                        </td>
+                                        <td class="align-middle text-center text-sm">
+                                            <span class="font-weight-normal mb-0">{{ ticket.subject }}</span>
+                                        </td>
+                                        <td class="align-middle text-center text-sm">
+                                            <span class="font-weight-normal mb-0">{{ ticket.priority }}</span>
+                                        </td>
+                                        <td class="align-middle text-center text-sm">
+                                            <span class="font-weight-normal mb-0">{{ ticket.process_type }}</span>
+                                        </td>
+                                        <td class="align-middle text-center text-sm">
+                                            {% if ticket.assign_to %}
+                                            <span class="text-secondary mb-0">{{ ticket.assign_to }}</span>
+                                            {% else %}
+                                            <span class="text-secondary mb-0">{% trans "Unassigned" %}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="align-middle text-center text-sm">
+                                            {% if ticket.status %}
+                                            <span class="text-secondary mb-0">{% trans "Open" %}</span>
+                                            {% else %}
+                                            <span class="text-secondary mb-0">{% trans "Closed" %}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="align-middle text-center text-sm">
+                                            {% if ticket.provider_company_id and user.company.provider_id and ticket.status %}
+                                            {% trans "Distribuidor" %}
+                                            {% elif ticket.provider_company_id %}
+                                            {{ ticket.company }}
+                                            {% elif ticket.customer_company_id %}
+                                            {{ ticket.company }}
+                                            {% else %}
+                                            {{ ticket.company }}
+                                            {% endif %}
+                                        </td>
+                                        <td class="align-middle text-center text-sm">
+                                            <span class="text-secondary mb-0">{{ ticket.created_at|date:"d/m/Y h:i:s A" }}</span>
+                                        </td>
+                                        <td class="align-middle text-center text-sm">
+                                            <span class="text-secondary mb-0">{{ ticket.last_comment|date:"d/m/Y h:i:s A" }}</span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="row mt-4">
+                        <div class="col-6 d-flex justify-content-start">
+                            <nav aria-label="Page navigation">
+                                <ul class="pagination">
+                                    {% if page_obj.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=1&paginate_by={{ request.GET.paginate_by }}&q={{ request.GET.q }}">{% trans 'Home' %}</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}&paginate_by={{ request.GET.paginate_by }}&q={{ request.GET.q }}">&laquo;</a>
+                                    </li>
+                                    {% endif %}
+                                    {% if page_obj.number|add:"-4" > 1 %}
+                                    <li class="page-item"><span class="page-link">...</span></li>
+                                    {% endif %}
+                                    {% for num in page_obj.paginator.page_range %}
+                                    {% if num > page_obj.number|add:"-4" and num < page_obj.number|add:"4" %}
+                                    <li class="page-item {% if page_obj.number == num %}active{% endif %}"><a class="page-link" href="?page={{ num }}&paginate_by={{ request.GET.paginate_by }}&q={{ request.GET.q }}">{{ num }}</a></li>
+                                    {% endif %}
+                                    {% endfor %}
+                                    {% if page_obj.number|add:"3" < page_obj.paginator.num_pages %}
+                                    <li class="page-item"><span class="page-link">...</span></li>
+                                    {% endif %}
+                                    {% if page_obj.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.next_page_number }}&paginate_by={{ request.GET.paginate_by }}&q={{ request.GET.q }}">&raquo;</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}&paginate_by={{ request.GET.paginate_by }}&q={{ request.GET.q }}">{% trans 'End' %}</a>
+                                    </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        </div>
+                        <div class="col-6 d-flex justify-content-end">
+                            <div class="pagination-info">
+                                {% trans 'Displaying' %} {{ page_obj.start_index }} {% trans 'to' %} {{ page_obj.end_index }} {% trans 'of' %} {{ page_obj.paginator.count }} {% trans 'items.' %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="{% static 'assets/js/dynamic-scrollable-content.js' %}"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="{% static 'assets/js/search.js' %}"></script>
+{% endblock %}

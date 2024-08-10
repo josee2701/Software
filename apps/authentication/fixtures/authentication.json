@@ -1,0 +1,240 @@
+[
+    {
+        "model": "auth.group",
+        "pk": 1,
+        "fields": {
+            "name": "Eventos",
+            "name_en": "Events",
+            "name_es": "Eventos"
+        }
+    },
+    {
+        "model": "auth.group",
+        "pk": 2,
+        "fields": {
+            "name": "Compañia",
+            "name_en": "Company",
+            "name_es": "Compañia"
+        }
+    },
+    {
+        "model": "auth.group",
+        "pk": 3,
+        "fields": {
+            "name": "Usuarios",
+            "name_en": "Users",
+            "name_es": "Usuarios"
+        }
+    },
+    {
+        "model": "auth.group",
+        "pk": 4,
+        "fields": {
+            "name": "Facturación",
+            "name_en": "Billing",
+            "name_es": "Facturación"
+        }
+    },
+    {
+        "model": "auth.group",
+        "pk": 5,
+        "fields": {
+            "name": "Tarjetas Simcards",
+            "name_en": "Simcard",
+            "name_es": "Tarjetas Simcards"
+        }
+    },
+    {
+        "model": "auth.group",
+        "pk": 6,
+        "fields": {
+            "name": "Dispositivos",
+            "name_en": "Devices",
+            "name_es": "Dispositivos"
+        }
+    },
+    {
+        "model": "auth.group",
+        "pk": 7,
+        "fields": {
+            "name": "Comandos",
+            "name_en": "Commands",
+            "name_es": "Comandos"
+        }
+    },
+    {
+        "model": "auth.group",
+        "pk": 8,
+        "fields": {
+            "name": "Vehículos",
+            "name_en": "Vehicles",
+            "name_es": "Vehículos"
+        }
+    },
+    {
+        "model": "auth.group",
+        "pk": 9,
+        "fields": {
+            "name": "Grupo de vehículos",
+            "name_en": "Vehicles Group",
+            "name_es": "Grupo de vehículos"
+        }
+    },
+    {
+        "model": "auth.group",
+        "pk": 10,
+        "fields": {
+            "name": "Geozonas",
+            "name_en": "Geozones",
+            "name_es": "Geozonas"
+        }
+    },
+    {
+        "model": "auth.group",
+        "pk": 11,
+        "fields": {
+            "name": "Conductores",
+            "name_en": "Drivers",
+            "name_es": "Conductores"
+        }
+    },
+    {
+        "model": "auth.group",
+        "pk": 12,
+        "fields": {
+            "name": "Configuracion de calificación",
+            "name_en": "Driver qualification configuration",
+            "name_es": "Configuracion de calificación"
+        }
+    },
+    {
+        "model": "auth.group",
+        "pk": 13,
+        "fields": {
+            "name": "Informe diario",
+            "name_en": "Daily report",
+            "name_es": "Informe diario"
+        }
+    },
+    {
+        "model": "auth.group",
+        "pk": 14,
+        "fields": {
+            "name": "Mesa de ayuda",
+            "name_en": "Helpdesk",
+            "name_es": "Mesa de ayuda"
+        }
+    },
+    {
+        "model": "auth.group_permissions",
+        "pk": 1,
+        "fields": {
+            "group_id": 1,
+            "permission_id": 40
+        }
+    },
+    {
+        "model": "auth.group_permissions",
+        "pk": 2,
+        "fields": {
+            "group_id": 2,
+            "permission_id": 120
+        }
+    },
+    {
+        "model": "auth.group_permissions",
+        "pk": 3,
+        "fields": {
+            "group_id": 3,
+            "permission_id": 4
+        }
+    },
+    {
+        "model": "auth.group_permissions",
+        "pk": 4,
+        "fields": {
+            "group_id": 4,
+            "permission_id": 140
+        }
+    },
+    {
+        "model": "auth.group_permissions",
+        "pk": 5,
+        "fields": {
+            "group_id": 5,
+            "permission_id": 100
+        }
+    },
+    {
+        "model": "auth.group_permissions",
+        "pk": 6,
+        "fields": {
+            "group_id": 6,
+            "permission_id": 68
+        }
+    },
+    {
+        "model": "auth.group_permissions",
+        "pk": 7,
+        "fields": {
+            "group_id": 7,
+            "permission_id": 60
+        }
+    },
+    {
+        "model": "auth.group_permissions",
+        "pk": 8,
+        "fields": {
+            "group_id": 8,
+            "permission_id": 108
+        }
+    },
+    {
+        "model": "auth.group_permissions",
+        "pk": 9,
+        "fields": {
+            "group_id": 9,
+            "permission_id": 112
+        }
+    },
+    {
+        "model": "auth.group_permissions",
+        "pk": 10,
+        "fields": {
+            "group_id": 10,
+            "permission_id": 76
+        }
+    },
+    {
+        "model": "auth.group_permissions",
+        "pk": 11,
+        "fields": {
+            "group_id": 11,
+            "permission_id": 16
+        }
+    },
+    {
+        "model": "auth.group_permissions",
+        "pk": 12,
+        "fields": {
+            "group_id": 12,
+            "permission_id": 12
+        }
+    },
+    {
+        "model": "auth.group_permissions",
+        "pk": 13,
+        "fields": {
+            "group_id": 13,
+            "permission_id": 32
+        }
+    },
+    {
+        "model": "auth.group_permissions",
+        "pk": 14,
+        "fields": {
+            "group_id": 14,
+            "permission_id": 132
+        }
+    }
+]

@@ -1,0 +1,110 @@
+[
+    {
+        "model": "whitelabel.Company",
+        "pk": 1,
+        "fields":{
+            "nit":"000000000",
+            "company_name":"AZ Smart",
+            "legal_representative": "AZ Smart",
+            "address":"Calle 1 # 2 - 3",
+            "country":"Colombia",
+            "city":"Bogotá",
+            "phone_number":"123456789",
+            "date_joined":"2023-01-01",
+            "signed_contract":true,
+            "provider":null,
+            "consultant":"AZ Smart",
+            "seller":"AZ Smart",
+            "coin":1,
+            "company_logo":"backgrounds/logo.png",
+            "modified_by":1,
+            "created_by":1
+
+        }
+    },
+    {
+        "model": "whitelabel.Theme",
+        "pk": 1,
+        "fields":{
+            "company":1,
+            "button_color":"#3E5EF8",
+            "lock_screen_image":"backgrounds/login-1.png",
+            "sidebar_image":"backgrounds/sidebar-1.jpg",
+            "sidebar_color":"#000000",
+            "opacity":"80"
+        }
+    },
+    {
+        "model": "authentication.User",
+        "pk": 1,
+        "fields":{
+            "username":"admin",
+            "email":"admin@admin.com",
+            "password":"pbkdf2_sha256$320000$X4JafIzElKoKU8BeHDqo5A$nMfnJRqFz5gdEhNLNkZX1oYfRG0AfSlvWZG3B3IanxE=",
+            "company_id":1,
+            "is_superuser":true,
+            "is_staff":true,
+            "is_active":true
+        }
+    },
+    {
+        "model": "whitelabel.MapType",
+        "pk": 1,
+        "fields":{
+            "name":"OpenStreetMap"
+        }
+    },
+    {
+        "model": "whitelabel.MapType",
+        "pk": 2,
+        "fields":{
+            "name":"Google Maps"
+        }
+    },
+    {
+        "model": "whitelabel.MapType",
+        "pk": 3,
+        "fields":{
+            "name":"Azure Maps"
+        }
+    },
+    {
+        "model": "whitelabel.CompanyTypeMap",
+        "pk": 1,
+        "fields":{
+            "company":1,
+            "map_type":1,
+            "key_map":""
+        }
+    },
+    {
+        "model": "whitelabel.Coin",
+        "pk": 1,
+        "fields":{
+            "name" : "Col"
+        }
+    },
+
+    {
+        "model": "whitelabel.Coin",
+        "pk": 2,
+        "fields":{
+            "name" : "Mex"
+        }
+    },
+
+    {
+        "model": "whitelabel.Coin",
+        "pk": 3,
+        "fields":{
+            "name" : "Usd"
+        }
+    },
+    {
+        "model": "whitelabel.Coin",
+        "pk": 4,
+        "fields":{
+            "name" : "Eur"
+        }
+    }
+]

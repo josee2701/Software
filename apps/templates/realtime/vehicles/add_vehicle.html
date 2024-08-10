@@ -1,0 +1,270 @@
+
+{% load i18n static %}
+
+{% block content %}
+{{form.media}}
+    <div class="modal-content">
+        <div class="modal-body">
+            <div class="card">
+                <div class="modal-header">
+                    <h3>{% trans "Add Asset" %}</h3>
+                    <button type="button" id="cerrarVenta" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form hx-post="{{ request.path }}">
+                <div class="card-body scrollable-content" id="dynamic-scrollable-content1"style="overflow-y: auto;">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col">
+                                    <div class="input-group input-group-static mb-4">
+                                        <label for="id_plate">{% trans "Plate:" %} <span style="color:red;">*</span> </label>
+                                        {{form.license}}
+                                    </div>
+                            </div>
+                            <div class="col">
+                                    <div class="input-group input-group-static mb-4">
+                                        <label for="id_owner">{% trans "Owner:" %}</label>
+                                        {{form.owner}}
+                                    </div>
+                            </div>
+                            <div class="col">
+                                    <div class="input-group input-group-static mb-4">
+                                        <label for="id_insurance">{% trans "Insurance:" %}</label>
+                                        {{form.insurance}}
+                                    </div>
+                            </div>
+                            <div class="col">
+                                    <div class="input-group input-group-static mb-4">
+                                        <label for="id_vehicle_type">{% trans "Asset type:" %} <span style="color:red;">*</span> </label>
+                                        {{form.vehicle_type}}
+                                    </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col">
+                                    <div class="input-group input-group-static mb-4">
+                                        <label for="id_company">{% trans "Company:" %} <span style="color:red;">*</span> </label>
+                                        {{form.company}}
+                                    </div>
+                                    <div id="form-errors">
+                                        {{form.company.errors}}
+                                    </div>
+                            </div>
+                            <div class="col">
+                                    <div class="input-group input-group-static mb-4">
+                                        <label for="id_device">{% trans "Device / Imei:" %} <span style="color:red;">*</span> </label>
+                                        {{form.device}}
+                                    </div>
+                            </div>
+                            <div class="col">
+                                    <div class="input-group input-group-static mb-4">
+                                        <label for="id_fuel_type">{% trans 'Fuel type:' %} <span style="color:red;">*</span> </label>
+                                        {{form.fuel_type}}
+                                    </div>
+                            </div>
+                            <div class="col">
+                                    <div class="input-group input-group-static mb-4">
+                                        <label for="id_n_interno">{% trans 'N° internal:' %} <span style="color:red;">*</span> </label>
+                                        {{form.n_interno}}
+                                    </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col">
+                                <div class="input-group input-group-static mb-4">
+                                    <label for="id_cylinder_capacity">{% trans 'Cylinder capacity:' %}</label>
+                                    {{form.cylinder_capacity}}
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="input-group input-group-static mb-4">
+                                    <label for="id_km_per_gallon">{% trans 'Km per gallon:' %}</label>
+                                    {{form.km_per_gallon}}
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="input-group input-group-static mb-4">
+                                    <label for="id_max_speed_allowed">{% trans 'Max speed allowed:' %}</label>
+                                    {{form.max_speed_allowed}}
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="input-group input-group-static mb-4">
+                                    <label for="id_fuel_tank_capacity">{% trans 'Fuel tank capacity in gallons:' %}</label>
+                                    {{form.fuel_tank_capacity}}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col">
+                                <div class="input-group input-group-static mb-4">
+                                    <label for="id_brand">{% trans "Brand:" %}</label>
+                                    {{form.brand}}
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="input-group input-group-static mb-4">
+                                    <label for="id_model">{% trans "Model:" %}</label>
+                                    {{form.model}}
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="input-group input-group-static mb-4">
+                                    <label for="id_line">{% trans 'Line:' %}</label>
+                                    {{form.line}}
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="input-group input-group-static mb-4">
+                                    <label for="id_color">{% trans 'Color:' %}</label>
+                                    {{form.color}}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col">
+                                <div class="input-group input-group-static mb-4">
+                                    <label for="id_engine_serial">{% trans 'Engine serial:' %}</label>
+                                    {{form.engine_serial}}
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="input-group input-group-static mb-4">
+                                    <label for="id_chassis">{% trans 'Chassis:' %}</label>
+                                    {{form.chassis}}
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="input-group input-group-static mb-4">
+                                    <label for="id_capacity">{% trans ' Capacity' %}</label>
+                                    {{form.capacity}}
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="input-group input-group-static mb-4">
+                                    <label for="id_alias">{% trans "Alias:" %}</label>
+                                    {{form.alias}}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col">
+                                <div class="form-check form-switch mb-3" style="padding-block-start: 18px;">
+                                    <label for="id_is_active" class="form-check-label"> {% trans "Is active?" %} <span style="color:red;">*</span> </label>
+                                    {{form.is_active}}
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="form-check form-switch mb-3" style="padding-block-start: 18px;">
+                                    <label for="id_remote_shutdown">{% trans 'Remote shutdown:' %}</label>
+                                    {{form.remote_shutdown}}
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="form-check form-switch mb-3" style="padding-block-start: 18px;">
+                                    <label for="id_microphone"> {% trans 'Microphone:' %} </label>
+                                    {{form.microphone}}
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="form-check form-switch mb-3" style="padding-block-start: 18px;">
+                                    <label for="id_camara">{% trans 'Camara:' %}</label>
+                                    {{form.camara}}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="contbox_icon radioSelected">
+                                <label for="id_icon">Icon</label>
+                                <div id="icon-options">
+                                    {% for value, url in form.icon.field.choices %}
+                                        <label>
+                                            <input type="radio" name="{{ form.icon.name }}" value="{{ value }}">
+                                            <img class= "myImage" src="{{ value }}" alt="icon">
+                                        </label>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="input-group input-group-static mb-4" style="width: 150px;">
+                                    <label>{% trans 'Installation date' %}<span style="color:red;"> *</span></label>
+                                    {{form.installation_date}}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <div class="row">
+                    <div class="col">
+                        <button class="btn btn-primary mt-3" type="submit"> <i class="fa-solid fa-floppy-disk me-2"></i> {% trans "Save" %} </button>
+                    </div>
+                </div>
+            </form>
+            </div>
+        </div>
+    </div>
+    <head>
+        <script src="{% static 'assets/js/dynamic-scrollable-content.js' %}"></script>
+        <link rel="stylesheet" type="text/css" href="{% static 'assets/css/estilos_templates.css' %}">
+    </head>
+
+    <script>
+        $(document).ready(function() {
+            var deviceSelect = $('#id_device'); // Asume que este es el ID del select de dispositivos en tu formulario
+            var companyIdField = $('#id_company'); // Asume que este es el ID del select de empresas en tu formulario
+
+            // Inicializa el select de dispositivos vacío
+            deviceSelect.empty();
+
+            function loadDevices(companyId) {
+                // Solo carga los dispositivos si se ha seleccionado una empresa
+                if (!companyId) {
+                    return; // No hacer nada si no se seleccionó ninguna empresa
+                }
+
+                // Construye la URL para obtener los dispositivos
+                var endpoint = `/es/realtime/vehicles/api/available-devices/${companyId}/`;
+
+                // Llama a la API para obtener los dispositivos
+                fetch(endpoint)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error("Network response was not ok");
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        // Limpia el select antes de agregar nuevas opciones
+                        deviceSelect.empty().append(new Option('', '--- Select Device ---', true, false));
+                        deviceSelect.empty().append('<option value="">---------</option>');
+
+                        // Agrega los dispositivos disponibles al select
+                        data.forEach(function(device) {
+                            deviceSelect.append(new Option(device.imei, device.id));
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Error al cargar los dispositivos:', error);
+                    });
+            }
+
+            // Evento de cambio para el select de compañía
+            companyIdField.change(function() {
+                var companyId = $(this).val();
+                loadDevices(companyId); // Carga los dispositivos solo cuando se selecciona una empresa
+            });
+        });
+
+        if ($('#id_company').val()) {
+            $('#id_company').trigger('change');
+        } else {
+            $('#id_device').empty().append('<option value="">---------</option>');
+        }
+        </script>
+        <script>
+            document.getElementById('id_model').addEventListener('input', function (e) {
+                if (this.value.length > 4) {
+                    this.value = this.value.slice(0, 4);
+                }
+            });
+        </script>         
+
+{% endblock content %}

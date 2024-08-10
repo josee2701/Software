@@ -1,0 +1,58 @@
+# byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+
+# migrations
+[0-9]*.py
+
+# tests and coverage
+*.pytest_cache
+.coverage
+
+# database & logs
+*.db
+*.sqlite3
+*.log
+
+# venv
+.env/
+venv/
+
+# other
+.DS_Store
+.vscode/
+
+# javascript
+package-lock.json
+
+staticfiles/*
+!staticfiles/.gitkeep
+.vscode/symbols.json
+
+apps/static/assets/node_modules
+apps/static/assets/yarn.lock
+apps/static/assets/.temp
+
+# environment variables
+# .env
+secret-env.yaml
+
+# Conda files
+conda-env.yml
+conda-requirements.txt
+
+# Sphinx docfiles
+docs/
+
+# Internationalization & Localization
+locale/
+
+# Doc files
+docs/build/
+
+#imagenes
+apps/media/uploads/
+apps/media/Iconos_vehicles/
+apps/media/Perfil/
+apps/media/ticket_attachments/
+apps/media/alarm_sounds

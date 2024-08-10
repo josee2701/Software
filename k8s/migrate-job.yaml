@@ -1,0 +1,18 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: migration
+spec:
+  template:
+    spec:
+      containers:
+      - name: django-migration
+        image: acrnp.azurecr.io/djangofront:latest
+        imagePullPolicy: Always
+        # image: django-frontend
+        # imagePullPolicy: IfNotPresent
+        envFrom:
+        - secretRef:
+            name: frontend-env
+        command: ["/gps-mobile/utils/migrations.sh"]
+      restartPolicy: Never

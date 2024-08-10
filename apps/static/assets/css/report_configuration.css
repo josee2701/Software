@@ -1,0 +1,160 @@
+.custom-checkbox {
+    position: relative;
+    display: block;
+    padding-left: 35px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.custom-checkbox input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+.checkmark {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 25px;
+    width: 25px;
+    background-color: #eee;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.custom-checkbox input:checked ~ .checkmark:after {
+    display: block;
+}
+
+.custom-checkbox .checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+}
+
+.custom-checkbox .checkmark:after {
+    left: 9px;
+    top: 5px;
+    width: 5px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    -webkit-transform: rotate(45deg);
+    -ms-transform: rotate(45deg);
+    transform: rotate(45deg);
+}
+
+.draggable-container {
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 10px; /* Espacio entre contenedor de checkboxes y botones */
+    max-height: 300px; /* Altura máxima del contenedor */
+    min-height: 300px;
+    overflow-y: auto; /* Agrega barras de desplazamiento si el contenido excede la altura máxima */
+}
+
+.draggable-item {
+    cursor: grab;
+    margin-bottom: 5px;
+}
+
+.draggable-item.dragging {
+    opacity: 0.5;
+}
+
+.draggable-item {
+    white-space: nowrap; /* Evita que el texto se envuelva a una nueva línea */
+}
+
+/* Estilos para el contenido en segundo plano */
+.background-content {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Fondo semitransparente */
+    z-index: 9998; /* Un índice z ligeramente menor para que esté detrás de la ventana flotante */
+}
+
+.transparent-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Color de fondo semi-transparente (negro con 50% de opacidad) */
+    z-index: 998; /* Asegura que esté detrás de la ventana flotante */
+    pointer-events: none; /* Desactiva los eventos del mouse para esta capa */
+}
+
+/* Estilos para el campo de búsqueda */
+.input-group-outline {
+    position: relative;
+    width: 100%;
+}
+
+.input-group-outline .form-label {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    left: 10px;
+    color: #6c757d;
+    transition: 0.2s ease-out;
+    pointer-events: none;
+}
+
+.input-group-outline .form-control {
+    padding-left: 30px;
+}
+
+.input-group-outline .form-control:focus + .form-label,
+.input-group-outline .form-control:not(:placeholder-shown) + .form-label {
+    transform: translateY(-175%) scale(0.85);
+    color: #6c757d;
+}
+
+.search-container {
+    position: relative;
+    padding: 0;
+    border: 1px solid #ced4da; /* Color de borde ligero */
+    border-radius: .25rem; /* Bordes redondeados */
+    display: flex;
+    align-items: center;
+}
+
+.search-input {
+    width: 100%;
+    padding: .375rem .75rem;
+    border: none;
+    border-radius: .25rem; /* Bordes redondeados */
+    outline: none; /* Elimina el contorno al enfocar */
+}
+
+.search-label {
+    position: absolute;
+    left: 10px;
+    top: -8px;
+    background-color: #fff; /* Fondo blanco para el texto del placeholder */
+    padding: 0 5px;
+    font-size: .75rem; /* Tamaño de fuente más pequeño para el texto del placeholder */
+    color: #6c757d; /* Color del texto del placeholder */
+    display: none; /* Ocultar por defecto, mostrar con JavaScript si es necesario */
+}
+
+/* Estilos adicionales para cuando el input tiene focus o contenido */
+.search-input:not(:placeholder-shown) + .search-label,
+.search-input:focus + .search-label {
+    display: inline-block;
+}
+
+.search-container {
+    position: relative;
+    border: 1px solid #ced4da;
+    border-radius: .25rem;
+}

@@ -1,0 +1,2306 @@
+[
+    {
+        "model": "events.event",
+        "pk": 27,
+        "fields": {
+            "number": 0,
+            "name": "Reporte"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 28,
+        "fields": {
+            "number": 1,
+            "name": "Solicitud de Ubicaci\u00f3n"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 29,
+        "fields": {
+            "number": 6,
+            "name": "Vehiculo en Movimiento"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 30,
+        "fields": {
+            "number": 8,
+            "name": "Digital input 1 on"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 31,
+        "fields": {
+            "number": 9,
+            "name": "Digital input 1 off"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 32,
+        "fields": {
+            "number": 10,
+            "name": "Reporte por Tiempo"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 33,
+        "fields": {
+            "number": 11,
+            "name": "Estacionado"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 34,
+        "fields": {
+            "number": 12,
+            "name": "Digital input 2 on"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 35,
+        "fields": {
+            "number": 13,
+            "name": "Digital input 2 off"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 36,
+        "fields": {
+            "number": 16,
+            "name": "Digital input 3 on"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 37,
+        "fields": {
+            "number": 17,
+            "name": "Digital input 3 off"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 38,
+        "fields": {
+            "number": 18,
+            "name": "Digital input 4 on"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 39,
+        "fields": {
+            "number": 19,
+            "name": "Digital input 4 off"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 40,
+        "fields": {
+            "number": 21,
+            "name": "Se\u00f1al celular baja"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 41,
+        "fields": {
+            "number": 22,
+            "name": "Se\u00f1al celular regular"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 42,
+        "fields": {
+            "number": 23,
+            "name": "Se\u00f1al celular media"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 43,
+        "fields": {
+            "number": 24,
+            "name": "Speed"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 44,
+        "fields": {
+            "number": 25,
+            "name": "Se\u00f1al celular buena"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 45,
+        "fields": {
+            "number": 26,
+            "name": "Se\u00f1al celular alta"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 46,
+        "fields": {
+            "number": 28,
+            "name": "Corte de corriente"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 47,
+        "fields": {
+            "number": 29,
+            "name": "Restauraci\u00f3n de corriente"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 48,
+        "fields": {
+            "number": 30,
+            "name": "Analog Input 1 on"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 49,
+        "fields": {
+            "number": 31,
+            "name": "Analog Input 1 off"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 50,
+        "fields": {
+            "number": 32,
+            "name": "Analog Input 2 on"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 51,
+        "fields": {
+            "number": 33,
+            "name": "Analog Input 2 off"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 52,
+        "fields": {
+            "number": 51,
+            "name": "Digital output 4 on"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 53,
+        "fields": {
+            "number": 52,
+            "name": "Digital output 4 off"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 54,
+        "fields": {
+            "number": 66,
+            "name": "External Voltage"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 55,
+        "fields": {
+            "number": 67,
+            "name": "Battery Voltage interna"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 56,
+        "fields": {
+            "number": 68,
+            "name": "Battery Current"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 57,
+        "fields": {
+            "number": 78,
+            "name": "Ibutton ID"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 58,
+        "fields": {
+            "number": 100,
+            "name": "SD not present"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 59,
+        "fields": {
+            "number": 101,
+            "name": "SD present"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 60,
+        "fields": {
+            "number": 175,
+            "name": "Remolque"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 61,
+        "fields": {
+            "number": 176,
+            "name": "Auto geozona on"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 62,
+        "fields": {
+            "number": 179,
+            "name": "Digital output 1 on"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 63,
+        "fields": {
+            "number": 180,
+            "name": "Digital output 2 on"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 64,
+        "fields": {
+            "number": 199,
+            "name": "Trip odometer"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 65,
+        "fields": {
+            "number": 200,
+            "name": "No Sleep"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 66,
+        "fields": {
+            "number": 201,
+            "name": "GPS Sleep"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 67,
+        "fields": {
+            "number": 202,
+            "name": "Deep Sleep"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 68,
+        "fields": {
+            "number": 203,
+            "name": "Online Sleep"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 69,
+        "fields": {
+            "number": 204,
+            "name": "Ultra Sleep"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 70,
+        "fields": {
+            "number": 211,
+            "name": "Motor Off"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 71,
+        "fields": {
+            "number": 212,
+            "name": "Motor On"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 72,
+        "fields": {
+            "number": 240,
+            "name": "Movimiento On"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 73,
+        "fields": {
+            "number": 241,
+            "name": "Movimiento Off"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 74,
+        "fields": {
+            "number": 243,
+            "name": "Green driving event duration"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 75,
+        "fields": {
+            "number": 246,
+            "name": "Remolque on"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 76,
+        "fields": {
+            "number": 247,
+            "name": "Remolque off"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 77,
+        "fields": {
+            "number": 248,
+            "name": "iButton not connected"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 78,
+        "fields": {
+            "number": 249,
+            "name": "Inmovilizador"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 79,
+        "fields": {
+            "number": 250,
+            "name": "Authorized Driving"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 80,
+        "fields": {
+            "number": 251,
+            "name": "jamming start"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 81,
+        "fields": {
+            "number": 252,
+            "name": "jamming stop"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 82,
+        "fields": {
+            "number": 253,
+            "name": "Aceleracion Brusca"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 83,
+        "fields": {
+            "number": 254,
+            "name": "Frenada Brusca"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 84,
+        "fields": {
+            "number": 255,
+            "name": "Giro Brusco"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 85,
+        "fields": {
+            "number": 256,
+            "name": "Exceso de velocidad"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 86,
+        "fields": {
+            "number": 263,
+            "name": "BT is disabled"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 87,
+        "fields": {
+            "number": 264,
+            "name": "BT Enabled"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 88,
+        "fields": {
+            "number": 265,
+            "name": "Device connected BTv3 Only"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 89,
+        "fields": {
+            "number": 266,
+            "name": "Device connected BLE only"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 90,
+        "fields": {
+            "number": 267,
+            "name": "Device connected BLE + BT"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 91,
+        "fields": {
+            "number": 279,
+            "name": "Digital output 1 off"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 92,
+        "fields": {
+            "number": 280,
+            "name": "Digital output 2 off"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 93,
+        "fields": {
+            "number": 303,
+            "name": "Instant Movement"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 94,
+        "fields": {
+            "number": 380,
+            "name": "Digital output 3 on"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 95,
+        "fields": {
+            "number": 381,
+            "name": "Ground Sense on"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 96,
+        "fields": {
+            "number": 382,
+            "name": "Ground Sense off"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 97,
+        "fields": {
+            "number": 400,
+            "name": "No license"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 98,
+        "fields": {
+            "number": 401,
+            "name": "B1 license type"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 99,
+        "fields": {
+            "number": 402,
+            "name": "B2 license type"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 100,
+        "fields": {
+            "number": 403,
+            "name": "B3 license type"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 101,
+        "fields": {
+            "number": 404,
+            "name": "B4 license type"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 102,
+        "fields": {
+            "number": 405,
+            "name": "T1 license type"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 103,
+        "fields": {
+            "number": 406,
+            "name": "T2 license type"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 104,
+        "fields": {
+            "number": 407,
+            "name": "T3 license type"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 105,
+        "fields": {
+            "number": 408,
+            "name": "T4 license type"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 106,
+        "fields": {
+            "number": 409,
+            "name": "No genero"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 107,
+        "fields": {
+            "number": 410,
+            "name": "Conductor masculino"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 108,
+        "fields": {
+            "number": 411,
+            "name": "Conductor femenino"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 109,
+        "fields": {
+            "number": 412,
+            "name": "Driver Registered"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 110,
+        "fields": {
+            "number": 413,
+            "name": "Driver Deregistered"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 111,
+        "fields": {
+            "number": 414,
+            "name": "Driver Swapping"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 112,
+        "fields": {
+            "number": 461,
+            "name": "Ralenti off"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 113,
+        "fields": {
+            "number": 462,
+            "name": "Ralenti on"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 114,
+        "fields": {
+            "number": 480,
+            "name": "Digital output 3 off"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 115,
+        "fields": {
+            "number": 755,
+            "name": "Entrada geozona 1"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 116,
+        "fields": {
+            "number": 756,
+            "name": "Salida geozona 1"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 117,
+        "fields": {
+            "number": 757,
+            "name": "Inicia exceso de velocidad geozona 1"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 118,
+        "fields": {
+            "number": 758,
+            "name": "Fin exceso de velocidad geozona 1"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 119,
+        "fields": {
+            "number": 759,
+            "name": "Entrada geozona 2"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 120,
+        "fields": {
+            "number": 760,
+            "name": "Salida geozona 2"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 121,
+        "fields": {
+            "number": 761,
+            "name": "Inicia exceso de velocidad geozona 2"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 122,
+        "fields": {
+            "number": 762,
+            "name": "Fin exceso de velocidad geozona 2"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 123,
+        "fields": {
+            "number": 763,
+            "name": "Entrada geozona 3"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 124,
+        "fields": {
+            "number": 764,
+            "name": "Salida geozona 3"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 125,
+        "fields": {
+            "number": 765,
+            "name": "Inicia exceso de velocidad geozona 3"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 126,
+        "fields": {
+            "number": 766,
+            "name": "Fin exceso de velocidad geozona 3"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 127,
+        "fields": {
+            "number": 767,
+            "name": "Entrada geozona 4"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 128,
+        "fields": {
+            "number": 768,
+            "name": "Salida geozona 4"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 129,
+        "fields": {
+            "number": 769,
+            "name": "Inicia exceso de velocidad geozona 4"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 130,
+        "fields": {
+            "number": 770,
+            "name": "Fin exceso de velocidad geozona 4"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 131,
+        "fields": {
+            "number": 771,
+            "name": "Entrada geozona 5"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 132,
+        "fields": {
+            "number": 772,
+            "name": "Salida geozona 5"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 133,
+        "fields": {
+            "number": 773,
+            "name": "Inicia exceso de velocidad geozona 5"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 134,
+        "fields": {
+            "number": 774,
+            "name": "Fin exceso de velocidad geozona 5"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 135,
+        "fields": {
+            "number": 775,
+            "name": "Entrada geozona 6"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 136,
+        "fields": {
+            "number": 776,
+            "name": "Salida geozona 6"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 137,
+        "fields": {
+            "number": 777,
+            "name": "Inicia exceso de velocidad geozona 6"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 138,
+        "fields": {
+            "number": 778,
+            "name": "Fin exceso de velocidad geozona 6"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 139,
+        "fields": {
+            "number": 779,
+            "name": "Entrada geozona 7"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 140,
+        "fields": {
+            "number": 780,
+            "name": "Salida geozona 7"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 141,
+        "fields": {
+            "number": 781,
+            "name": "Inicia exceso de velocidad geozona 7"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 142,
+        "fields": {
+            "number": 782,
+            "name": "Fin exceso de velocidad geozona 7"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 143,
+        "fields": {
+            "number": 783,
+            "name": "Entrada geozona 8"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 144,
+        "fields": {
+            "number": 784,
+            "name": "Salida geozona 8"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 145,
+        "fields": {
+            "number": 785,
+            "name": "Inicia exceso de velocidad geozona 8"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 146,
+        "fields": {
+            "number": 786,
+            "name": "Fin exceso de velocidad geozona 8"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 147,
+        "fields": {
+            "number": 787,
+            "name": "Entrada geozona 9"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 148,
+        "fields": {
+            "number": 788,
+            "name": "Salida geozona 9"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 149,
+        "fields": {
+            "number": 789,
+            "name": "Inicia exceso de velocidad geozona 9"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 150,
+        "fields": {
+            "number": 790,
+            "name": "Fin exceso de velocidad geozona 9"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 151,
+        "fields": {
+            "number": 791,
+            "name": "Entrada geozona 10"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 152,
+        "fields": {
+            "number": 792,
+            "name": "Salida geozona 10"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 153,
+        "fields": {
+            "number": 793,
+            "name": "Inicia exceso de velocidad geozona 10"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 154,
+        "fields": {
+            "number": 794,
+            "name": "Fin exceso de velocidad geozona 10"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 155,
+        "fields": {
+            "number": 795,
+            "name": "Entrada geozona 11"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 156,
+        "fields": {
+            "number": 796,
+            "name": "Salida geozona 11"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 157,
+        "fields": {
+            "number": 797,
+            "name": "Inicia exceso de velocidad geozona 11"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 158,
+        "fields": {
+            "number": 798,
+            "name": "Fin exceso de velocidad geozona 11"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 159,
+        "fields": {
+            "number": 799,
+            "name": "Entrada geozona 12"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 160,
+        "fields": {
+            "number": 800,
+            "name": "Salida geozona 12"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 161,
+        "fields": {
+            "number": 801,
+            "name": "Inicia exceso de velocidad geozona 12"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 162,
+        "fields": {
+            "number": 802,
+            "name": "Fin exceso de velocidad geozona 12"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 163,
+        "fields": {
+            "number": 803,
+            "name": "Entrada geozona 13"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 164,
+        "fields": {
+            "number": 804,
+            "name": "Salida geozona 13"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 165,
+        "fields": {
+            "number": 805,
+            "name": "Inicia exceso de velocidad geozona 13"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 166,
+        "fields": {
+            "number": 806,
+            "name": "Fin exceso de velocidad geozona 13"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 167,
+        "fields": {
+            "number": 807,
+            "name": "Entrada geozona 14"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 168,
+        "fields": {
+            "number": 808,
+            "name": "Salida geozona 14"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 169,
+        "fields": {
+            "number": 809,
+            "name": "Inicia exceso de velocidad geozona 14"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 170,
+        "fields": {
+            "number": 810,
+            "name": "Fin exceso de velocidad geozona 14"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 171,
+        "fields": {
+            "number": 811,
+            "name": "Entrada geozona 15"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 172,
+        "fields": {
+            "number": 812,
+            "name": "Salida geozona 15"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 173,
+        "fields": {
+            "number": 813,
+            "name": "Inicia exceso de velocidad geozona 15"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 174,
+        "fields": {
+            "number": 814,
+            "name": "Fin exceso de velocidad geozona 15"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 175,
+        "fields": {
+            "number": 815,
+            "name": "Entrada geozona 16"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 176,
+        "fields": {
+            "number": 816,
+            "name": "Salida geozona 16"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 177,
+        "fields": {
+            "number": 817,
+            "name": "Inicia exceso de velocidad geozona 16"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 178,
+        "fields": {
+            "number": 818,
+            "name": "Fin exceso de velocidad geozona 16"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 179,
+        "fields": {
+            "number": 819,
+            "name": "Entrada geozona 17"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 180,
+        "fields": {
+            "number": 820,
+            "name": "Salida geozona 17"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 181,
+        "fields": {
+            "number": 821,
+            "name": "Inicia exceso de velocidad geozona 17"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 182,
+        "fields": {
+            "number": 822,
+            "name": "Fin exceso de velocidad geozona 17"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 183,
+        "fields": {
+            "number": 823,
+            "name": "Entrada geozona 18"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 184,
+        "fields": {
+            "number": 824,
+            "name": "Salida geozona 18"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 185,
+        "fields": {
+            "number": 825,
+            "name": "Inicia exceso de velocidad geozona 18"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 186,
+        "fields": {
+            "number": 826,
+            "name": "Fin exceso de velocidad geozona 18"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 187,
+        "fields": {
+            "number": 827,
+            "name": "Entrada geozona 19"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 188,
+        "fields": {
+            "number": 828,
+            "name": "Salida geozona 19"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 189,
+        "fields": {
+            "number": 829,
+            "name": "Inicia exceso de velocidad geozona 19"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 190,
+        "fields": {
+            "number": 830,
+            "name": "Fin exceso de velocidad geozona 19"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 191,
+        "fields": {
+            "number": 831,
+            "name": "Entrada geozona 20"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 192,
+        "fields": {
+            "number": 832,
+            "name": "Salida geozona 20"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 193,
+        "fields": {
+            "number": 833,
+            "name": "Inicia exceso de velocidad geozona 20"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 194,
+        "fields": {
+            "number": 834,
+            "name": "Fin exceso de velocidad geozona 20"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 195,
+        "fields": {
+            "number": 835,
+            "name": "Entrada geozona 21"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 196,
+        "fields": {
+            "number": 836,
+            "name": "Salida geozona 21"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 197,
+        "fields": {
+            "number": 837,
+            "name": "Inicia exceso de velocidad geozona 21"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 198,
+        "fields": {
+            "number": 838,
+            "name": "Fin exceso de velocidad geozona 21"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 199,
+        "fields": {
+            "number": 839,
+            "name": "Entrada geozona 22"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 200,
+        "fields": {
+            "number": 840,
+            "name": "Salida geozona 22"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 201,
+        "fields": {
+            "number": 841,
+            "name": "Inicia exceso de velocidad geozona 22"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 202,
+        "fields": {
+            "number": 842,
+            "name": "Fin exceso de velocidad geozona 22"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 203,
+        "fields": {
+            "number": 843,
+            "name": "Entrada geozona 23"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 204,
+        "fields": {
+            "number": 844,
+            "name": "Salida geozona 23"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 205,
+        "fields": {
+            "number": 845,
+            "name": "Inicia exceso de velocidad geozona 23"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 206,
+        "fields": {
+            "number": 846,
+            "name": "Fin exceso de velocidad geozona 23"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 207,
+        "fields": {
+            "number": 847,
+            "name": "Entrada geozona 24"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 208,
+        "fields": {
+            "number": 848,
+            "name": "Salida geozona 24"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 209,
+        "fields": {
+            "number": 849,
+            "name": "Inicia exceso de velocidad geozona 24"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 210,
+        "fields": {
+            "number": 850,
+            "name": "Fin exceso de velocidad geozona 24"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 211,
+        "fields": {
+            "number": 851,
+            "name": "Entrada geozona 25"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 212,
+        "fields": {
+            "number": 852,
+            "name": "Salida geozona 25"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 213,
+        "fields": {
+            "number": 853,
+            "name": "Inicia exceso de velocidad geozona 25"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 214,
+        "fields": {
+            "number": 854,
+            "name": "Fin exceso de velocidad geozona 25"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 215,
+        "fields": {
+            "number": 855,
+            "name": "Entrada geozona 26"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 216,
+        "fields": {
+            "number": 856,
+            "name": "Salida geozona 26"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 217,
+        "fields": {
+            "number": 857,
+            "name": "Inicia exceso de velocidad geozona 26"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 218,
+        "fields": {
+            "number": 858,
+            "name": "Fin exceso de velocidad geozona 26"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 219,
+        "fields": {
+            "number": 859,
+            "name": "Entrada geozona 27"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 220,
+        "fields": {
+            "number": 860,
+            "name": "Salida geozona 27"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 221,
+        "fields": {
+            "number": 861,
+            "name": "Inicia exceso de velocidad geozona 27"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 222,
+        "fields": {
+            "number": 862,
+            "name": "Fin exceso de velocidad geozona 27"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 223,
+        "fields": {
+            "number": 863,
+            "name": "Entrada geozona 28"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 224,
+        "fields": {
+            "number": 864,
+            "name": "Salida geozona 28"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 225,
+        "fields": {
+            "number": 865,
+            "name": "Inicia exceso de velocidad geozona 28"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 226,
+        "fields": {
+            "number": 866,
+            "name": "Fin exceso de velocidad geozona 28"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 227,
+        "fields": {
+            "number": 867,
+            "name": "Entrada geozona 29"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 228,
+        "fields": {
+            "number": 868,
+            "name": "Salida geozona 29"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 229,
+        "fields": {
+            "number": 869,
+            "name": "Inicia exceso de velocidad geozona 29"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 230,
+        "fields": {
+            "number": 870,
+            "name": "Fin exceso de velocidad geozona 29"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 231,
+        "fields": {
+            "number": 871,
+            "name": "Entrada geozona 30"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 232,
+        "fields": {
+            "number": 872,
+            "name": "Salida geozona 30"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 233,
+        "fields": {
+            "number": 873,
+            "name": "Inicia exceso de velocidad geozona 30"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 234,
+        "fields": {
+            "number": 874,
+            "name": "Fin exceso de velocidad geozona 30"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 235,
+        "fields": {
+            "number": 875,
+            "name": "Entrada geozona 31"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 236,
+        "fields": {
+            "number": 876,
+            "name": "Salida geozona 31"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 237,
+        "fields": {
+            "number": 877,
+            "name": "Inicia exceso de velocidad geozona 31"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 238,
+        "fields": {
+            "number": 878,
+            "name": "Fin exceso de velocidad geozona 31"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 239,
+        "fields": {
+            "number": 879,
+            "name": "Entrada geozona 32"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 240,
+        "fields": {
+            "number": 880,
+            "name": "Salida geozona 32"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 241,
+        "fields": {
+            "number": 881,
+            "name": "Inicia exceso de velocidad geozona 32"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 242,
+        "fields": {
+            "number": 882,
+            "name": "Fin exceso de velocidad geozona 32"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 243,
+        "fields": {
+            "number": 883,
+            "name": "Entrada geozona 33"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 244,
+        "fields": {
+            "number": 884,
+            "name": "Salida geozona 33"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 245,
+        "fields": {
+            "number": 885,
+            "name": "Inicia exceso de velocidad geozona 33"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 246,
+        "fields": {
+            "number": 886,
+            "name": "Fin exceso de velocidad geozona 33"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 247,
+        "fields": {
+            "number": 887,
+            "name": "Entrada geozona 34"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 248,
+        "fields": {
+            "number": 888,
+            "name": "Salida geozona 34"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 249,
+        "fields": {
+            "number": 889,
+            "name": "Inicia exceso de velocidad geozona 34"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 250,
+        "fields": {
+            "number": 890,
+            "name": "Fin exceso de velocidad geozona 34"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 251,
+        "fields": {
+            "number": 891,
+            "name": "Entrada geozona 35"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 252,
+        "fields": {
+            "number": 892,
+            "name": "Salida geozona 35"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 253,
+        "fields": {
+            "number": 893,
+            "name": "Inicia exceso de velocidad geozona 35"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 254,
+        "fields": {
+            "number": 894,
+            "name": "Fin exceso de velocidad geozona 35"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 255,
+        "fields": {
+            "number": 895,
+            "name": "Entrada geozona 36"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 256,
+        "fields": {
+            "number": 896,
+            "name": "Salida geozona 36"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 257,
+        "fields": {
+            "number": 897,
+            "name": "Inicia exceso de velocidad geozona 36"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 258,
+        "fields": {
+            "number": 898,
+            "name": "Fin exceso de velocidad geozona 36"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 259,
+        "fields": {
+            "number": 899,
+            "name": "Entrada geozona 37"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 260,
+        "fields": {
+            "number": 900,
+            "name": "Salida geozona 37"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 261,
+        "fields": {
+            "number": 901,
+            "name": "Inicia exceso de velocidad geozona 37"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 262,
+        "fields": {
+            "number": 902,
+            "name": "Fin exceso de velocidad geozona 37"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 263,
+        "fields": {
+            "number": 903,
+            "name": "Entrada geozona 38"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 264,
+        "fields": {
+            "number": 904,
+            "name": "Salida geozona 38"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 265,
+        "fields": {
+            "number": 905,
+            "name": "Inicia exceso de velocidad geozona 38"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 266,
+        "fields": {
+            "number": 906,
+            "name": "Fin exceso de velocidad geozona 38"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 267,
+        "fields": {
+            "number": 907,
+            "name": "Entrada geozona 39"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 268,
+        "fields": {
+            "number": 908,
+            "name": "Salida geozona 39"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 269,
+        "fields": {
+            "number": 909,
+            "name": "Inicia exceso de velocidad geozona 39"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 270,
+        "fields": {
+            "number": 910,
+            "name": "Fin exceso de velocidad geozona 39"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 271,
+        "fields": {
+            "number": 911,
+            "name": "Entrada geozona 40"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 272,
+        "fields": {
+            "number": 912,
+            "name": "Salida geozona 40"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 273,
+        "fields": {
+            "number": 913,
+            "name": "Inicia exceso de velocidad geozona 40"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 274,
+        "fields": {
+            "number": 914,
+            "name": "Fin exceso de velocidad geozona 40"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 275,
+        "fields": {
+            "number": 915,
+            "name": "Entrada geozona 41"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 276,
+        "fields": {
+            "number": 916,
+            "name": "Salida geozona 41"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 277,
+        "fields": {
+            "number": 917,
+            "name": "Inicia exceso de velocidad geozona 41"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 278,
+        "fields": {
+            "number": 918,
+            "name": "Fin exceso de velocidad geozona 41"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 279,
+        "fields": {
+            "number": 919,
+            "name": "Entrada geozona 42"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 280,
+        "fields": {
+            "number": 920,
+            "name": "Salida geozona 42"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 281,
+        "fields": {
+            "number": 921,
+            "name": "Inicia exceso de velocidad geozona 42"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 282,
+        "fields": {
+            "number": 922,
+            "name": "Fin exceso de velocidad geozona 42"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 283,
+        "fields": {
+            "number": 923,
+            "name": "Entrada geozona 43"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 284,
+        "fields": {
+            "number": 924,
+            "name": "Entrada geozona 43"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 285,
+        "fields": {
+            "number": 925,
+            "name": "Inicia exceso de velocidad geozona 43"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 286,
+        "fields": {
+            "number": 926,
+            "name": "Fin exceso de velocidad geozona 43"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 287,
+        "fields": {
+            "number": 927,
+            "name": "Entrada geozona 44"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 288,
+        "fields": {
+            "number": 928,
+            "name": "Salida geozona 44"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 289,
+        "fields": {
+            "number": 929,
+            "name": "Inicia exceso de velocidad geozona 44"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 290,
+        "fields": {
+            "number": 930,
+            "name": "Fin exceso de velocidad geozona 44"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 291,
+        "fields": {
+            "number": 931,
+            "name": "Entrada geozona 45"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 292,
+        "fields": {
+            "number": 932,
+            "name": "Salida geozona 45"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 293,
+        "fields": {
+            "number": 933,
+            "name": "Inicia exceso de velocidad geozona 45"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 294,
+        "fields": {
+            "number": 934,
+            "name": "Fin exceso de velocidad geozona 45"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 295,
+        "fields": {
+            "number": 935,
+            "name": "Entrada geozona 46"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 296,
+        "fields": {
+            "number": 936,
+            "name": "Salida geozona 46"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 297,
+        "fields": {
+            "number": 937,
+            "name": "Inicia exceso de velocidad geozona 46"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 298,
+        "fields": {
+            "number": 938,
+            "name": "Fin exceso de velocidad geozona 46"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 299,
+        "fields": {
+            "number": 939,
+            "name": "Entrada geozona 47"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 300,
+        "fields": {
+            "number": 940,
+            "name": "Salida geozona 47"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 301,
+        "fields": {
+            "number": 941,
+            "name": "Inicia exceso de velocidad geozona 47"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 302,
+        "fields": {
+            "number": 942,
+            "name": "Fin exceso de velocidad geozona 47"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 303,
+        "fields": {
+            "number": 943,
+            "name": "Entrada geozona 48"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 304,
+        "fields": {
+            "number": 944,
+            "name": "Salida geozona 48"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 305,
+        "fields": {
+            "number": 945,
+            "name": "Inicia exceso de velocidad geozona 48"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 306,
+        "fields": {
+            "number": 946,
+            "name": "Fin exceso de velocidad geozona 48"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 307,
+        "fields": {
+            "number": 947,
+            "name": "Entrada geozona 49"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 308,
+        "fields": {
+            "number": 948,
+            "name": "Salida geozona 49"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 309,
+        "fields": {
+            "number": 949,
+            "name": "Inicia exceso de velocidad geozona 49"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 310,
+        "fields": {
+            "number": 950,
+            "name": "Fin exceso de velocidad geozona 49"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 311,
+        "fields": {
+            "number": 951,
+            "name": "Entrada geozona 50"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 312,
+        "fields": {
+            "number": 952,
+            "name": "Salida geozona 50"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 313,
+        "fields": {
+            "number": 953,
+            "name": "Inicia exceso de velocidad geozona 50"
+        }
+    },
+    {
+        "model": "events.event",
+        "pk": 314,
+        "fields": {
+            "number": 954,
+            "name": "Fin exceso de velocidad geozona 50"
+        }
+    }
+]

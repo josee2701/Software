@@ -1,0 +1,86 @@
+{% load i18n %}
+
+{% for ticket in list_tickets %}
+    <tr>
+        <!-- Acciones o botones para el ticket (editar, eliminar, etc.) -->
+        <td>
+            <!-- Aquí puedes agregar botones u acciones para el ticket si es necesario -->
+            <!-- Botón para ver el ticket -->
+            <button type="button" hx-get="{% url 'companies:view_ticket' ticket.id %}" class="btn btn-primary" hx-target="#dialog">
+                <i class="fa-solid fa-eye"></i>
+            </button>
+        </td>
+
+        <!-- Columnas de información del ticket -->
+        <td class="align-middle text-center text-sm">
+            <span class="font-weight-normal mb-0">{{ ticket.id }}</span>
+        </td>
+        <td class="align-middle text-center text-sm">
+            <span class="font-weight-normal mb-0">{{ ticket.created_by }}</span>
+        </td>
+        <td class="align-middle text-center text-sm">
+            <span class="font-weight-normal mb-0">{{ ticket.subject }}</span>
+        </td>
+        <td class="align-middle text-center text-sm">
+            <span class="font-weight-normal mb-0">{{ ticket.priority }}</span>
+        </td>
+        <td class="align-middle text-center text-sm">
+            <span class="font-weight-normal mb-0">{{ ticket.process_type }}</span>
+        </td>
+        <td class="align-middle text-center text-sm">
+            {% if ticket.assign_to %}
+            <span class="text-secondary mb-0">{{ ticket.assign_to }}</span>
+            {% else %}
+                <span class="text-secondary mb-0">{% trans "Unassigned" %}</span>
+            {% endif %}
+        </td>
+        <td class="align-middle text-center text-sm">
+            {% if ticket.status %}
+                <span class="text-secondary mb-0">{% trans "Open" %}</span>
+            {% else %}
+                <span class="text-secondary mb-0">{% trans "Closed" %}</span>
+            {% endif %}
+        </td>
+        <td class="align-middle text-center text-sm">
+            {% if ticket.provider_company_id and user.company.provider_id and ticket.status %}
+                {% trans "Distribuidor" %}
+            {% elif ticket.provider_company_id %}
+                {{ ticket.company }}
+            {% elif ticket.customer_company_id %}
+                {{ ticket.company }}
+            {% else %}
+                {{ ticket.company }}
+            {% endif %}
+        </td>
+        <td class="align-middle text-center text-sm">
+            <span class="text-secondary mb-0">{{ ticket.created_at|date:"d/m/Y h:i:s A" }}</span>
+        </td>
+        <td class="align-middle text-center text-sm">
+            <span class="text-secondary mb-0">{{ ticket.last_comment|date:"d/m/Y h:i:s A" }}</span>
+        </td>
+    </tr>
+{% endfor %}{% block scripts %}
+
+<!-- Script para implementar el search en el modulo de usuarios-->
+<script>
+  const input = document.getElementById("search-input");
+
+  input.addEventListener("keyup", (e) => {
+    const value = e.target.value.toLowerCase();
+    // Obtener todas las filas de la tabla
+    const rows = document.querySelector("tbody").querySelectorAll("tr");
+
+    rows.forEach((row) => {
+      // Obtener el texto de todas las celdas en la fila
+      const cellTexts = Array.from(row.querySelectorAll("td")).map(cell => cell.textContent.toLowerCase());
+
+      // Si alguna de las celdas contiene el valor buscado, mostrar la fila
+      if (cellTexts.some(text => text.includes(value))) {
+        row.hidden = false;
+      } else {
+        row.hidden = true;
+      }
+    });
+  });
+</script>
+{% endblock scripts %}

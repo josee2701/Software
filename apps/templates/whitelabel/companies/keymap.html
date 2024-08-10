@@ -1,0 +1,46 @@
+{% load i18n static %} {{form.media}}
+<div id="dialog" class="modal-dialog" hx-target="this">
+  <div class="modal-dialog">
+    <div class="modal-content bg-light">
+      <div class="modal-body">
+        <div class="card">
+      <div class="modal-header">
+        <h3>
+          {% trans "Key Maps: " %} {{company.company_name}}
+        </h3>
+        <button type="button" id="cerrarVenta" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form hx-post="{{ request.path }}" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="row">
+          <div class="input-group input-group-static mb-6 justify-content-center">
+            {% for map in maps %}
+              {% if map.map_type_id != 1 %}
+                <div class="col-md-4 mx-4">
+                {{ map }}
+                {{ form.key_map }}
+                <div hidden>
+                  <select name="id">
+                    <option value="{{ map.id }}">{{ map.id }}</option>
+                  </select>
+                  <select name="map_type">
+                    <option value="{{ map.map_type_id }}">{{ map }}</option>
+                  </select>
+                </div>
+                </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+          </div>
+          <div class="row">
+            <div class="d-grid gap-2 col-2 mx-2">
+              <button type="submit" class="btn btn-primary">{% trans "Save" %}</button>
+            </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<head>
+  <link rel="stylesheet" type="text/css" href="{% static 'assets/css/estilos_templates.css' %}">
+</head>

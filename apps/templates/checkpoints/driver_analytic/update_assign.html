@@ -1,0 +1,111 @@
+{% load i18n static %}
+
+{%block content %}
+{{form.media}}
+
+    <div class="modal-content">
+        <div class="modal-body">
+            <div class="card-header pb-0">
+                <div class="card">
+                  <div class="modal-header">
+                    <h3>{% trans "Assign Vehicle" %}</h3>
+                    <button type="button" id="cerrarVenta" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+            <div class="card-body">
+                <form hx-post="{{ request.path}}"> {% csrf_token %}
+                    <div>
+                        <div class=row>
+                            <div class=col>
+                                <h5>ID: {{Driver.personal_identification_number}} </h5>
+                            </div>
+                            <div class=col>
+                                <h5> Driver: {{Driver.first_name}} {{Driver.last_name}} </h5>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col">
+                                <p>
+                                    <div class="input-group input-group-static mb-4">
+                                        <label for="id_vehicle"> {% trans "Vehicle" %} </label>
+                                        {{form.vehicle}}
+                                    </div>
+                                </p>
+                            </div>
+
+                            <div class="col">
+                                <p>
+                                    <div class="input-group input-group-static my-3">
+                                        <label for="id_date_joined"> {% trans "Date joined" %} </label>
+                                        {{form.date_joined}}
+                                    </div>
+                                    <div id="form-errors">
+                                        {{form.date_joined.errors}}
+                                    </div>
+                                </p>
+                            </div>
+
+                            <div class="col">
+                                <p>
+                                    <div class="input-group input-group-static my-3">
+                                        <label for="id_date_leaving"> {% trans "Date leaving" %} </label>
+                                        {{form.date_leaving}}
+                                    </div>
+                                    <div id="form-errors">
+                                        {{form.date_leaving.errors}}
+                                    </div>
+                                </p>
+                            </div>
+                        </div>
+                        <div class=row>
+                            <div class=col>
+                                <button class="btn btn-primary" type="submit"> <i class="fa-solid  fa-floppy-disk me-2"></i> {% trans "Save" %}</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+                <div class="mt-5 mp-5 container">
+                    <div class="card">
+                        <div class="modal-header">
+                            <h3>{% trans "List Assign Vehicle" %}</h3>
+                          </div>
+                        <div class="table-responsive">
+                            <table class="table align-items-center mb-0">
+                                <thead>
+                                    <tr>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"> {% trans "Vehicle" %}</th>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"> {% trans "Date joined" %} </th>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"> {% trans "Date leaving" %} </th>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for driver in assign_drivers %}
+                                        <tr>
+                                            <td class="align-middle text-center text-sm">
+                                                 <span "text-xs font-weight-normal mb-0"> {{driver.vehicle}} </span>
+                                            </td>
+                                            <td class="align-middle text-center text-sm">
+                                                <span "text-secondary text-xs font-weight-normal mb-0">{{driver.date_joined}}</span>
+                                             </td>
+                                            <td class="align-middle text-center text-sm">
+                                                <span "text-secondary text-xs font-weight-normal mb-0">{{driver.date_leaving}}</span>
+                                            </td>
+                                            <td>
+                                                <button type="button" hx-get="{% url 'checkpoints:update_vehicle_assign' driver.id %}"  class="btn btn-primary mx-2" hx-target="#dialog"><i class="fa-solid fa-pencil"></i></button>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <head>
+        <link rel="stylesheet" type="text/css" href="{% static 'assets/css/estilos_templates.css' %}">
+    </head>
+
+
+
+{% endblock %}

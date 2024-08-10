@@ -1,0 +1,119 @@
+{% load i18n static %}
+{% block content %}
+<div class="modal-content">
+  <div class="modal-body">
+    <div class="card">
+      <div class="ms-md-auto">
+        <button type="button" id="cerrarVenta" class="btn-close justify-content-end" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="card-body text-center">
+        <div style="width: 200px; height: 200px; overflow: hidden; position: relative; border-radius: 50%; margin: 0 auto;">
+          {% if user.profile_picture %}
+            <img id="profile-picture-preview" class="rounded-circle" src="{{ user.profile_picture.url }}" style="object-fit: cover; width: 100%; height: 100%;" />
+          {% else %}
+            <img id="profile-picture-preview" class="rounded-circle" src="{{ MEDIA_URL }}Perfil/Perfil.png" style="object-fit: cover; width: 100%; height: 100%;" />
+          {% endif %}
+        </div>
+
+        <h5>{{ user.username }}</h5>
+
+        <form hx-post="{{ request.path }}" action="{% url 'set_language' %}" enctype="multipart/form-data">
+          {% csrf_token %}
+
+          <!-- Agregar un mensaje de restricciones -->
+          <p class="text-sm">
+            {% trans "The image should be in PNG, JPG, or JPEG format and weigh less than 2 MB." %}
+          </p>
+
+          <div class="form-group">
+            <label for="id_profile_picture"></label>
+            <input
+              type="file"
+              class="form-control-file"
+              id="id_profile_picture"
+              name="profile_picture"
+              accept="image/*"
+              onchange="handleProfilePicture(this)"
+              />
+          </div>
+
+          <div class="row justify-content-end">
+            <div class="col">
+                <h6 class="card-subtitle mb-2 text-muted">{% trans "User information" %}</h6>
+                <ul class="list-group list-group-flush text-start">
+                  <li class="list-group-item"><strong>{% trans "Id: " %}</strong> {{ user.id}}</li>
+                  <li class="list-group-item"><strong>{% trans "Name: " %}</strong> {{ user.first_name }} {{ user.last_name }}</li>
+                  <li class="list-group-item"><strong>{% trans "Email: " %}</strong> {{ user.email }}</li>
+                  <li class="list-group-item"><strong>{% trans "Registration Date: " %}</strong> {{ user.date_joined|date:"F d, Y" }}</li>
+
+                  <li class="list-group-item">
+                      <strong>{% translate 'Password' %}</strong>
+                      <span class="password-toggle"><a type="button" hx-get="{% url 'Password' %}"
+                        hx-target="#dialog">{% trans 'Change password' %}</a></span>
+                </li>
+              </div>
+              <div class="col">
+                <h6 class="card-subtitle mb-2 text-muted">{% trans "Company" %}</h6>
+                <ul class="list-group list-group-flush text-start">
+                  <li class="list-group-item"><strong>{% translate "Name of the company: " %} </strong> {{ user.company.company_name }}</li>
+                  <li class="list-group-item"><strong>{% trans "Legal representative:" %}</strong> {{ user.company.legal_representative }}</li>
+                  <li class="list-group-item"><strong>{% trans "NIT:" %}</strong> {{ user.company.nit }}</li>
+                  <li class="list-group-item"><strong>{% trans "Address:" %}</strong> {{ user.company.address }}</li>
+                  <li class="list-group-item"><strong>{% trans "Country:" %}</strong> {{ user.company.country }}</li>
+                  <li class="list-group-item"><strong>{% trans "Modules:" %}</strong> {{ user_groups.group}} </i>
+                </ul>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary">{% trans "Save changes" %}</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<head>
+  <link rel="stylesheet" type="text/css" href="{% static 'assets/css/estilos_templates.css' %}">
+</head>
+{% endblock content %}
+<!-- Agrega este código en la sección de scripts o en un archivo separado -->
+<script>
+  // Obtener el elemento del enlace "Modificar" y el div con los campos de contraseña
+  const passwordToggle = document.querySelector('.password-toggle');
+  const passwordFields = document.querySelector('.password-fields');
+
+  // Agregar un event listener al enlace "Modificar"
+  passwordToggle.addEventListener('click', function (event) {
+    event.preventDefault();
+    if (passwordFields.style.display === 'none') {
+      // Mostrar los campos de contraseña
+      passwordFields.style.display = 'block';
+      passwordToggle.textContent = 'Cancelar'; // Cambiar el texto del enlace a "Cancelar"
+    } else {
+      // Ocultar los campos de contraseña
+      passwordFields.style.display = 'none';
+      passwordToggle.textContent = 'Modificar'; // Cambiar el texto del enlace a "Modificar"
+    }
+  });
+</script>
+<script>
+  function handleProfilePicture(input) {
+      if (input.files && input.files[0]) {
+        const file = input.files[0];
+        const maxSizeMB = 2; // Tamaño máximo en megabytes
+        const maxSizeBytes = maxSizeMB * 1024 * 1024; // Convertir a bytes
+        const reader = new FileReader();
+
+          if (file.size > maxSizeBytes) {
+              alert('La imagen es demasiado grande. Debe ser menor de 2 MB.');
+              input.value = ''; // Limpiar el campo de entrada
+              return;
+          }
+
+          reader.onload = function (e) {
+              // Actualiza la fuente de la imagen de vista previa
+              document.getElementById('profile-picture-preview').src = e.target.result;
+          };
+
+          reader.readAsDataURL(file);
+      }
+  }
+</script>

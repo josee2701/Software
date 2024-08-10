@@ -1,0 +1,32 @@
+{% load i18n static %}
+
+{% block content %}
+<div class="container mt-3">
+    <h2>{% trans "Add comment" %}</h2>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <!-- Renderiza cada campo manualmente -->
+        <div class="mb-3">
+            <label for="id_text">{% trans "Comment" %}</label>
+            {{ form.text }} <!-- Asegúrate de que 'text' sea el nombre del campo de texto en tu CommentForm -->
+            {% if form.text.errors %}
+                <div class="alert alert-danger">
+                    {{ form.text.errors }}
+                </div>
+            {% endif %}
+        </div>
+        <!-- Aquí puedes agregar el campo de archivo si existe -->
+        <div class="mb-3">
+            {{ form.attachment }}
+            {% if form.attachment.errors %}
+                <div class="alert alert-danger">
+                    {{ form.attachment.errors }}
+                </div>
+            {% endif %}
+        </div>
+        <div class="text-end">
+            <button type="submit" class="btn btn-primary">{% trans "Save comment" %}</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

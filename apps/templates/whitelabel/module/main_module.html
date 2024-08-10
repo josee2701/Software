@@ -1,0 +1,59 @@
+{% extends "layouts/base.html" %}
+{% load i18n static %}
+
+{% block title %}
+    {% trans "Billing" %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card my-4">
+                <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
+                    <div class="bg-gradient-primary shadow-primary border-radius-lg pt-4 pb-3">
+                        <div class=col>
+                            <h5 class="text-white text-capitalize ps-3">{% trans "Billing" %}</h5>
+                        </div>
+                    </div>
+                    <p><p>
+                    <div class="col d-flex">
+                        <!-- Es la opción del buscador de la plantilla de Vehicle -->
+                        <form id="search-form" method="GET" onsubmit="return false">
+                            <div class="input-group input-group-outline">
+                                <label class="form-label">{% trans "Search..." %}</label>
+                                <input id="search-input" type="text" class="form-control" onfocus="focused(this)" onfocusout="defocused(this)" name="q" autocomplete="off">
+                            </div>
+                        </form>
+                    </div>
+                    <p><p>
+                </div>
+                <div class="card-body scrollable-content" id="dynamic-scrollable-content2" style="overflow-y: auto;">
+                    <div class="table-responsive p-0">
+                        <!-- Se realiza la tabla en la cual se estipulan los nombres de cada columna -->
+                        <table class="table align-items-center" id="billings-table">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th class="text-start text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Company" %}</th>
+                                    <th class="text-start text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Coin" %}</th>
+                                    <th class="text-start text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Modules" %}</th>
+                                    <th class="text-start text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Price" %}</th>
+                                    <th class="text-start text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Total Price" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody hx-get="{% url 'companies:list_create_module' %}" hx-trigger="load, ListModuleChanged from:body">
+                                <tr><td>{% trans "Loading..." %}</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<head>
+    <script src="{% static 'assets/js/dynamic-scrollable-content.js' %}"></script>
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/estilos_templates.css' %}" />
+</head>
+{% endblock %}

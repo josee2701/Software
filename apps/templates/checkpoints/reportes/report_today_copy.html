@@ -1,0 +1,150 @@
+{% extends "layouts/base.html" %} {% load i18n static %} {% block content %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>{% trans "Report today" %}</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/estilos_templates.css' %}" />
+
+    {% if user.company.theme_set.all.0.button_color %}
+    <script>
+      var headerColor = "{{ user.company.theme_set.all.0.button_color }}";
+    </script>
+    {% endif %}
+  </head>
+
+  <body>
+    <div id="overlay">
+      <p>{% trans "Generating..." %}</p>
+    </div>
+    <div class="container-fluid py-4">
+      <div class="row">
+        <div class="col-12">
+          <div class="card my-4">
+            <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
+              <div class="bg-gradient-primary shadow-primary border-radius-lg pt-4 pb-3">
+                <div class="col">
+                  <h5 class="text-white text-capitalize ps-3">{% trans "Operation Report" %}</h5>
+                </div>
+              </div>
+              <div class="card-body">
+                <form method="get" id="search-form" onsubmit="showOverlay()">
+                  <div class="row">
+                    <div class="col">
+                      <div class="input-group input-group-static mb-4">
+                        <label for="id_company">{% trans "Company:" %} <span style="color: red">*</span></label>
+                        {{ form.company }}
+                      </div>
+                      <div class="input-group input-group-static mb-4">
+                        <label for="id_vehicle">{% trans "Vehicles:" %}<span style="color: red">*</span></label>
+                        {{ form.vehicles}}
+                      </div>
+                    </div>
+                    <div class="col">
+                      <div class="input-group input-group-static mb-4">
+                        <label for="id_start_date">{% trans "Start date:" %}<span style="color: red"> *</span></label>
+                        {{ form.start_date }}
+                        <input type="hidden" id="utc_start_date" name="utc_start_date" />
+                      </div>
+                      <div class="input-group input-group-static mb-4">
+                        <label for="id_event">{% trans "Event:" %}</label>
+                        {{ form.event}}
+                      </div>
+                    </div>
+                    <div class="col">
+                      <div class="input-group input-group-static mb-4">
+                        <label for="id_end_date">{% trans "Ending date:" %}<span style="color: red"> *</span></label>
+                        {{ form.end_date }}
+                        <input type="hidden" id="utc_end_date" name="utc_end_date" />
+                      </div>
+                      <!-- Mensaje de error para las fechas -->
+                      <small id="date_error" class="text-danger" style="display: none"></small>
+                    </div>
+                  </div>
+
+                <div class="row">
+                  <div class="col">
+                    <div class="d-flex justify-content-start align-items-center">
+                      <!-- Boton "Generate Report" -->
+                      <div>
+                        <button class="btn btn-primary mt-3" type="submit">
+                          <i class="fa-solid fa-floppy-disk me-2"></i> {% trans "Generate Report" %}
+                        </button>
+                      </div>
+                      <!-- Formulario de búsqueda -->
+                    </div>
+                  </div>
+                </div>
+            </form>
+                <div class="table-responsive p-0">
+                  <table class="table align-items-center mb-0">
+                    <thead>
+                      <tr>
+                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Company" %}</th>
+                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Plate" %}</th>
+                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Server date" %}</th>
+                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Event date" %}</th>
+                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                          {% trans "Name of the event" %}
+                        </th>
+                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Location" %}</th>
+                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "odometer" %}</th>
+                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Latitude " %}</th>
+                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans " Longitude" %}</th>
+                      </tr>
+                    </thead>
+                    <tbody id="reportTableBody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
+
+<script src="{% static 'assets/js/report_today/report_today_copy.js' %}"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+    $(document).ready(function () {
+      $("#search-form").on("submit", function (e) {
+        e.preventDefault();  // Previene el envío tradicional del formulario
+        $.ajax({
+          url: "{% url 'checkpoints:report-data-api' %}",  // Asegúrate de que la URL es correcta
+          type: "GET",
+          data: $(this).serialize(),
+          success: function (data) {
+            // Vacía el cuerpo de la tabla antes de añadir nuevas filas
+            var tbody = $('#reportTableBody');
+            tbody.empty();
+
+            // Procesa cada item de los datos y añade una fila a la tabla
+            data.forEach(function(item) {
+              var row = $('<tr>');
+              row.append($('<td>').text(item.company));
+              row.append($('<td>').text(item.device));
+              row.append($('<td>').text(item.server_date));
+              row.append($('<td>').text(item.signal_date));
+              row.append($('<td>').text(item.main_event));
+              row.append($('<td>').text(item.location));
+              row.append($('<td>').text(item.odometer));
+              row.append($('<td>').text(item.latitude));
+              row.append($('<td>').text(item.longitude));
+                row.append($('<td>').text(item.calculated_speed));
+              tbody.append(row);
+            });
+          },
+          error: function (xhr, status, error) {
+            console.error("Error: ", xhr.statusText);
+            // Muestra un mensaje de error en la tabla o en algún otro lugar
+            $('#reportTableBody').html('<tr><td colspan="9" class="text-center">No data found or error loading data.</td></tr>');
+          }
+        });
+      });
+    });
+    </script>
+
+
+{% endblock content %}

@@ -1,0 +1,16 @@
+<!-- prettier-ignore -->
+
+{% extends "account/base.html" %}
+
+{% block title %} Sign Up {% endblock title %}
+
+{% block content %}
+
+<h2>Sign Up</h2>
+
+<form method="post">
+    {% csrf_token %} {{ form.as_p }}
+    <button class="btn btn-primary" type="submit">Sign Up</button>
+</form>
+
+{% endblock content %}

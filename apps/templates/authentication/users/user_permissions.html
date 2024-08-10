@@ -1,0 +1,183 @@
+{% load i18n static %} {% block content %}
+
+<div class="modal-content">
+  <div class="modal-body">
+    <div class="card">
+      <div class="modal-header">
+        <h3>{% trans "Permissions User: "%} {{user.username}}</h3>
+        <button type="button" id="cerrarVenta" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+
+      </div>
+      <div class="card-body">
+        <form hx-post="{{ request.path }}">
+          {% csrf_token %}
+          <div class="row">
+            <div class="input-group input-group-outline">
+              <label class="form-label"></label>
+              <input
+                id="search-groups"
+                type="text"
+                class="form-control"
+                onfocus="focused(this)"
+                placeholder="Search"
+                onfocusout="defocused(this)"
+                name="q"
+                autocomplete="off"
+              />
+            </div>
+
+            <div class="col">
+              <p></p>
+              <body>
+                <table class="table-items-start table-responsive">
+                  <thead>
+                    <tr>
+                      <th style="inline-size: 13%" class="text-start text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                        {% trans "Modules" %}
+                      </th>
+                      <th style="inline-size: 13%" class="text-start text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                        {% trans "Add" %}
+                      </th>
+                      <th style="inline-size: 13%" class="text-start text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                        {% trans "Update" %}
+                      </th>
+                      <th style="inline-size: 13%" class="text-start text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                        {% trans "Delete" %}
+                      </th>
+                      <th style="inline-size: 13%" class="text-start text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                        {% trans "View" %}
+                      </th>
+                      <th style="inline-size: 13%" class="text-start text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                        {% trans "All" %}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for module, permissions in grouped_permissions %}
+                    <tr class="module-row">
+                      <td style="inline-size: 18%">
+                        <div class="form-check form-switch">
+                          <!-- Aquí establecemos la casilla de verificación como checked de manera predeterminada -->
+                          <input
+                            class="form-check-input module-checkbox"
+                            type="checkbox"
+                            name="groups"
+                            value="{{ module.pk }}"
+                            id="{{ module.id }}"
+                            checked
+                          />
+                          <label class="form-check-label" for="{{ module.id }}"> {{ module.name }} </label>
+                        </div>
+                      </td>
+                      {% for permission in permissions %}
+                      <td class="align-middle text-start permission-row" data-module="{{ module.id }}">
+                        <div class="form-check">
+                          <input
+                            class="form-check-input"
+                            type="checkbox"
+                            name="user_permissions"
+                            value="{{ permission.pk }}"
+                            id="permission_{{ permission.name }}"
+                            {%
+                            if
+                            permission
+                            in
+                            user_permissions
+                            %}checked{%
+                            endif
+                            %}
+                          />
+                          <label class="form-check-label" for="{{ permission.name }}"> </label>
+                        </div>
+                      </td>
+                      {% endfor %}
+
+                      <td class="align-middle text-start permission-row" data-module="{{ module.id }}">
+                        <div class="form-check">
+                          <input class="form-check-input select-all-permissions" type="checkbox" />
+                        </div>
+                      </td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </body>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col">
+              <button class="btn btn-primary mt-3" type="submit"><i class="fa-solid fa-floppy-disk me-2"></i> {% trans "Save" %}</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<head>
+  <link rel="stylesheet" type="text/css" href="{% static 'assets/css/estilos_templates.css' %}">
+</head>
+
+<script>
+  src = "{% static 'path/to/jquery.js' %}";
+</script>
+<script>
+  $(document).ready(function () {
+    function togglePermissions(moduleId, show) {
+      $('.permission-row[data-module="' + moduleId + '"]').toggle(show);
+    }
+
+    $(".module-checkbox").change(function () {
+      var moduleId = $(this).attr("id");
+      var isChecked = $(this).prop("checked");
+      togglePermissions(moduleId, isChecked);
+    });
+
+    $(".module-checkbox").each(function () {
+      var moduleId = $(this).attr("id");
+      var isChecked = $(this).prop("checked");
+      togglePermissions(moduleId, isChecked);
+    });
+
+    $(".select-all-permissions").change(function () {
+      var isChecked = $(this).prop("checked");
+      $(this).closest("tr").find('input[name="user_permissions"]').prop("checked", isChecked);
+    });
+  });
+
+  function toggleSelectAllPermissions(source) {
+    var checkboxes = document.querySelectorAll('input[name="user_permissions"]');
+    for (var i = 0; i < checkboxes.length; i++) {
+      checkboxes[i].checked = source.checked;
+    }
+  }
+
+  // Obtén el campo de entrada de búsqueda
+  var searchInput = document.getElementById("search-groups");
+
+  // Agrega un evento de escucha al campo de entrada
+  searchInput.addEventListener("keyup", function (event) {
+    // Obtén la consulta de búsqueda
+    var query = event.target.value.toLowerCase();
+
+    // Obtén todas las filas de la tabla
+    var rows = document.querySelectorAll(".module-row");
+
+    // Itera sobre las filas
+    rows.forEach(function (row) {
+      // Obtén el texto de la celda del módulo
+      var moduleCell = row.querySelector("td:first-child");
+      var moduleText = moduleCell.textContent || moduleCell.innerText;
+
+      // Si el texto del módulo no coincide con la consulta de búsqueda, oculta la fila
+      if (moduleText.toLowerCase().indexOf(query) === -1) {
+        row.style.display = "none";
+      } else {
+        // De lo contrario, asegúrate de que la fila sea visible
+        row.style.display = "";
+      }
+    });
+  });
+</script>
+
+{% endblock content %}

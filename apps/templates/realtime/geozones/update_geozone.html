@@ -1,0 +1,111 @@
+{% load i18n static %}
+<!DOCTYPE html>
+<html lang="en">
+  <body>
+    <div class="modal-content">
+        <div class="modal-body">
+            <div class="card">
+                <div class="modal-header">
+                    <h3>{% trans "Update Geozone" %}</h3>
+                    <button type="button" id="cerrarVenta" class="btn-close" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <form hx-post="{{ request.path }}">
+                    {% csrf_token %}
+                    <div class="card-body scrollable-content" id="dynamic-scrollable-content1"style="overflow-y: auto;">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="input-group input-group-static mb-2">
+                                    <label for="id_company">{% trans "Company" %} <span style="color: red">*</span> </label>
+                                    {{ form.company }}
+                                </div>
+                                <div class="input-group input-group-static mb-4">
+                                    <label for="{{ form.type.id_for_label }}">{% trans "Type Event" %} <span
+                                            style="color: red">*</span></label>
+                                    {{ form.type_event }}
+                                </div>
+                                <div class="form-check form-switch mb-3" style="padding-left: 2.375rem">
+                                    <label for="{{ form.name.id_for_label }}">{% trans "Set Events as Alarm" %} <span
+                                            style="color: red">*</span></label>
+                                    {{ form.alarma }}
+                                </div>
+                                <div class="input-group input-group-static mb-4">
+                                    <label for="{{ form.name.id_for_label }}">{% trans "Name" %} <span
+                                            style="color: red">*</span></label>
+                                    {{ form.name }}
+                                </div>
+                                <div class="input-group input-group-static mb-4">
+                                    <label for="{{ form.description.id_for_label }}">{% trans 'Description' %}</label>
+                                    {{ form.description }}
+                                </div>
+                                <div class="input-group input-group-static mb-4">
+                                    <label for="id_radius">Radius <span style="color: red">*</span></label>
+                                    <input type="number" id="id_radius" name="radius" value="{{ form.radius.value }}"
+                                        class="form-control" />
+                                </div>
+                                <div class="input-group input-group-static mb-4">
+                                    <label for="{{ form.status.id_for_label }}">{% trans 'Speed' %}<span
+                                            style="color: red">*</span></label>
+                                    {{ form.speed }}
+                                </div>
+                                <div class="input-group input-group-static mb-4">
+                                    <label for="id_latitude">Latitude <span style="color: red">*</span></label>
+                                    <input type="number" step="any" id="id_latitude" name="latitude"
+                                        value="{{ form.latitude.value }}" class="form-control" />
+                                </div>
+                                <div class="input-group input-group-static mb-4">
+                                    <label for="id_longitude">Longitude <span style="color: red">*</span></label>
+                                    <input type="number" step="any" id="id_longitude" name="longitude"
+                                        value="{{ form.longitude.value }}" class="form-control" />
+                                </div>
+                                <div class="row">
+                                    <div class="col mb-4">
+                                        <label for="id_color"
+                                            class="input-group input-group-static mb-4"> {% trans 'Geozone color' %}
+                                        </label>
+                                        <input type="color" class="form-control; ms-0" id="id_color" name="color"
+                                            value="{{ form.color.value }}" />
+                                    </div>
+                                    <div class="col mb-4">
+                                        <label for="id_color_edges"
+                                            class="input-group input-group-static mb-4"> {% trans 'Border color' %}
+                                        </label>
+                                        <input type="color" class="form-control; ms-0" id="id_color_edges"
+                                            name="color_edges" value="{{ form.color_edges.value }}" />
+                                    </div>
+                                </div>
+                                <input type="hidden" id="id_shape_type" name="shape_type"
+                                    value="{{ form.shape_type.value }}" />
+                            </div>
+                            <div class="col">
+                                <input id="pac-input" class="controls" type="hidden"
+                                    placeholder="Buscar un lugar o una dirección" />
+                                <div id="map"></div>
+                            </div>
+                        </div>
+                        <!-- ... otros campos del formulario ... -->
+                    </div>
+                    <p>
+                    <div class="row">
+                        <div class="col">
+                            <button type="submit" class="btn btn-primary">{% trans "Save" %}</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- Scripts al final del cuerpo para una carga de página más eficiente -->
+    <script src="{% static 'assets/scripts/geozone/geozona_update.js' %}"></script>
+    <script
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBQCROrMdrexN00HA_2cXyjJwlQZVHph8Y&libraries=places,drawing&callback=initMap"
+      loading="async"
+      defer
+    ></script>
+  </body>
+  <head>
+    <script src="{% static 'assets/js/dynamic-scrollable-content.js' %}"></script>
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/geozona.css' %}" />
+    <!-- Otros elementos en el encabezado, si los hay -->
+  </head>
+</html>

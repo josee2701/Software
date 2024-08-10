@@ -1,0 +1,74 @@
+{% load i18n static %}
+{% block content %}
+  {{ form.media }}
+
+  <div class="modal-content">
+    <div class="modal-body">
+      <div class="card">
+        <div class="modal-header">
+          <h3>{% trans "Sending Commands" %}</h3>
+          <button type="button" id="cerrarVenta" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="card-body">
+          <form id="confirmForm" hx-post="{{ request.path }}">
+            {% csrf_token %}
+            <div class="row">
+              <p></p>
+              <div class="col">
+                <div class="input-group input-group-static mb-4" style="display: flex; align-items: center; gap: 1px;">
+                  <label for="search-device" style="margin-bottom: 0; margin-right: 5px;">{% trans "Plate:" %} <span style="color:red;">*</span></label>
+                  <div style="flex-grow: 1;">
+                    <input id="search-device" type="text" placeholder="{% trans "Search" %}" autocomplete="off" style="border-radius: 8px; border: 1px solid #ccc; padding: 6px 8px; max-width: 150px; margin-bottom: 1px;">
+                  </div>
+                  {{ form.device }}
+                </div>
+                {% if form.device.errors %}
+                  <div class="text-danger">{{ form.device.errors }}</div>
+                {% endif %}
+              </div>
+              <div class="col">
+                <div class="col">
+                  <p></p>
+                  <div class="input-group input-group-static mb-4">
+                    <label for="id_command">{% trans "Command:" %} <span style="color:red;">*</span> </label>
+                    <select name="command" id="id_command" class="form-control">
+                    </select>
+                  </div>
+                  <div id="command-error" class="text-danger" style="display: none;">{% trans "This field is required." %}</div>
+                  {% if form.command.errors %}
+                    <div class="text-danger">{{ form.command.errors }}</div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col">
+                <button type="button" id="saveButton" class="btn btn-primary mt-3">
+                  <i class="fa-solid fa-floppy-disk me-2"></i> {% trans "Save" %}
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    var translations = {
+        confirmMessage: "{% trans 'Are you sure you want to send these command?' %}",
+        selectDevice: "{% trans 'Please select a device.' %}",
+    };
+  </script>
+  <script src="{% static 'assets/js/sending_commands/add_sending_commands.js' %}"></script>
+  <style>
+    #search-device {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+    #search-device:focus {
+        border-color: {{ user.company.theme_set.all.0.button_color|default_if_none:"#0000FF" }} !important;
+        box-shadow: 0 0 2px {{ user.company.theme_set.all.0.button_color|default_if_none:"#0000FF" }} !important;
+        outline: none !important;
+    }
+  </style>
+{% endblock content %}

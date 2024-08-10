@@ -1,0 +1,16 @@
+<!-- prettier-ignore -->
+
+{% extends "layouts/base.html" %}
+{% block title %} Log Out {% endblock title %}
+
+{% block content %}
+
+<h2>Log Out</h2>
+
+<p class="lead">Are you sure you want to log out?</p>
+<form method="post" action="{% url 'account_logout' %}">
+    {% csrf_token %} {{ form.as_p }}
+    <button class="btn btn-primary" type="submit">Log Out</button>
+</form>
+
+{% endblock content %}
