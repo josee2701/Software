@@ -147,34 +147,24 @@ FORM_RENDERER = "django.forms.renderers.DjangoTemplates"
 # Configuración de bases de datos
 # -----------------------------------------------------------------
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
-    },
-}
-
-DB_ENGINE = os.environ.get("SQLSERVER_ENGINE")
-DB_HOST = os.environ.get("SQLSERVER_SERVER")
-DB_NAME = os.environ.get("SQLSERVER_NAME")
-DB_USER = os.environ.get("SQLSERVER_USER")
-DB_PASSWORD = os.environ.get("SQLSERVER_PASSWORD")
-DB_PORT = os.environ.get("SQLSERVER_PORT")
-DB_IS_AVAIL = all([DB_ENGINE, DB_HOST, DB_NAME, DB_USER, DB_PASSWORD, DB_PORT])
-
-if DB_IS_AVAIL:
+if DEBUG:
     DATABASES = {
-        "default": {
-            "ENGINE": DB_ENGINE,
-            "HOST": DB_HOST,
-            "NAME": DB_NAME,
-            "USER": DB_USER,
-            "PASSWORD": DB_PASSWORD,
-            "PORT": DB_PORT,
-            
-        },
+        'default': {
+            'ENGINE': os.getenv('SQLITE_ENGINE'),
+            'NAME': os.path.join(BASE_DIR, os.getenv('SQLITE_NAME')),
+        }
     }
-
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': os.getenv('POSTGRES_ENGINE'),
+            'NAME': os.getenv('POSTGRES_NAME'),
+            'USER': os.getenv('POSTGRES_USER'),
+            'PASSWORD': os.getenv('POSTGRES_PASSWORD'),
+            'HOST': os.getenv('POSTGRES_HOST'),
+            'PORT': os.getenv('POSTGRES_PORT'),
+        }
+    }
 # Configuración de Redis para Channels
 # -----------------------------------------------------------------
 
