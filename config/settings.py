@@ -37,8 +37,9 @@ ENCRYPTION_KEY = os.environ.get("ENCRYPTION_KEY")
 DEBUG = os.getenv("DEBUG", "0") == "1"
 
 # Hosts permitidos para el despliegue de la aplicación
-ENV_ALLOWED_HOST = os.environ.get("ENV_ALLOWED_HOST")
-ALLOWED_HOSTS = [ENV_ALLOWED_HOST] if ENV_ALLOWED_HOST else []
+# SECURITY WARNING: don't run with debug turned on in production!
+ALLOWED_HOSTS = ['software-h42n.onrender.com', 'localhost', '127.0.0.1']
+
 # Aplicaciones instaladas
 # -----------------------------------------------------------------
 
