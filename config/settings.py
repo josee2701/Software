@@ -99,7 +99,6 @@ MIDDLEWARE = [
     "apps.authentication.middleware.ExpireSessionOnBrowserCloseMiddleware",
     "apps.authentication.middleware.SingleSessionPerUserMiddleware",
     "apps.authentication.middleware.ManejoUsuarioNoExistenteMiddleware",
-    "middleware.htmx_middleware.HTMXMiddleware",
 ]
 
 
