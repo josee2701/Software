@@ -299,6 +299,7 @@ CORS_ALLOWED_ORIGINS = [
     "https://gpsmobile.pro",
     "https://www.gpsmobile.pro",
     "https://*.gpsmobile.pro",
+    "https://software-h42n.onrender.com",
 ]
 
 CSRF_TRUSTED_ORIGINS = [
@@ -311,6 +312,7 @@ CSRF_TRUSTED_ORIGINS = [
     "https://gpsmobile.pro",
     "https://www.gpsmobile.pro",
     "https://*.gpsmobile.pro",
+    "https://software-h42n.onrender.com",
 ]
 
 
