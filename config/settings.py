@@ -37,8 +37,9 @@ ENCRYPTION_KEY = os.environ.get("ENCRYPTION_KEY")
 DEBUG = os.getenv("DEBUG", "0") == "1"
 
 # Hosts permitidos para el despliegue de la aplicación
-ENV_ALLOWED_HOST = os.environ.get("ENV_ALLOWED_HOST")
-ALLOWED_HOSTS = [ENV_ALLOWED_HOST] if ENV_ALLOWED_HOST else []
+# SECURITY WARNING: don't run with debug turned on in production!
+ALLOWED_HOSTS = ['software-h42n.onrender.com', 'localhost', '127.0.0.1']
+
 # Aplicaciones instaladas
 # -----------------------------------------------------------------
 
@@ -99,7 +100,6 @@ MIDDLEWARE = [
     "apps.authentication.middleware.ExpireSessionOnBrowserCloseMiddleware",
     "apps.authentication.middleware.SingleSessionPerUserMiddleware",
     "apps.authentication.middleware.ManejoUsuarioNoExistenteMiddleware",
-    "middleware.htmx_middleware.HTMXMiddleware",
 ]
 
 
@@ -148,35 +148,15 @@ FORM_RENDERER = "django.forms.renderers.DjangoTemplates"
 # -----------------------------------------------------------------
 
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
-    },
-}
-
-DB_ENGINE = os.environ.get("SQLSERVER_ENGINE")
-DB_HOST = os.environ.get("SQLSERVER_SERVER")
-DB_NAME = os.environ.get("SQLSERVER_NAME")
-DB_USER = os.environ.get("SQLSERVER_USER")
-DB_PASSWORD = os.environ.get("SQLSERVER_PASSWORD")
-DB_PORT = os.environ.get("SQLSERVER_PORT")
-DB_IS_AVAIL = all([DB_ENGINE, DB_HOST, DB_NAME, DB_USER, DB_PASSWORD, DB_PORT])
-
-if DB_IS_AVAIL:
-    DATABASES = {
-        "default": {
-            "ENGINE": DB_ENGINE,
-            "HOST": DB_HOST,
-            "NAME": DB_NAME,
-            "USER": DB_USER,
-            "PASSWORD": DB_PASSWORD,
-            "PORT": DB_PORT,
-            "OPTIONS": {
-                "driver": "ODBC Driver 18 for SQL Server",
-            },
-        },
+        'default': {
+            'ENGINE': os.getenv('POSTGRES_ENGINE'),
+            'NAME': os.getenv('POSTGRES_NAME'),
+            'USER': os.getenv('POSTGRES_USER'),
+            'PASSWORD': os.getenv('POSTGRES_PASSWORD'),
+            'HOST': os.getenv('POSTGRES_HOST'),
+            'PORT': os.getenv('POSTGRES_PORT'),
+        }
     }
-
 # Configuración de Redis para Channels
 # -----------------------------------------------------------------
 
@@ -300,6 +280,7 @@ CORS_ALLOWED_ORIGINS = [
     "https://gpsmobile.pro",
     "https://www.gpsmobile.pro",
     "https://*.gpsmobile.pro",
+    "https://software-h42n.onrender.com",
 ]
 
 CSRF_TRUSTED_ORIGINS = [
@@ -312,6 +293,7 @@ CSRF_TRUSTED_ORIGINS = [
     "https://gpsmobile.pro",
     "https://www.gpsmobile.pro",
     "https://*.gpsmobile.pro",
+    "https://software-h42n.onrender.com",
 ]
 
 

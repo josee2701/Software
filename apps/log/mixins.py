@@ -1,7 +1,6 @@
 import asyncio
 import json
 
-import aiohttp
 from asgiref.sync import async_to_sync, sync_to_async
 from django.forms.models import model_to_dict
 from django.utils.decorators import method_decorator
