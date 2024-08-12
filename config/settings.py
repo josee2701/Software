@@ -171,9 +171,7 @@ if DB_IS_AVAIL:
             "USER": DB_USER,
             "PASSWORD": DB_PASSWORD,
             "PORT": DB_PORT,
-            "OPTIONS": {
-                "driver": "ODBC Driver 18 for SQL Server",
-            },
+            
         },
     }
 
