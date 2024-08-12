@@ -1,14 +1,14 @@
 from django.db import DatabaseError, connection
 
 
-def fetch_all_user(company, user):
+def fetch_all_user(company, user, search_query=None):
     try:
         with connection.cursor() as cursor:
-            # Asegurarse de que 'company' es del tipo correcto, por ejemplo, un entero
-            company_id = int(company.id)  # Convertir a entero si es necesario
-
             # Llamada al procedimiento almacenado con el parámetro correctamente formateado
-            cursor.execute("EXEC [dbo].[ListUserByCompany] @CompanyId=%s, @UserId=%s", [company_id, user])
+            cursor.execute(
+                "EXEC [dbo].[ListUserByCompany] @CompanyId=%s, @UserId=%s, @SearchQuery=%s",
+                [company, user, search_query],
+            )
 
             rows = cursor.fetchall()
             columns = [col[0] for col in cursor.description]

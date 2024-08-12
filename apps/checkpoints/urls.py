@@ -1,12 +1,12 @@
 from django.urls import include, path
 
+from apps.checkpoints.sql import fetch_all_confidatasem
+
 from . import views
-from .api import (
-    events_by_company,
-    events_person_by_company,
-    export_report,
-    vehicles_by_company,
-)
+from .api import (ExportDataDriver, ExportDataScoreDriver, SearchDataSem,
+                  SearchDrivers, SearchScores, events_by_company,
+                  events_person_by_company, export_report, user_by_company,
+                  vehicles_by_company)
 
 app_name = "checkpoints"
 
@@ -17,11 +17,6 @@ urlpatterns = [
         include(
             [
                 path("", views.ListDriverTemplate.as_view(), name="list_drivers"),
-                path(
-                    "list_drivers_company",
-                    views.ListDriversView.as_view(),
-                    name="list_drivers_company",
-                ),
                 path("add", views.AddDriverView.as_view(), name="add_driver"),
                 path(
                     "update/<int:pk>",
@@ -49,6 +44,8 @@ urlpatterns = [
                     views.UpdateVehicleAssignView.as_view(),
                     name="update_vehicle_assign",
                 ),
+                path("drivers-user", SearchDrivers.as_view(), name="user_driver"),
+                path("export-drivers", ExportDataDriver.as_view(), name="export_drivers"),
             ]
         ),
     ),
@@ -58,20 +55,17 @@ urlpatterns = [
         include(
             [
                 path(
-                    "score_configuration/<int:pk>",
-                    views.ScoreConfigurationView.as_view(),
-                    name="score_configuration",
-                ),
-                path(
-                    "list_score_configuration",
+                    "list_score_configuration/",
                     views.ListScoreCompanyTemplate.as_view(),
                     name="list_score_configuration",
                 ),
                 path(
-                    "list_score_configuration_companies",
-                    views.ListScoreCompaniesView.as_view(),
-                    name="list_score_configuration_companies",
+                    "score_configuration/<int:pk>",
+                    views.ScoreConfigurationView.as_view(),
+                    name="score_configuration",
                 ),
+                path("scores-user", SearchScores.as_view(), name="user_scores"),
+                path("export-scores", ExportDataScoreDriver.as_view(), name="export_scores"),
             ]
         ),
     ),
@@ -99,13 +93,42 @@ urlpatterns = [
                     events_person_by_company,
                     name="events_by_company",
                 ),
-                path("report-today/", views.ReportToday.as_view(), name="report"),
                 path("avldat", export_report, name="avldat"),
+                
+            ]
+        ),
+    ),
+    path(
+        "powerbi/",
+        include(
+            [
                 path(
-                    "api/report-data/",
-                    views.ReportDataAPIView.as_view(),
-                    name="report-data-api",
+                    "DataSeM",
+                    views.Advanced_AnalyticalView.as_view(),
+                    name="DataSeM",
                 ),
+                path(
+                    "Confi_DataSeM",
+                    views.DataSemConfigurationList.as_view(),
+                    name="Config_DataSeM",
+                ),
+                path(
+                    "DataSeM/Add",
+                    views.AddDataSemConfiguration.as_view(),
+                    name="AddDataSeM",
+                ),
+                path(
+                    "DataSeM/Update/<int:pk>/",
+                    views.UpdateDataSemConfiguration.as_view(),
+                    name="UpdateDataSeM",
+                ),
+                path(
+                    "DataSeM/Delete/<int:pk>/",
+                    views.DeleteDataSemConfiguration.as_view(),
+                    name="DeleteDataSeM",
+                ),
+                path("search_datasem", SearchDataSem.as_view(), name="search_datasem"),
+                path("user_company/<int:company_id>/", user_by_company , name="list_user"),
             ]
         ),
     ),

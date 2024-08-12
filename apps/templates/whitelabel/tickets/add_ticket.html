@@ -1,68 +1,63 @@
 {% load i18n static %}
-
 {% block content %}
-{{ form.media }}
-<div class="modal-content">
+<div class="modal-content" id="miModal" style="z-index: 1050">
     <div class="modal-body">
         <div class="card">
             <div class="modal-header">
                 <h3>{% trans "Add Ticket" %}</h3>
                 <button type="button" id="cerrarVenta" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="card-body scrollable-content" id="dynamic-scrollable-content1"style="overflow-y: auto;">
-                <form hx-post="{{ request.path }}" method="post" enctype="multipart/form-data">
+            <div class="card-body">
+                <form hx-post="{{ request.path }}" hx-target="#modal-content" enctype="multipart/form-data">
                     {% csrf_token %}
-                    <p>
-                        <div class="input-group input-group-static mb-4">
-                            <label for="id_subject">{% trans "Subject:" %} <span style="color:red;">*</span> </label>
-                            {{ form.subject }}
-                        </div>
-                        <div id="form-errors">
-                            {{ form.subject.errors }}
-                        </div>
-                    </p>
-
+                    {{ form.non_field_errors }}
+                    <div class="input-group input-group-static mb-4">
+                        <label for="id_subject">{% trans "Subject:" %} <span style="color:red;">*</span> </label>
+                        {{ form.subject }}
+                        {{ form.subject.errors }}
+                    </div>
                     <div class="row">
                         <div class="col">
-                            <p>
-                                <div class="input-group input-group-static mb-4">
-                                    <label for="id_priority">{% trans "Priority:" %} <span style="color:red;">*</span> </label>
-                                    {{ form.priority }}
-                                </div>
-                            </p>
+                            <div class="input-group input-group-static mb-4">
+                                <label for="id_priority">{% trans "Priority:" %} <span style="color:red;">*</span> </label>
+                                {{ form.priority }}
+                                {{ form.priority.errors }}
+                            </div>
                         </div>
                         <div class="col">
-                            <p>
-                                <div class="input-group input-group-static mb-4">
-                                    <label for="id_process_type">{% trans "Process:" %} <span style="color:red;">*</span> </label>
-                                    {{ form.process_type }}  <!-- Use process_form instead of form -->
-                                </div>
-                                <div id="form-errors">
-                                    {{ form.process_type.errors }}  <!-- Display any errors for the process_type field -->
-                                </div>
-                            </p>
+                            <div class="input-group input-group-static mb-4">
+                                <label for="id_process_type" style="display: flex; align-items: center;">
+                                    {% trans "Process:" %} <span style="color:red;">*</span>
+                                    <div style="display: flex; gap: 10px; margin-left: 10px;">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="process_type" id="id_distributor" value="{{ provider }}">
+                                            <input type="hidden" name="id_distributor" id="input-id_distributor" value="">
+                                            <label class="form-check-label" for="id_distributor">
+                                                {% trans 'Distributor' %}
+                                            </label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="process_type" id="id_interns" value="{{ company }}" checked>
+                                            <input type="hidden" name="id_interns" id="input-id_interns" value="">
+                                            <label class="form-check-label" for="id_interns">
+                                                {% trans 'Interns' %}
+                                            </label>
+                                        </div>
+                                    </div>
+                                </label>
+                                {{ form.process_type }}
+                                {{ form.process_type.errors }}
+                            </div>
                         </div>
                     </div>
-
-                <!--<p>
-                        <div class="input-group input-group-static mb-4">
-                            <label for="id_assign_to">{% trans "Assign to:" %} </label>
-                            {{ form.assign_to }}
-                        </div>
-                    </p>-->
-
-                    <p>
-                        <div class="input-group input-group-static mb-4">
-                            <label for="id_message">{% trans "Message:" %} <span style="color:red;">*</span> </label>
-                            {{ message_form.text }}  <!-- Nuevo formulario para el mensaje -->
-                        </div>
-                    </p>
-
-                    <p>
-                        <div class="input-group input-group-static mb-4">
-                            <label for="id_file">{% trans "Attachments cannot exceed 7 MB : " %} </label>
-                            <input type="file" name="file" id="id_file" multiple accept="image/*,.pdf,.docx,.doc,.txt,.xlsx,.xls,.jpg,.png,.jpeg,.msg,.mp4" />
-                        </div>
+                    <div class="input-group input-group-static mb-4">
+                        <label for="id_message">{% trans "Message:" %} <span style="color:red;">*</span> </label>
+                        {{ message_form.text }}
+                        {{ message_form.text.errors }}
+                    </div>
+                    <div class="input-group input-group-static mb-4">
+                        <label for="id_file">{% trans "Attachments cannot exceed 7 MB : " %} </label>
+                        <input type="file" name="file" id="id_file" multiple accept="image/*,.cfg,.csv,.doc,.docx,.eml,.exe,.jpeg,.jpg,.mp4,.msg,.pdf,.png,.rar,.txt,.xls,.xlsx,.xml,.zip" />
                         {% if messages %}
                             <ul>
                                 {% for message in messages %}
@@ -70,13 +65,11 @@
                                 {% endfor %}
                             </ul>
                         {% endif %}
-                    </p>
-
+                    </div>
                     <div id="attachment-preview"></div>
-                </div>
                     <div class="row">
                         <div class="col">
-                            <button class="btn btn-primary mt-3" type="submit"> <i class="fa-solid fa-floppy-disk me-2"></i> {% trans "Save" %} </button>
+                            <button class="btn btn-primary" type="submit"><i class="fa-solid fa-floppy-disk me-2"></i> {% trans "Save" %}</button>
                         </div>
                     </div>
                 </form>
@@ -84,53 +77,62 @@
         </div>
     </div>
     <head>
-        <script src="{% static 'assets/js/dynamic-scrollable-content.js' %}"></script>
         <link rel="stylesheet" type="text/css" href="{% static 'assets/css/estilos_templates.css' %}">
+        <link rel="stylesheet" type="text/css" href="{% static 'assets\css\select2.css' %}">
     </head>
+
 </div>
 {% endblock content %}
-
 {% block scripts %}
+<!-- Incluir jQuery primero -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Incluir Select2 después de jQuery -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<script src="{% static 'assets/js/whitelabel/tickets/filtro_process.js' %}"></script>
+<script src="{% static 'assets/js/whitelabel/tickets/adjuntos.js' %}"></script>
 <script>
-    function initializeAttachmentHandler() {
-        const attachmentInput = document.getElementById("id_file");
-        const maxSizeMB = 7; // Tamaño máximo en megabytes
-        const allowedFormats = ["pdf", "docx", "doc", "txt", "xlsx", "xls", "jpg", "png", "jpeg", "msg", "cfg", "mp4"];
-
-        attachmentInput.addEventListener("change", handleFileSelect);
-
-        function handleFileSelect(event) {
-            const files = event.target.files;
-            const previewContainer = document.getElementById("attachment-preview");
-            previewContainer.innerHTML = ""; // Limpiar la vista previa antes de agregar nuevos archivos
-
-            for (const file of files) {
-                const fileName = file.name;
-                const fileSizeMB = file.size / (1024 * 1024); // Convertir a MB
-
-
-                // Verificar si el archivo no está admitido o excede el tamaño máximo permitido
-                const fileExtension = fileName.split(".").pop().toLowerCase();
-                if (!allowedFormats.includes(fileExtension) || fileSizeMB > maxSizeMB) {
-                    // Mostrar el mensaje de alerta correspondiente
-                    if (!allowedFormats.includes(fileExtension)) {
-                        alert("El archivo " + fileName + " no está admitido. Los formatos permitidos son: " + allowedFormats.join(", "));
-                    } else {
-                        alert("El archivo " + fileName + " excede el tamaño máximo permitido de " + maxSizeMB + " MB.");
-                    }
-                    event.target.value = ""; // Limpiar el campo de entrada
-                    return;
-                }
-
-                const listItem = document.createElement("div");
-                listItem.textContent = fileName + " (" + fileSizeMB.toFixed(2) + " MB)";
-                previewContainer.appendChild(listItem);
+    // Escucha el evento 'change' en los elementos de entrada de radio
+    document.querySelectorAll('input[name="process_type"]').forEach(function(radio) {
+        radio.addEventListener('change', function() {
+            // Si el usuario selecciona "Distributor", establece el valor del campo 'id_distributor'
+            if (this.id === 'id_distributor') {
+                document.getElementById('input-id_distributor').value = this.value;
+            } else {
+                // Si el usuario selecciona algo distinto de "Distributor", borra el valor del campo 'id_distributor'
+                document.getElementById('input-id_distributor').value = "";
             }
-        }
-    }
-
-    // Llamar a la función de inicialización después de cargar la página
-    initializeAttachmentHandler();
+        });
+    });
 </script>
 
-{% endblock %}
+<style>
+    .select2-container--default .select2-results__option--highlighted.select2-results__option--selectable {
+        background-color: {{ button_color }};
+        color: white;
+    }
+</style>
+<script>
+    var translations = {
+        low: "{% trans 'Low' %}",
+        medium: "{% trans 'Medium' %}",
+        high: "{% trans 'High' %}",
+        end: "{% trans 'End' %}",
+        home: "{% trans 'Home' %}",
+        open: "{% trans 'Open' %}",
+        closed: "{% trans 'Closed' %}",
+        to: "{% trans 'to' %}",
+        of: "{% trans 'of' %}",
+        days: "{% trans 'Days' %}",
+        distributor : "{% trans 'Distributor' %}",
+        unassigned : "{% trans 'Unassigned' %}",
+        displaying: "{% trans 'Displaying' %}",
+        ticketOpen: "{% trans 'Cases_Open' %}",
+        file: "{% trans 'The archive ' %}",
+        isNotAllowed: "{% trans ' is not allowed. Allowed formats are: ' %}",
+        alertFilesExceedsSize: "{% trans 'The total size of the selected files exceeds the maximum allowed size of ' %}",
+        alertFileExceedSize: "{% trans ' exceeds the maximum allowed size of ' %}"
+    };
+</script>
+{% endblock  %}

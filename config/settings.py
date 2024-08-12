@@ -14,47 +14,43 @@ import os
 from urllib.parse import urlparse
 
 import environ
-
-env = environ.Env()
-# Leer .env
-environ.Env.read_env()
-
 from django.utils.translation import gettext_lazy as _
+
+# Inicializa las variables de entorno
+env = environ.Env()
+environ.Env.read_env()
 
 # Configuración central
 # -----------------------------------------------------------------
-# https://docs.djangoproject.com/en/4.0/ref/settings/#core-settings
 
-
-# Estable los directorios de la aplicación
+# Establece los directorios de la aplicación
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 APPS_DIR = os.path.join(BASE_DIR, "apps")
 
-# Toma las variables de entorno desde el archivo .env
-# environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
-
-# Emite la excepción establecida en ImproperlyConfigured si SECRET_KEY no se encuentra en .env
+# Clave secreta para la seguridad de Django
 SECRET_KEY = os.environ.get("SECRET_KEY")
 
-# False si DEBUG no está en .env (de acuerdo a cast anterior)
-DEBUG = str(os.environ.get("DEBUG")) == "1"
+# Clave de encriptación (si se usa en la aplicación)
+ENCRYPTION_KEY = os.environ.get("ENCRYPTION_KEY")
 
+# Modo de depuración (debe estar desactivado en producción)
+DEBUG = os.getenv("DEBUG", "0") == "1"
+
+# Hosts permitidos para el despliegue de la aplicación
 ENV_ALLOWED_HOST = os.environ.get("ENV_ALLOWED_HOST")
-ALLOWED_HOSTS = []
-if ENV_ALLOWED_HOST:
-    ALLOWED_HOSTS = [ENV_ALLOWED_HOST]
-
-# Definición de la aplicación
-# -------------------------------
+ALLOWED_HOSTS = [ENV_ALLOWED_HOST] if ENV_ALLOWED_HOST else []
+# Aplicaciones instaladas
+# -----------------------------------------------------------------
 
 LOCAL_APPS = [
-    "apps.authentication",  # Must be above `django.contrib.auth` because has a custom User model.
-    "apps.api",
+    "apps.authentication",  # Modelo de usuario personalizado
+    "apps.log",
     "apps.checkpoints",
     "apps.events",
     "apps.socketmap",
     "apps.realtime",
     "apps.whitelabel",
+    "apps.powerbi",
 ]
 
 DJANGO_APPS = [
@@ -69,7 +65,7 @@ DJANGO_APPS = [
     "django.forms",
 ]
 
-THIRD_PARHY_APPS = [
+THIRD_PARTY_APPS = [
     "colorfield",
     "crispy_forms",
     "crispy_bootstrap5",
@@ -85,59 +81,37 @@ THIRD_PARHY_APPS = [
     "corsheaders",
 ]
 
-INSTALLED_APPS = LOCAL_APPS + DJANGO_APPS + THIRD_PARHY_APPS
+INSTALLED_APPS = LOCAL_APPS + DJANGO_APPS + THIRD_PARTY_APPS
 
-# DATE_INPUT_FORMATS = ["%B %d, %Y"]
-
-
-# Django REST Framework
-# ----------------------------------------------------------
-# https://www.django-rest-framework.org/api-guide/settings/
-# *** Queda pendiente hacer las configuraciones de seguridad CORS que sugiere el libro "Django
-# for APIs" p. 50. ***
-
-REST_FRAMEWORK = {
-    "DEFAULT_SCHEMA_CLASS": "rest_framework.schemas.coreapi.AutoSchema",
-    "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.AllowAny",
-    ],
-    "DEFAULT_RENDERER_CLASSES": [
-        "rest_framework.renderers.JSONRenderer",
-    ],
-    # 'DEFAULT_AUTHENTICATION_CLASSES': [
-    #     'rest_framework.authentication.SessionAuthentication',
-    # ],
-}
-
-
-# -- Middleware
-# https://docs.djangoproject.com/en/4.0/ref/settings/#middleware
-
-# NOTA: el orden de los middlewares importa, por favor no lo cambie a menos que esté seguro de
-# la implementación que está llevando a cabo.
+# Configuración de middleware
+# -----------------------------------------------------------------
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
-    # Habilita la configuración de multi-idiomas de la aplicación
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
-    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    # Habilita la validación de sesión única por usuario
+    "apps.authentication.middleware.ExpireSessionOnBrowserCloseMiddleware",
     "apps.authentication.middleware.SingleSessionPerUserMiddleware",
     "apps.authentication.middleware.ManejoUsuarioNoExistenteMiddleware",
+    "middleware.htmx_middleware.HTMXMiddleware",
 ]
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",  # Agrega la URL de tu aplicación React en desarrollo
-    # Otras URL permitidas pueden ir aquí
-]
+
+# Configuración de URLs y aplicaciones
+# -----------------------------------------------------------------
 
 ROOT_URLCONF = "config.urls"
+ASGI_APPLICATION = "config.asgi.application"
+# WSGI_APPLICATION = "config.wsgi.application"
+
+# Configuración de templates
+# -----------------------------------------------------------------
 
 TEMPLATES = [
     {
@@ -162,36 +136,18 @@ TEMPLATES = [
     }
 ]
 
+# Configuración de Crispy Forms
+# -----------------------------------------------------------------
+
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
-
 CRISPY_TEMPLATE_PACK = "bootstrap5"
-
 CRISPY_CLASS_CONVERTERS = {"textinput": "textinput inputtext"}
-
 FORM_RENDERER = "django.forms.renderers.DjangoTemplates"
-ASGI_APPLICATION = "config.asgi.application"
 
-# WSGI_APPLICATION = "config.wsgi.application"
-
-
-# -- Bases de datos
-# https://docs.djangoproject.com/en/4.0/ref/settings/#databases
-
+# Configuración de bases de datos
+# -----------------------------------------------------------------
 
 DATABASES = {
-    # SQL Server
-    # "default": {
-    #     "ENGINE": env("SQLSERVER_ENGINE"),
-    #     "HOST": env("SQLSERVER_SERVER"),
-    #     "NAME": env("SQLSERVER_NAME"),
-    #     "USER": env("SQLSERVER_USER"),
-    #     "PASSWORD": env("SQLSERVER_PASSWORD"),
-    #     "PORT": env("SQLSERVER_PORT"),
-    #     "OPTIONS": {
-    #         "driver": "ODBC Driver 18 for SQL Server",
-    #     },
-    # },
-    # SQLite configuración
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
@@ -204,20 +160,10 @@ DB_NAME = os.environ.get("SQLSERVER_NAME")
 DB_USER = os.environ.get("SQLSERVER_USER")
 DB_PASSWORD = os.environ.get("SQLSERVER_PASSWORD")
 DB_PORT = os.environ.get("SQLSERVER_PORT")
-DB_IS_AVAIL = all(
-    [
-        DB_ENGINE,
-        DB_HOST,
-        DB_NAME,
-        DB_USER,
-        DB_PASSWORD,
-        DB_PORT,
-    ]
-)
+DB_IS_AVAIL = all([DB_ENGINE, DB_HOST, DB_NAME, DB_USER, DB_PASSWORD, DB_PORT])
 
 if DB_IS_AVAIL:
     DATABASES = {
-        # SQL Server
         "default": {
             "ENGINE": DB_ENGINE,
             "HOST": DB_HOST,
@@ -231,22 +177,10 @@ if DB_IS_AVAIL:
         },
     }
 
+# Configuración de Redis para Channels
+# -----------------------------------------------------------------
 
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
-# -- Redis
-# https://github.com/redis/redis-om-python
-# https://docs.djangoproject.com/en/4.0/topics/cache/#redis
-
-# REDIS_URL = env("REDIS_URL")
-
-REDIS_HOST = os.environ.get("REDIS_HOST")
-
-REDIS_PORT = os.environ.get("REDIS_PORT")
-
-REDIS_DB = os.environ.get("REDIS_DB")
-
-REDIS_URL = "redis://redis-cip:6379"
+REDIS_URL = os.environ.get("REDIS_URL", "redis://redis-cip:6379")
 parsed_url = urlparse(REDIS_URL)
 
 CHANNEL_LAYERS = {
@@ -258,33 +192,15 @@ CHANNEL_LAYERS = {
     },
 }
 
+# Configuración de idioma e internacionalización
+# -----------------------------------------------------------------
 
-LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "handlers": {
-        "console": {
-            "class": "logging.StreamHandler",
-        },
-    },
-    "loggers": {
-        "channels": {
-            "handlers": ["console"],
-            "level": "DEBUG",
-        },
-    },
-}
-
-
-# -- Lenguajes, internationalización y localización
-# https://docs.djangoproject.com/en/4.0/topics/i18n/
-
-LANGUAGE_CODE = "en-us"  # O el código de idioma correspondiente
-
+LANGUAGE_CODE = "en"
 
 LANGUAGES = [
     ("en", _("English")),
     ("es", _("Spanish")),
+    ("it", _("Italian")),
     # ("es-co", _("Spanish (Colombia)")),
     # ("es-mx", _("Spanish (Mexico)")),
     # ("es-es", _("Spanish (Spain)")),
@@ -294,36 +210,19 @@ LOCALE_PATHS = [
     os.path.join(BASE_DIR, "locale"),  # Ruta donde se encuentran las traducciones
 ]
 
-
 TIME_ZONE = "America/Bogota"
-
 USE_I18N = True
-
 USE_L10N = True
+USE_TZ = False  # False si presenta problemas el driver de conexión a SQL Server
 
-USE_TZ = (
-    False  # False, si presenta problemas el driver de conección a SQL Server. Más info:
-)
-# https://docs.microsoft.com/en-us/samples/azure-samples/azure-sql-db-django/azure-sql-db-django/
-
-
-# Autenticaciones
-# --------------------------------------------------------
-# https://docs.djangoproject.com/en/4.0/ref/settings/#auth
+# Configuración de autenticación
+# -----------------------------------------------------------------
 
 SITE_ID = 1
-
 AUTH_USER_MODEL = "authentication.User"
-
 LOGIN_URL = "login"
-
 LOGIN_REDIRECT_URL = "main"
-
 LOGOUT_REDIRECT_URL = "index"
-
-
-# Validación de contraseñas
-# https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -345,19 +244,13 @@ AUTH_PASSWORD_VALIDATORS = [
 
 AUTHENTICATION_BACKENDS = (
     "django.contrib.auth.backends.ModelBackend",
-    # Object-Permissions Level con django-guardian
     "guardian.backends.ObjectPermissionBackend",
 )
 
 
-# -- Sesiones
-# https://docs.djangoproject.com/en/4.0/ref/settings/#sessions
+# Configuración de archivos estáticos y media
+# -----------------------------------------------------------------
 
-SESSION_EXPIRE_AT_BROWSER_CLOSE = True
-
-# Archivos Static (CSS, JavaScript, Images)
-# ---------------------------------------------------------
-# https://docs.djangoproject.com/en/4.0/howto/static-files/
 STATICFILES_DIRS = [
     # os.path.join(BASE_DIR, "static"),
     os.path.join(APPS_DIR, "static"),
@@ -366,13 +259,9 @@ STATICFILES_DIRS = [
 MEDIA_ROOT = os.path.join(APPS_DIR, "media")
 MEDIA_URL = "media/"
 STATIC_URL = "static/"
-
 # Archivos Static para producción
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
-
-
 AZURE_ACCOUNT_NAME = os.environ.get("AZURE_ACCOUNT_NAME")
-
 AZURE_BLOB_AVAIL = all([AZURE_ACCOUNT_NAME])
 if AZURE_BLOB_AVAIL:
     AZURE_CUSTOM_DOMAIN = f"{AZURE_ACCOUNT_NAME}.blob.core.windows.net"
@@ -381,39 +270,116 @@ if AZURE_BLOB_AVAIL:
     STATICFILES_STORAGE = "config.azureblob.AzureStaticStorage"
     STATIC_LOCATION = "static"
     MEDIA_LOCATION = "media"
-
     STATIC_URL = f"https://{AZURE_CUSTOM_DOMAIN}/{STATIC_LOCATION}/"
     STATIC_ROOT = STATIC_URL
-
     MEDIA_URL = f"https://{AZURE_CUSTOM_DOMAIN}/{MEDIA_LOCATION}/"
     MEDIA_ROOT = MEDIA_URL
     AZURE_OVERWRITE_FILES = True
-
 STATICFILES_DIRS = [
     os.path.join(APPS_DIR, "static"),
     os.path.join(APPS_DIR, "media"),
 ]
 # STATIC_URL = "/app/static/"
-
-
 # # Archivos Static para producción
-
 STATICFILES_FINDERS = [
     "django.contrib.staticfiles.finders.FileSystemFinder",
     "django.contrib.staticfiles.finders.AppDirectoriesFinder",
 ]
 # -- Cache
 # https://docs.djangoproject.com/en/4.0/topics/cache/#
+# Configuración de CORS y CSRF
+# -----------------------------------------------------------------
+
+CORS_ALLOWED_ORIGINS = [
+    "http://127.0.0.1",
+    "http://localhost",
+    "http://localhost:3000",
+    "http://www.gpsmobile.pro",
+    "http://*.gpsmobile.pro",
+    "http://www.gpsmobile.pro",
+    "https://gpsmobile.pro",
+    "https://www.gpsmobile.pro",
+    "https://*.gpsmobile.pro",
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://127.0.0.1",
+    "http://localhost",
+    "http://localhost:3000",
+    "http://www.gpsmobile.pro",
+    "http://*.gpsmobile.pro",
+    "http://www.gpsmobile.pro",
+    "https://gpsmobile.pro",
+    "https://www.gpsmobile.pro",
+    "https://*.gpsmobile.pro",
+]
+
+
+CSRF_COOKIE_SECURE = True if not DEBUG else False
+SESSION_COOKIE_SECURE = True if not DEBUG else False
+
+
+# # Dominio de la cookie CSRF
+# CSRF_COOKIE_DOMAIN = 'gpsmobile.pro'
+
+# SESSION_COOKIE_DOMAIN = 'gpsmobile.pro' # Reemplaza con tu dominio real
+
+# Configuración de sesiones
+# -----------------------------------------------------------------
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
+# Asegúrate de que las cookies CSRF y de sesión estén configuradas adecuadamente
+CSRF_USE_SESSIONS = True
+
+# Configuración de Django REST Framework
+# -----------------------------------------------------------------
+
+REST_FRAMEWORK = {
+    "DEFAULT_SCHEMA_CLASS": "rest_framework.schemas.coreapi.AutoSchema",
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.AllowAny",
+    ],
+    "DEFAULT_RENDERER_CLASSES": [
+        "rest_framework.renderers.JSONRenderer",
+    ],
+}
+
+# Configuración del servicio de email
+# -----------------------------------------------------------------
 
 # Configuración del servicio de email (Gmail)
-EMAIL_BACKEND = env(
-    "EMAIL_BACKEND", default="django.core.mail.backends.smtp.EmailBackend"
-)
-EMAIL_HOST = env("EMAIL_HOST", default="smtp.gmail.com")
-EMAIL_HOST_USER = env("EMAIL_HOST_USER")
-EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
-EMAIL_PORT = env.int("EMAIL_PORT", default=25)
-EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
+EMAIL_BACKEND = env('EMAIL_BACKEND', default='django.core.mail.backends.smtp.EmailBackend')
+EMAIL_HOST = env('EMAIL_HOST', default='smtp.gmail.com')
+EMAIL_HOST_USER = env('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
+EMAIL_PORT = env.int('EMAIL_PORT', default=587)
+EMAIL_USE_TLS = env.bool('EMAIL_USE_TLS', default=True)
 
-# Configuracion para la paginacion
+# Configuración de paginación
+# -----------------------------------------------------------------
+
 DEFAULT_PAGINATION = 10
+
+# Configuración de logging
+# -----------------------------------------------------------------
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+    "loggers": {
+        "channels": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+        },
+    },
+}
+
+# Configuración del campo por defecto para modelos
+# -----------------------------------------------------------------
+
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

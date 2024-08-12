@@ -1,33 +1,36 @@
-"""
-Middleware (marco de enlaces) que valida los inicios de sesión de los usuarios para dejar solamente
-una activa, la más reciente. Depende del módulo de señales que escucha cuando un usuario se
-conecta y desconecta, y de la tabla `loggedinuser` que guarda la lista de usuarios en línea y la
-clave de sesión en la cual están conectados.
-
-Para más información sobre esta implementación, consulte:
-https://gist.github.com/fleepgeek/92b01d3187cf92b4495d71c69ee818df
-https://medium.com/scalereal/everything-you-need-to-know-about-middleware-in-django-2a3bd3853cd6
-
-"""
-
 from django.contrib.auth import logout
 from django.contrib.sessions.models import Session
 from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import redirect
+from django.utils.deprecation import MiddlewareMixin
 
 
-class SingleSessionPerUserMiddleware:
-    """Se ejecuta una sola vez cuando el servidor inicia."""
+class ExpireSessionOnBrowserCloseMiddleware(MiddlewareMixin):
+    """
+    Este middleware asegura que la sesión del usuario expire cuando se cierre el navegador.
+    """
 
-    def __init__(self, get_response):
-        self.get_response = get_response
-
-    def __call__(self, request):
+    def process_response(self, request, response):
         """
-        Código a ejecutar para cada petición antes de llamar a la vista y posteriormente
-        al middleware.
+        Este método se ejecuta después de que la vista ha sido procesada y antes de que la
+        respuesta sea enviada al cliente. Configura la cookie de sesión (sessionid) para que expire
+        al cerrar el navegador estableciendo expires=None.
         """
+        response.set_cookie("sessionid", request.session.session_key, expires=None)
+        return response
 
+class SingleSessionPerUserMiddleware(MiddlewareMixin):
+    """
+    Este middleware garantiza que un usuario solo pueda tener una sesión activa a la vez.
+    """
+
+    def process_request(self, request):
+        """
+        Este método se ejecuta antes de que la vista sea procesada.
+        Si el usuario está autenticado, verifica si tiene una sesión previa activa guardada en la
+        tabla loggedinuser. Si existe una sesión previa diferente a la actual, elimina la sesión
+        previa y actualiza la sesión activa en la base de datos.
+        """
         if request.user.is_authenticated:
             # Cuando un usuario se autentifica, verifica en la tabla `loggedinuser` si el usuario
             # está conectado a través de una sesión previa y guarda la clave de esa sesión.
@@ -47,24 +50,20 @@ class SingleSessionPerUserMiddleware:
             request.user.logged_in_user.session_key = request.session.session_key
             request.user.logged_in_user.save()
 
-        response = self.get_response(request)
-
-        return response
-
-
-class ManejoUsuarioNoExistenteMiddleware:
-    def __init__(self, get_response):
-        self.get_response = get_response
-
-    def __call__(self, request):
-        response = self.get_response(request)
-        return response
+class ManejoUsuarioNoExistenteMiddleware(MiddlewareMixin):
+    """
+    Este middleware maneja las excepciones que ocurren cuando un usuario no existe en la base de
+    datos, cerrando la sesión y redirigiendo al usuario a la página de inicio de sesión.
+    """
 
     def process_exception(self, request, exception):
+        """
+        Este método se ejecuta cuando ocurre una excepción durante el procesamiento de la solicitud.
+        Si la excepción es del tipo ObjectDoesNotExist, cierra la sesión (logout(request))
+        y redirige al usuario a la página de inicio de sesión (redirect('/login/')).
+        """
         if isinstance(exception, ObjectDoesNotExist):
             # Aquí puedes especificar una lógica adicional para determinar si el error
             # proviene específicamente de una operación relacionada con el usuario.
             logout(request)
-            return redirect(
-                "/login/"
-            )  # Asegúrate de reemplazar '/login/' con la URL de tu vista de login.
+            return redirect("login")  # Asegúrate de reemplazar 'login' con el nombre correcto de tu vista de login.

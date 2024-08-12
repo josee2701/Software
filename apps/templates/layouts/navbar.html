@@ -34,19 +34,23 @@
 {% endif %}
 
   <div class="sidenav-header">
+
     <i
       class="fas fa-times p-3 cursor-pointer text-white opacity-5 position-absolute end-0 top-0 d-none d-xl-none"
       aria-hidden="true"
       id="iconSidenav"
     ></i>
     <a
-      class="navbar-brand m-4"
-      href="{% url 'main' %}"
+    class="navbar-brand m-4"
+    {% if perms.socketmap.view_realtrackiot %}
+    href="{% url 'main' %}"
+    {% endif %}
     >
+
     {% if user.company.company_logo %}
     <img
       src="{{ MEDIA_URL }}{{ user.company.company_logo }}"
-      alt="{{ user.company.company_name }}"
+      alt=""
       class="navbar-brand-img h-100"
     />
     {% elif user.company.company_logo == "" and user.company.provider is None %}
@@ -65,20 +69,17 @@
   <hr class="horizontal light mt-0 mb-2" />
   <div class="collapse navbar-collapse w-auto" id="sidenav-collapse-main">
     <ul class="navbar-nav">
-      <li class="nav-item">
-        <a
-          class="nav-link text-white active bg-gradient-primary"
-          href="{% url 'main' %}"
-        >
-          <div
-            class="text-white text-center me-2 d-flex align-items-center justify-content-center"
-          >
-            <i class="material-icons opacity-10">dashboard</i>
-          </div>
-          <span class="nav-link-text ms-1">{% trans "Real Time" %}</span>
-          </a>
-      </li>
-      {% if perms.whitelabel.view_company or perms.authentication.view_user %}
+        {% if perms.socketmap.view_realtrackiot %}
+        <li class="nav-item">
+            <a class="nav-link text-white active bg-gradient-primary" href="{% url 'main' %}">
+                <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
+                    <i class="material-icons opacity-10">dashboard</i>
+                </div>
+                <span class="nav-link-text ms-1">{% trans "Real Time" %}</span>
+            </a>
+        </li>
+        {% endif %}
+        {% if perms.whitelabel.view_company or perms.authentication.view_user or perms.whitelabel.add_theme or perms.whitelabel.change_theme %}
         <li class="nav-item">
             <div class="nav-link text-white dropdown-toggle" id="configurationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                 <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
@@ -88,118 +89,138 @@
             </div>
             <ul class="dropdown-menu" aria-labelledby="configurationDropdown">
                 {% if perms.whitelabel.view_company %}
-                    <li><a class="dropdown-item" href="{% url 'companies:companies' %}"><i class="material-icons opacity-10" style="vertical-align: middle;">apartment</i> {% trans "Companies" %}</a></li>
+                <li><a class="dropdown-item" href="{% url 'companies:companies' %}"><i class="material-icons opacity-10" style="vertical-align: middle;">apartment</i> {% trans "Companies" %}</a></li>
                 {% endif %}
                 {% if perms.authentication.view_user %}
-                    <li><a class="dropdown-item" href="{% url 'users' %}"><i class="material-icons opacity-10" style="vertical-align: middle;">person</i> {% trans "Users" %}</a></li>
+                <li><a class="dropdown-item" href="{% url 'users' %}"><i class="material-icons opacity-10" style="vertical-align: middle;">person</i> {% trans "Users" %}</a></li>
                 {% endif %}
-                {% with theme=user.company.theme_set.first %} {% if theme %}
-                    <li><a class="dropdown-item" href="{% url 'companies:theme' theme.pk  %}"><i class="material-icons opacity-10" style="vertical-align: middle;">tune</i> {% trans "Custom" %}</a></li>
-                {% endif %} {% endwith %}
+                {% with theme=user.company.theme_set.first %}
+                {% if theme %}
+                    {% if perms.whitelabel.add_theme or perms.whitelabel.change_theme %}
+                    <li><a class="dropdown-item" href="{% url 'companies:theme' theme.pk %}"><i class="material-icons opacity-10" style="vertical-align: middle;">tune</i> {% trans "Custom" %}</a></li>
+                    {% endif %}
+                {% endif %}
+            {% endwith %}
             </ul>
         </li>
-      {% endif %}
+        {% endif %}
 
-      {% if perms.realtime.view_dataplan or perms.realtime.view_dataplan %}
-          <li class="nav-item">
-              <div class="nav-link text-white dropdown-toggle" id="plansDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                  <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
-                      <i class="material-icons opacity-10" style="vertical-align: middle;">sim_card</i>
-                  </div>
-                  <span class="nav-link-text ms-1" style="vertical-align: middle;">{% trans "Plans" %}</span>
-              </div>
-              <ul class="dropdown-menu" aria-labelledby="plansDropdown">
-                  {% if perms.whitelabel.view_module %}
-                      <li><a class="dropdown-item" href="{% url 'companies:module' %}"><i class="material-icons opacity-10" style="vertical-align: middle;">attach_money</i> {% trans "Billing" %}</a></li>
-                  {% endif %}
-                  {% if perms.realtime.view_dataplan %}
-                      <li><a class="dropdown-item" href="{% url 'realtime:dataplan' %}"><i class="material-icons opacity-10" style="vertical-align: middle;">sim_card</i> {% trans "DataPlans" %}</a></li>
-                  {% endif %}
-              </ul>
-          </li>
-      {% endif %}
-
-      {% if perms.realtime.view_simcard or perms.realtime.view_device or perms.realtime.view_vehicle %}
-          <li class="nav-item">
-              <div class="nav-link text-white dropdown-toggle" id="realtimeDataDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                  <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
-                      <i class="material-icons opacity-10" style="vertical-align: middle;">settings_input_antenna</i>
-                  </div>
-                  <span class="nav-link-text ms-1" style="vertical-align: middle;">{% trans "Device Management" %}</span>
-              </div>
-              <ul class="dropdown-menu" aria-labelledby="realtimeDataDropdown">
-                  {% if perms.realtime.view_simcard %}
-                      <li><a class="dropdown-item" href="{% url 'realtime:simcards' %}"><i class="material-icons opacity-10" style="vertical-align: middle;">sim_card</i> {% trans "Simcards" %}</a></li>
-                  {% endif %}
-                  {% if perms.realtime.view_device %}
-                      <li><a class="dropdown-item" href="{% url 'realtime:devices' %}"><i class="material-icons opacity-10" style="vertical-align: middle;">settings_input_antenna</i> {% trans "Devices" %}</a></li>
-                  {% endif %}
-                  {% if perms.realtime.view_vehicle %}
-                      <li><a class="dropdown-item" href="{% url 'realtime:vehicles' %}"><i class="material-icons opacity-10" style="vertical-align: middle;">local_shipping</i> {% trans "Assets" %}</a></li>
-                  {% endif %}
-              </ul>
-          </li>
-      {% endif %}
-
-      {% if perms.realtime.view_io_items_report or perms.checkpoints.view_report %}
-          <li class="nav-item">
-              <div class="nav-link text-white dropdown-toggle" id="reportsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                  <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
-                      <i class="material-icons opacity-10" style="vertical-align: middle;">rule</i>
-                  </div>
-                  <span class="nav-link-text ms-1" style="vertical-align: middle;">{% trans "Reports" %}</span>
-              </div>
-              <ul class="dropdown-menu" aria-labelledby="reportsDropdown">
-                  {% if perms.realtime.view_io_items_report %}
-                      <li><a class="dropdown-item" href="{% url 'realtime:add_configuration_report' %}"><i class="material-icons opacity-10" style="vertical-align: middle;">rule</i> {% trans "Customize Report" %}</a></li>
-                  {% endif %}
-                  {% if perms.checkpoints.view_report %}
-                      <li><a class="dropdown-item" href="{% url 'checkpoints:report_today' %}"><i class="material-icons opacity-10" style="vertical-align: middle;">summarize</i> {% trans "Today's Report" %}</a></li>
-                  {% endif %}
-              </ul>
-          </li>
-      {% endif %}
-
-      {% if perms.events.view_eventfeature or perms.realtime.view_geozones or perms.realtime.view_sending_commands or perms.checkpoints.view_driver %}
-          <li class="nav-item">
-              <div class="nav-link text-white dropdown-toggle" id="featuresDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                  <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
-                      <i class="material-icons opacity-10" style="vertical-align: middle;">more_horiz</i>
-                  </div>
-                  <span class="nav-link-text ms-1" style="vertical-align: middle;">{% trans "Features" %}</span>
-              </div>
-              <ul class="dropdown-menu" aria-labelledby="featuresDropdown">
-                  {% if perms.events.view_eventfeature %}
-                      <li><a class="dropdown-item" href="{% url 'events:list_user_events' %}"><i class="material-icons opacity-10" style="vertical-align: middle;">event</i> {% trans "Events" %}</a></li>
-                  {% endif %}
-                  {% if perms.realtime.view_geozones %}
-                      <li><a class="dropdown-item" href="{% url 'realtime:geozones' %}"><i class="material-icons opacity-10" style="vertical-align: middle;">share_location</i> {% trans "Geozones" %}</a></li>
-                  {% endif %}
-                  {% if perms.realtime.view_sending_commands %}
-                      <li><a class="dropdown-item" href="{% url 'realtime:commands' %}"><i class="material-icons opacity-10" style="vertical-align: middle;">forward_to_inbox</i> {% trans "Commands" %}</a></li>
-                  {% endif %}
-                  {% if perms.checkpoints.view_driver %}
-                      <li><a class="dropdown-item" href="{% url 'checkpoints:list_drivers' %}"><i class="material-icons opacity-10" style="vertical-align: middle;">contact_emergency</i> {% trans "Driver" %}</a></li>
-                  {% endif %}
-              </ul>
-          </li>
-      {% endif %}
-
-      {% if perms.whitelabel.view_ticket %}
+        {% if perms.realtime.view_dataplan or perms.whitelabel.view_module %}
         <li class="nav-item">
-          <a class="nav-link text-white" href="{% url 'companies:main_ticket' %}">
-            <div
-            class="text-white text-center me-2 d-flex align-items-center justify-content-center"
-            >
-            <span class="material-icons">support_agent</span>
+            <div class="nav-link text-white dropdown-toggle" id="plansDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
+                    <i class="material-icons opacity-10" style="vertical-align: middle;">sim_card</i>
+                </div>
+                <span class="nav-link-text ms-1" style="vertical-align: middle;">{% trans "Plans" %}</span>
             </div>
-            <span class="nav-link-text ms-1">{% trans "Helpdesk" %}</span>
-          </a>
+            <ul class="dropdown-menu" aria-labelledby="plansDropdown">
+                {% if perms.whitelabel.view_module %}
+                <li><a class="dropdown-item" href="{% url 'companies:module' %}"><i class="material-icons opacity-10" style="vertical-align: middle;">attach_money</i> {% trans "Billing" %}</a></li>
+                {% endif %}
+                {% if perms.realtime.view_dataplan %}
+                <li><a class="dropdown-item" href="{% url 'realtime:dataplan' %}"><i class="material-icons opacity-10" style="vertical-align: middle;">sim_card</i> {% trans "DataPlans" %}</a></li>
+                {% endif %}
+            </ul>
         </li>
-      {% endif %}
+        {% endif %}
 
+        {% if perms.realtime.view_simcard or perms.realtime.view_device or perms.realtime.view_vehicle %}
+        <li class="nav-item">
+            <div class="nav-link text-white dropdown-toggle" id="realtimeDataDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
+                    <i class="material-icons opacity-10" style="vertical-align: middle;">settings_input_antenna</i>
+                </div>
+                <span class="nav-link-text ms-1" style="vertical-align: middle;">{% trans "Device Management" %}</span>
+            </div>
+            <ul class="dropdown-menu" aria-labelledby="realtimeDataDropdown">
+                {% if perms.realtime.view_simcard %}
+                <li><a class="dropdown-item" href="{% url 'realtime:simcards' %}"><i class="material-icons opacity-10" style="vertical-align: middle;">sim_card</i> {% trans "Simcards" %}</a></li>
+                {% endif %}
+                {% if perms.realtime.view_device %}
+                <li><a class="dropdown-item" href="{% url 'realtime:devices' %}"><i class="material-icons opacity-10" style="vertical-align: middle;">settings_input_antenna</i> {% trans "Devices" %}</a></li>
+                {% endif %}
+                {% if perms.realtime.view_vehicle %}
+                <li><a class="dropdown-item" href="{% url 'realtime:vehicles' %}"><i class="material-icons opacity-10" style="vertical-align: middle;">local_shipping</i> {% trans "Assets" %}</a></li>
+                {% endif %}
+            </ul>
+        </li>
+        {% endif %}
+
+        {% if perms.realtime.view_io_items_report or perms.checkpoints.view_report %}
+        <li class="nav-item">
+            <div class="nav-link text-white dropdown-toggle" id="reportsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
+                    <i class="material-icons opacity-10" style="vertical-align: middle;">rule</i>
+                </div>
+                <span class="nav-link-text ms-1" style="vertical-align: middle;">{% trans "Reports" %}</span>
+            </div>
+            <ul class="dropdown-menu" aria-labelledby="reportsDropdown">
+                {% if perms.realtime.view_io_items_report %}
+                <li><a class="dropdown-item" href="{% url 'realtime:add_configuration_report' %}"><i class="material-icons opacity-10" style="vertical-align: middle;">rule</i> {% trans "Customize Report" %}</a></li>
+                {% endif %}
+                {% if perms.checkpoints.view_report %}
+                <li><a class="dropdown-item" href="{% url 'checkpoints:report_today' %}"><i class="material-icons opacity-10" style="vertical-align: middle;">summarize</i> {% trans "Today's Report" %}</a></li>
+                {% endif %}
+            </ul>
+        </li>
+        {% endif %}
+
+        {% if perms.events.view_eventfeature or perms.realtime.view_geozones or perms.realtime.view_sending_commands or perms.checkpoints.view_driver %}
+        <li class="nav-item">
+            <div class="nav-link text-white dropdown-toggle" id="featuresDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
+                    <i class="material-icons opacity-10" style="vertical-align: middle;">more_horiz</i>
+                </div>
+                <span class="nav-link-text ms-1" style="vertical-align: middle;">{% trans "Features" %}</span>
+            </div>
+            <ul class="dropdown-menu" aria-labelledby="featuresDropdown">
+                {% if perms.events.view_eventfeature %}
+                <li><a class="dropdown-item" href="{% url 'events:list_user_events' %}"><i class="material-icons opacity-10" style="vertical-align: middle;">event</i> {% trans "Events" %}</a></li>
+                {% endif %}
+                {% if perms.realtime.view_geozones %}
+                <li><a class="dropdown-item" href="{% url 'realtime:geozones' %}"><i class="material-icons opacity-10" style="vertical-align: middle;">share_location</i> {% trans "Geozones" %}</a></li>
+                {% endif %}
+                {% if perms.realtime.view_sending_commands %}
+                <li><a class="dropdown-item" href="{% url 'realtime:commands' %}"><i class="material-icons opacity-10" style="vertical-align: middle;">forward_to_inbox</i> {% trans "Commands" %}</a></li>
+                {% endif %}
+                {% if perms.checkpoints.view_driver %}
+                <li><a class="dropdown-item" href="{% url 'checkpoints:list_drivers' %}"><i class="material-icons opacity-10" style="vertical-align: middle;">contact_emergency</i> {% trans "Driver" %}</a></li>
+                {% endif %}
+            </ul>
+        </li>
+        {% endif %}
+        
+        {% if perms.checkpoints.view_advanced_analytical %}
+        <li class="nav-item">
+            <a class="nav-link text-white" href="{% url 'checkpoints:DataSeM' %}">
+                <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
+                    <span class="material-icons">trending_up</span>
+                </div>
+                <span class="nav-link-text ms-1">DataSeM</span>
+            </a>
+        </li>
+        {% endif %}
+        <li class="nav-item">
+          <a class="nav-link text-white" href="{% url 'checkpoints:Config_DataSeM' %}">
+              <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
+                  <span class="material-icons">trending_up</span>
+              </div>
+              <span class="nav-link-text ms-1">ConfigDataSeM</span>
+          </a>
+      </li>
+
+        {% if perms.whitelabel.view_ticket %}
+        <li class="nav-item">
+            <a class="nav-link text-white" href="{% url 'companies:main_ticket' %}">
+                <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
+                    <span class="material-icons">support_agent</span>
+                </div>
+                <span class="nav-link-text ms-1">{% trans "Helpdesk" %}</span>
+            </a>
+        </li>
+        {% endif %}
     </ul>
-  </div>
+</div>
   <div class="sidenav-footer position-absolute w-100 bottom-0">
     <div class="">
       <a
@@ -236,7 +257,7 @@
         <ul class="navbar-nav justify-content-end">
           {% if user.is_authenticated %}
               <li class="col d-flex justify-content-start">
-                  <a type="button" hx-get="{% url 'Profile' user.id %}" hx-target="#dialog">
+                  <a type="button" hx-get="{% url 'Profile' user.id %}" hx-target="#modal .modal-content">
                       <i class="fa fa-user me-sm-1"></i>
                       <span class="d-sm-inline d-none">{{user.first_name}}</span>
                   </a>

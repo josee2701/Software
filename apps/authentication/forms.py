@@ -18,12 +18,8 @@ https://docs.djangoproject.com/en/4.1/topics/forms/
 from any_imagefield.models import AnyImageField
 from django import forms
 from django.contrib.auth import get_user_model, password_validation
-from django.contrib.auth.forms import (
-    PasswordResetForm,
-    SetPasswordForm,
-    UserChangeForm,
-    UserCreationForm,
-)
+from django.contrib.auth.forms import (PasswordResetForm, SetPasswordForm,
+                                       UserChangeForm, UserCreationForm)
 from django.contrib.auth.models import Group, Permission
 from django.contrib.auth.tokens import default_token_generator
 from django.core.exceptions import ValidationError
@@ -315,7 +311,7 @@ class UserCreationForm_(UserCreationForm):
     )
     companies_to_monitor = forms.ModelMultipleChoiceField(
         required=False,
-        queryset=Company.objects.filter(visible = True, actived = True),
+        queryset=Company.objects.filter(visible=True, actived=True),
         widget=MyCheckboxSelectMultiple(
             attrs={
                 "class": "form-check-input",
@@ -325,7 +321,7 @@ class UserCreationForm_(UserCreationForm):
     )
     vehicles_to_monitor = forms.ModelMultipleChoiceField(
         required=False,
-        queryset=Vehicle.objects.filter(visible = True),
+        queryset=Vehicle.objects.filter(visible=True),
         widget=MyCheckboxSelectMultiple(
             attrs={
                 "class": "form-check-input",
@@ -359,6 +355,7 @@ class UserCreationForm_(UserCreationForm):
             "is_active",
             "group_vehicles",
             "process_type",
+            "rol",
         )
 
         labels = {
@@ -372,60 +369,61 @@ class UserCreationForm_(UserCreationForm):
             "is_active": _("Active"),
             "group_vehicles": _("group vehicles"),
             "process_type": _("process_type"),
+            "rol":_("rol")
         }
         widgets = {
             "username": forms.TextInput(
                 attrs={
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                     "class": "form-control",
                 }
             ),
             "email": forms.EmailInput(
                 attrs={
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                     "class": "form-control",
                     "autofocus": True,
                 }
             ),
             "first_name": forms.TextInput(
                 attrs={
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                     "class": "form-control",
                 }
             ),
             "last_name": forms.TextInput(
                 attrs={
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                     "class": "form-control",
                 }
             ),
             "company": forms.Select(
                 attrs={
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                     "class": "form-control",
                 }
             ),
             "companies_to_monitor": forms.SelectMultiple(
                 attrs={
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                     "class": "form-control",
                 }
             ),
             "group_vehicles": forms.SelectMultiple(
                 attrs={
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                     "class": "form-control",
                 }
             ),
             "vehicles_to_monitor": forms.SelectMultiple(
                 attrs={
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                     "class": "form-control",
                 }
             ),
             "alarm": forms.Select(
                 attrs={
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                     "class": "form-control",
                 }
             ),
@@ -434,9 +432,14 @@ class UserCreationForm_(UserCreationForm):
                     "class": "form-check-input",
                 }
             ),
+            "rol": forms.CheckboxInput(
+                attrs={
+                    "class": "form-check-input",
+                }
+            ),
             "process_type": forms.Select(
                 attrs={
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                     "class": "form-control",
                 }
             ),
@@ -467,9 +470,7 @@ class UserCreationForm_(UserCreationForm):
             username=username, company=company, visible=True
         ).exists():
             raise ValidationError(
-                _(
-                    "Un usuario con este nombre de usuario ya existe en la compañía seleccionada."
-                )
+                _("A user with this username already exists in the selected company.")
             )
         return username
 
@@ -481,7 +482,7 @@ class UserChangeForm_(UserChangeForm):
 
     companies_to_monitor = forms.ModelMultipleChoiceField(
         required=False,
-        queryset=Company.objects.filter(visible = True, actived = True),
+        queryset=Company.objects.filter(visible=True, actived=True),
         widget=MyCheckboxSelectMultiple(
             attrs={
                 "class": "form-check-input",
@@ -491,7 +492,7 @@ class UserChangeForm_(UserChangeForm):
     )
     vehicles_to_monitor = forms.ModelMultipleChoiceField(
         required=False,
-        queryset=Vehicle.objects.filter(visible = True, is_active = True),
+        queryset=Vehicle.objects.filter(visible=True, is_active=True),
         widget=MyCheckboxSelectMultiple(
             attrs={
                 "class": "form-check-input",
@@ -525,6 +526,7 @@ class UserChangeForm_(UserChangeForm):
             "email",
             "group_vehicles",
             "process_type",
+            "rol"
         )
         labels = {
             "email": _("Email"),
@@ -537,17 +539,18 @@ class UserChangeForm_(UserChangeForm):
             "alarm": _("alarm"),
             "group_vehicles": _("group vehicles"),
             "process_type": _("process_type"),
+            "rol":_("rol")
         }
         widgets = {
             "username": forms.TextInput(
                 attrs={
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                     "class": "form-control",
                 }
             ),
             "email": forms.EmailInput(
                 attrs={
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                     "class": "form-control",
                     "placeholder": _("Email"),
                     "autofocus": True,
@@ -555,37 +558,37 @@ class UserChangeForm_(UserChangeForm):
             ),
             "first_name": forms.TextInput(
                 attrs={
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                     "class": "form-control",
                 }
             ),
             "last_name": forms.TextInput(
                 attrs={
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                     "class": "form-control",
                 }
             ),
             "company": forms.Select(
                 attrs={
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                     "class": "form-control",
                 }
             ),
             "companies_to_monitor": forms.SelectMultiple(
                 attrs={
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                     "class": "form-control",
                 }
             ),
             "group_vehicles": forms.SelectMultiple(
                 attrs={
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                     "class": "form-control",
                 }
             ),
             "vehicles_to_monitor": forms.SelectMultiple(
                 attrs={
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                     "class": "form-control",
                 }
             ),
@@ -596,13 +599,18 @@ class UserChangeForm_(UserChangeForm):
             ),
             "alarm": forms.Select(
                 attrs={
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                     "class": "form-control",
+                }
+            ),
+            "rol": forms.CheckboxInput(
+                attrs={
+                    "class": "form-check-input",
                 }
             ),
             "process_type": forms.Select(
                 attrs={
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                     "class": "form-control",
                 }
             ),

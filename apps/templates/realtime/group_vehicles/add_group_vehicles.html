@@ -7,7 +7,7 @@
       <button type="button" id="cerrarVenta" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
     </div>
     <div class="card-body">
-      <form hx-post="{{ request.path }}" enctype="multipart/form-data">
+      <form hx-post="{{ request.path }}" hx-target="#modal-content" enctype="multipart/form-data">
         {% csrf_token %}
         <div class="row">
           <div class="col">

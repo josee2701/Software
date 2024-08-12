@@ -7,9 +7,9 @@
       <div class="col" >
         <div class="card align-items-center">
           <div class="card-body">
-            <form hx-post="{{ request.path }}">
+            <form hx-post="{{ request.path }}" hx-target="#modal-content">
               {% csrf_token %}
-              <p>{% trans '¿Are you sure you want to delete the Vehicle' %} "{{ object }}" ?</p>
+              <p>{% trans '¿Are you sure you want to delete the Dataplan' %} "{{ object }}" ?</p>
               <div class="d-grid col-4 mx-auto">
                 <button type="submit" class="btn btn-primary">{% trans "Confirm" %}</button>
                 <button type="button" class="btn btn-primary" data-bs-dismiss="modal">{% trans 'Cancel' %}</button>

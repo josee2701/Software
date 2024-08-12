@@ -7,8 +7,13 @@ Para una mayor referencia sobre la creación de modelos en Django, consulte
 https://docs.djangoproject.com/en/4.1/topics/db/models/
 """
 
+import base64
+import os
+
 import pycountry
 from colorfield.fields import ColorField
+from cryptography.fernet import Fernet, InvalidToken
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
@@ -34,7 +39,7 @@ class Theme(models.Model):
     )
     lock_screen_image = models.ImageField(
         upload_to="uploads/",
-        validators=[FileExtensionValidator(["png", "jpg"])],
+        validators=[FileExtensionValidator(["png", "jpg", "jpeg"])],
         blank=True,
         null=True,
         default="backgrounds/login-1.png",
@@ -42,7 +47,7 @@ class Theme(models.Model):
     )
     sidebar_image = models.ImageField(
         upload_to="uploads/",
-        validators=[FileExtensionValidator(["png", "jpg"])],
+        validators=[FileExtensionValidator(["png", "jpg", "jpeg"])],
         blank=True,
         null=True,
         default="backgrounds/sidebar-1.jpg",
@@ -60,6 +65,23 @@ class Theme(models.Model):
         default="80",
     )
 
+    def save(self, *args, **kwargs):
+        company_id = self.company_id
+        # Eliminar imágenes antiguas si se están actualizando
+        if self.pk:
+            old_instance = Theme.objects.get(pk=self.pk)
+            # Eliminar sidebar_image si es diferente y pertenece a la misma compañía
+            if self.sidebar_image and old_instance.sidebar_image != self.sidebar_image:
+                if old_instance.company_id == company_id:
+                    old_instance.sidebar_image.delete(save=False)
+            # Eliminar lock_screen_image si es diferente y pertenece a la misma compañía
+            if self.lock_screen_image and old_instance.lock_screen_image != self.lock_screen_image:
+                if old_instance.company_id == company_id:
+                    old_instance.lock_screen_image.delete(save=False)
+
+        super().save(*args, **kwargs)
+
+
     class Meta:
         verbose_name_plural = _("themes")
 
@@ -73,10 +95,7 @@ class Module(models.Model):
         "Company", on_delete=models.CASCADE, verbose_name=_("Company")
     )
     group = models.ForeignKey(Group, on_delete=models.CASCADE, verbose_name=_("Group"))
-    price = models.DecimalField(default=0, max_digits=6, decimal_places=2)
-
-    def __str__(self):
-        return f"{self.first_name} {self.last_name}"
+    price = models.DecimalField(default=0, max_digits=10, decimal_places=2)
 
     class Meta:
         verbose_name_plural = _("modules")
@@ -110,7 +129,7 @@ class CompanyTypeMap(models.Model):
     map_type = models.ForeignKey(
         "MapType", on_delete=models.CASCADE, verbose_name=_("Map type")
     )
-    key_map = models.CharField(max_length=60, blank=False, verbose_name=_("key map"))
+    key_map = models.CharField(max_length=512, blank=False, verbose_name=_("key map"))
 
     class Meta:
         verbose_name_plural = _("company type maps")
@@ -130,6 +149,90 @@ class CompanyTypeMap(models.Model):
         self.key_map = self.key_map.strip()
         if not self.key_map:
             raise ValidationError(_("key map cannot be only spaces"))
+
+    def save(self, *args, **kwargs):
+        """
+        Guarda el objeto en la base de datos.
+
+        Encripta la clave antes de guardarla si no está ya encriptada.
+        """
+        if not self._is_encrypted(self.key_map):
+            self.key_map = self.encrypt_key(self.key_map)
+        super().save(*args, **kwargs)
+
+    def encrypt_key(self, key):
+        """
+        Encripta una clave utilizando el algoritmo Fernet.
+
+        Args:
+            key (str): La clave a encriptar.
+
+        Returns:
+            str: La clave encriptada en formato base64.
+
+        """
+        # Inicializa el cifrado Fernet con la clave de encriptación
+        cipher_suite = Fernet(settings.ENCRYPTION_KEY.encode())
+        # Cifra la clave y la codifica en base64 para su almacenamiento
+        encrypted_key = cipher_suite.encrypt(key.encode())
+        return base64.urlsafe_b64encode(encrypted_key).decode()
+
+    def decrypt_key(self, encrypted_key):
+        """
+        Desencripta una clave encriptada utilizando el algoritmo Fernet.
+
+        Args:
+            encrypted_key (str): La clave encriptada en formato base64.
+
+        Returns:
+            str: La clave desencriptada.
+
+        """
+        try:
+            # Asegura que la cadena tenga el padding correcto para base64
+            missing_padding = len(encrypted_key) % 4
+            if missing_padding != 0:
+                encrypted_key += "=" * (4 - missing_padding)
+            # Inicializa el cifrado Fernet con la clave de encriptación
+            cipher_suite = Fernet(settings.ENCRYPTION_KEY.encode())
+            # Decodifica y desencripta la clave
+            decrypted_key = cipher_suite.decrypt(
+                base64.urlsafe_b64decode(encrypted_key)
+            )
+            return decrypted_key.decode()
+        except InvalidToken:
+            return encrypted_key
+
+    def get_obscured_key(self):
+        """
+        Obtiene una versión parcialmente oculta de la clave.
+
+        Returns:
+            str: La clave parcialmente oculta.
+
+        """
+        try:
+            decrypted_key = self.decrypt_key(self.key_map)
+            return "*" * (len(decrypted_key) - 4) + decrypted_key[-4:]
+        except InvalidToken:
+            return self.key_map
+
+    def _is_encrypted(self, key):
+        """
+        Verifica si una clave está encriptada.
+
+        Args:
+            key (str): La clave a verificar.
+
+        Returns:
+            bool: True si la clave está encriptada, False en caso contrario.
+
+        """
+        try:
+            self.decrypt_key(key)
+            return True
+        except (InvalidToken, ValueError):
+            return False
 
 
 class Company(models.Model):
@@ -294,6 +397,12 @@ class Process(models.Model):
 
 
 class Ticket(models.Model):
+    PRIORITY_CHOICES = [
+        ("Low", _("Low")),
+        ("Medium", _("Medium")),
+        ("High", _("High")),
+    ]
+
     created_by = models.ForeignKey(
         get_user_model(),
         on_delete=models.CASCADE,
@@ -307,9 +416,7 @@ class Ticket(models.Model):
         null=True,
     )
     subject = models.CharField(max_length=200)
-    priority = models.CharField(
-        max_length=20, choices=[("High", "High"), ("Medium", "Medium"), ("Low", "Low")]
-    )
+    priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES)
 
     assign_to = models.ForeignKey(
         "authentication.User",
@@ -320,6 +427,7 @@ class Ticket(models.Model):
     )
     status = models.BooleanField(default=True, verbose_name="Open")
     created_at = models.DateTimeField(auto_now_add=True)
+    closed_at = models.DateTimeField(null=True, verbose_name="closed at")
     last_comment = models.DateTimeField(auto_now=True)
 
     process_type = models.ForeignKey(
@@ -345,6 +453,8 @@ class Ticket(models.Model):
         verbose_name=_("Customer Company"),
         null=True,
     )
+
+    rating = models.IntegerField(null=True, verbose_name="rating")
 
 
 class Message(models.Model):
@@ -374,8 +484,24 @@ class Attachment(models.Model):
         validators=[
             FileExtensionValidator(
                 [
-                    "pdf", "docx", "doc", "txt", "xlsx", "xls", "zip", "exe",
-                    "jpg", "png", "jpeg", "msg", "cfg", "mp4", "rar", "xim", "eml",    
+                    "pdf",
+                    "docx",
+                    "doc",
+                    "txt",
+                    "xlsx",
+                    "xls",
+                    "zip",
+                    "exe",
+                    "jpg",
+                    "png",
+                    "jpeg",
+                    "msg",
+                    "cfg",
+                    "mp4",
+                    "rar",
+                    "xim",
+                    "eml",
+                    "xml",
                 ]
             ),
         ],

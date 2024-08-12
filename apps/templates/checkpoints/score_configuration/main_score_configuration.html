@@ -2,62 +2,181 @@
 
 {% load i18n static %}
 
-{% block title %} {% trans "Score Configuration" %}{% endblock %}
+{% block title %} {% trans "Score Configuration" %} {% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
+<div class="container-fluid py-4 custom-padding-container" style="overflow: hidden;">
     <div class="row">
         <div class="col-12">
-            <div class="card my-4">
+            <div class="card my-4 custom-padding-card-my-4">
                 <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
                     <div class="bg-gradient-primary shadow-primary border-radius-lg pt-4 pb-3">
-                        <div class=col>
-                            <h5 class="text-white text-capitalize ps-3">{% trans "Driver Rating Settings List" %}</h5>
+                        <div class="col">
+                            <h5 class="text-white text-capitalize ps-3">{% trans "Driver Rating Settings" %}</h5>
                         </div>
                     </div>
                 </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col d-flex">
-                            <!-- Es la opcion del buscador de la platilla de Simcard -->
-                            <form id="search-form" method="GET" onsubmit="return false">
-                                <div class="input-group input-group-outline">
-                                    <label class="form-label">{% trans "Search..." %}</label>
-                                    <input
-                                        id="search-input"
-                                        type="text"
-                                        class="form-control"
-                                        onfocus="focused(this)"
-                                        onfocusout="defocused(this)"
-                                        name="q"
-                                        autocomplete="off"
-                                    />
-                                </div>
-                            </form>
+                <div class="card-body custom-padding-body">
+                    <div class="row align-items-center mb-3">
+                        <div class="col-12 d-flex flex-column flex-md-row align-items-center justify-content-between">
+                            <div class="d-flex flex-wrap align-items-center mb-2 mb-md-0">
+                                <form method="POST" action="{% url 'checkpoints:list_score_configuration' %}" class="d-flex align-items-center">
+                                    {% csrf_token %}
+                                    <label class="me-2" style="padding-top: 4px;">{% trans "Show" %}</label>
+                                    <select name="paginate_by" onchange="this.form.submit()" class="form-select form-select-sm me-2">
+                                        <option value="15" {% if request.POST.paginate_by == '15' or paginate_by == 15 %} selected {% endif %}>15</option>
+                                        <option value="25" {% if request.POST.paginate_by == '25' or paginate_by == 25 %} selected {% endif %}>25</option>
+                                        <option value="50" {% if request.POST.paginate_by == '50' or paginate_by == 50 %} selected {% endif %}>50</option>
+                                        <option value="100" {% if request.POST.paginate_by == '100' or paginate_by == 100 %} selected {% endif %}>100</option>
+                                    </select>
+                                    <label class="mt-1">{% trans "results" %}</label>
+                                    <input type="hidden" name="q" value="{{ request.POST.q }}">
+                                </form>
+                            </div>
+                            <div class="d-flex justify-content-end align-items-center flex-wrap">
+                                {% if object_list %}
+                                <a class="btn btn-primary" id="exportExcelBtn" type="button" style="padding: 9px 12px; margin-right: 8px !important; margin: 0 0 0 -1px;">
+                                    <i class="fa-solid fa-file-excel mx-2"></i> {% trans "Export to Excel" %}
+                                </a>
+                                {% endif %}
+                                <form id="search-form" method="GET" class="flex me-md-3 mb-2 mb-md-0" style="max-width: 180px;" onsubmit="return false">
+                                    <div class="input-group input-group-sm input-group-outline">
+                                        <label class="form-label">{% trans "Search..." %}</label>
+                                        <input id="search-input" type="text" class="form-control" onfocus="focused(this)" onfocusout="defocused(this)" name="q" autocomplete="off">
+                                    </div>
+                                </form>
+                            </div>
                         </div>
-                        <!-- Contenido de la vista para usuarios con permiso -->
-                        {% comment %} <div class="col d-flex justify-content-end">
-                            <a href="{% url 'checkpoints:list_drivers' %}" class="btn btn-primary" role="button"> {% trans "Return" %} </a>
-                        </div> {% endcomment %}
-                    </div>
-                    <p><p>
-                    <div class="card-body scrollable-content" id="dynamic-scrollable-content" style="overflow-y: auto;">
-                        <div class="table-responsive p-0">
-                            <!-- Se realiza la tabla en la cual se estipulan los nombres de cada columna -->
-                            <table class="table align-items-center mb-0">
+                      </div>
+                      <div style="overflow-x: auto;">
+                      <div class="table-responsive">
+                        <table class="table align-items-center mb-0 table-sm">
                                 <thead>
                                     <tr>
                                         <th></th>
-                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"> {% trans "Company" %} </th>
-                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"> {% trans "Maximum score" %} </th>
-                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"> {% trans "Minimum score" %} </th>
-                                        <!-- <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"> {% trans "Modified by" %} </th> -->
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                            <form id="sort-form-company" method="post" style="display: none;" action="{% url 'checkpoints:list_score_configuration' %}">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="order_by" value="company">
+                                                <input type="hidden" name="direction" value="{% if order_by == 'company' and direction == 'asc' %}desc{% else %}asc{% endif %}">
+                                            </form>
+                                            <a href="#" onclick="document.getElementById('sort-form-company').submit(); return false;">
+                                                {% trans "Company" %}
+                                                <span class="sort-indicator">
+                                                    <span class="sort-arrow sort-arrow-up {% if order_by == 'company' and direction == 'asc' %}active{% else %}inactive{% endif %}">↑</span>
+                                                    <span class="sort-arrow sort-arrow-down {% if order_by == 'company' and direction == 'desc' %}active{% else %}inactive{% endif %}">↓</span>
+                                                </span>
+                                            </a>
+                                        </th>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                            <form id="sort-form-max-score" method="post" style="display: none;" action="{% url 'checkpoints:list_score_configuration' %}">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="order_by" value="max_score">
+                                                <input type="hidden" name="direction" value="{% if order_by == 'max_score' and direction == 'asc' %}desc{% else %}asc{% endif %}">
+                                            </form>
+                                            <a href="#" onclick="document.getElementById('sort-form-max-score').submit(); return false;">
+                                                {% trans "Maximum score" %}
+                                                <span class="sort-indicator">
+                                                    <span class="sort-arrow sort-arrow-up {% if order_by == 'max_score' and direction == 'asc' %}active{% else %}inactive{% endif %}">↑</span>
+                                                    <span class="sort-arrow sort-arrow-down {% if order_by == 'max_score' and direction == 'desc' %}active{% else %}inactive{% endif %}">↓</span>
+                                                </span>
+                                            </a>
+                                        </th>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                            <form id="sort-form-min-score" method="post" style="display: none;" action="{% url 'checkpoints:list_score_configuration' %}">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="order_by" value="min_score">
+                                                <input type="hidden" name="direction" value="{% if order_by == 'min_score' and direction == 'asc' %}desc{% else %}asc{% endif %}">
+                                            </form>
+                                            <a href="#" onclick="document.getElementById('sort-form-min-score').submit(); return false;">
+                                                {% trans "Minimum score" %}
+                                                <span class="sort-indicator">
+                                                    <span class="sort-arrow sort-arrow-up {% if order_by == 'min_score' and direction == 'asc' %}active{% else %}inactive{% endif %}">↑</span>
+                                                    <span class="sort-arrow sort-arrow-down {% if order_by == 'min_score' and direction == 'desc' %}active{% else %}inactive{% endif %}">↓</span>
+                                                </span>
+                                            </a>
+                                        </th>                                     
                                     </tr>
                                 </thead>
-                                <tbody hx-get="{% url 'checkpoints:list_score_configuration_companies' %}" hx-trigger="load, ListScoreChanged from:body">
-                                    <tr><td> {% trans "Loading..." %} </td></tr>
+                                <tbody id="score-tbody">
+                                    {% for score_setup in object_list %}
+                                    <tr>
+                                        <td class="text-center p-2">
+                                            <button type="button" hx-get="{% url 'checkpoints:score_configuration' score_setup.company_id %}" class="btn btn-primary btn-sm" hx-target="#modal .modal-content">
+                                                <i class="fa-solid fa-pencil"></i>
+                                            </button>
+                                        </td>
+                                        <td class="align-middle text-center text-sm">
+                                            <span class="text-secondary mb-0">{{ score_setup.company }}</span>
+                                        </td>
+                                        <td class="align-middle text-center text-sm">
+                                            <span class="text-secondary mb-0">{{ score_setup.max_score }}</span>
+                                        </td>
+                                        <td class="align-middle text-center text-sm">
+                                            <span class="text-secondary mb-0">{{ score_setup.min_score }}</span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
                                 </tbody>
                             </table>
+                        </div>
+                    </div>
+                    <form id="pagination-form" method="post" action="">
+                        {% csrf_token %}
+                        <input type="hidden" name="paginate_by" value="{{ request.POST.paginate_by }}">
+                        <input type="hidden" name="q" value="{{ request.GET.q }}">
+                        <input type="hidden" name="page" id="page-input" value="{{ page_obj.number }}">
+                    </form>
+                    <div class="row mt-2 custom-row">
+                        <div class="col-6 d-flex justify-content-start align-items-center">
+                            <div class="pagination-info">
+                                {% trans 'Displaying' %} {{ page_obj.start_index }} {% trans 'to' %} {{ page_obj.end_index }} {% trans 'of' %} {{ page_obj.paginator.count }} {% trans 'items.' %}
+                            </div>
+                        </div>
+                        <div class="col-6 d-flex justify-content-end">
+                            <nav aria-label="Page navigation" id="pagination-container">
+                                <ul class="pagination">
+                                    {% if page_obj.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="#" onclick="setPageAndSubmit(1); return false;">
+                                                {% trans 'Home' %}
+                                            </a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="#" onclick="setPageAndSubmit({{ page_obj.previous_page_number }}); return false;">
+                                                &laquo;
+                                            </a>
+                                        </li>
+                                    {% endif %}
+                                    {% if page_obj.number|add:"-4" > 1 %}
+                                        <li class="page-item"><span class="page-link">...</span></li>
+                                    {% endif %}
+                                    {% for num in page_obj.paginator.page_range %}
+                                        {% if num > page_obj.number|add:"-4" and num < page_obj.number|add:"4" %}
+                                            <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                                                <a class="page-link" href="#" onclick="setPageAndSubmit({{ num }}); return false;">
+                                                    {{ num }}
+                                                </a>
+                                            </li>
+                                        {% endif %}
+                                    {% endfor %}
+                                    {% if page_obj.number|add:"3" < page_obj.paginator.num_pages %}
+                                        <li class="page-item"><span class="page-link">...</span></li>
+                                    {% endif %}
+                                    {% if page_obj.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="#" onclick="setPageAndSubmit({{ page_obj.next_page_number }}); return false;">
+                                                &raquo;
+                                            </a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="#" onclick="setPageAndSubmit({{ page_obj.paginator.num_pages }}); return false;">
+                                                {% trans 'End' %}
+                                            </a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
                         </div>
                     </div>
                 </div>
@@ -65,5 +184,53 @@
         </div>
     </div>
 </div>
-<script src="{% static 'assets/js/dynamic-scrollable-content.js' %}"></script>
+<!-- Modal de progreso -->
+<div class="modal fade" id="downloadModal" tabindex="-1" aria-labelledby="downloadModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-start modal-dialog-scrollable" style="max-width: 25%;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="downloadModalLabel">{% trans "Download Progress" %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="progress">
+                    <div id="downloadProgressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar">0%</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/estilos_templates.css' %}" />
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/style_main_list.css' %}" />
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/report/report_today.css' %}">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.3/xlsx.full.min.js"></script>
+</head>
+<script>
+    var csrfToken = "{{ csrf_token }}";
+    const updateScoreUrl = "{% url 'checkpoints:score_configuration' 0 %}";
+    var translations = {
+        low: "{% trans 'Low' %}",
+        medium: "{% trans 'Medium' %}",
+        high: "{% trans 'High' %}",
+        end: "{% trans 'End' %}",
+        home: "{% trans 'Home' %}",
+        open: "{% trans 'Open' %}",
+        closed: "{% trans 'Closed' %}",
+        false: "{% trans 'Inactive' %}",
+        true: "{% trans 'Active' %}",
+        to: "{% trans 'to' %}",
+        of: "{% trans 'of' %}",
+        unassigned : "{% trans 'Unassigned' %}",
+        displaying: "{% trans 'Displaying' %}",
+        scoreDriver: "{% trans 'Score_Driver' %}",
+    };
+</script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="{% static 'assets/js/checkpoints/driver_analytic/search_scores.js' %}"></script>
+<script src="{% static 'assets/js/asc_desc.js' %}"></script>
+<script src="{% static 'assets/js/checkpoints/driver_analytic/export_score_driver.js' %}"></script>
 {% endblock %}

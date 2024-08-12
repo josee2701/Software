@@ -9,7 +9,7 @@
 
       </div>
       <div class="card-body">
-        <form hx-post="{{ request.path }}">
+        <form hx-post="{{ request.path }}" hx-target="#modal-content">
           {% csrf_token %}
           <div class="row">
             <div class="input-group input-group-outline">
@@ -19,7 +19,7 @@
                 type="text"
                 class="form-control"
                 onfocus="focused(this)"
-                placeholder="Search"
+                placeholder={% trans "Search" %}
                 onfocusout="defocused(this)"
                 name="q"
                 autocomplete="off"
@@ -109,82 +109,12 @@
     </div>
   </div>
 </div>
+
 <head>
   <link rel="stylesheet" type="text/css" href="{% static 'assets/css/estilos_templates.css' %}">
 </head>
+<script src="{% static 'assets/js/user/update_permissions.js' %}"></script>
 
-<script>
-  src = "{% static 'path/to/jquery.js' %}";
-</script>
-<script>
-  $(document).ready(function () {
-    // Función para mostrar u ocultar permisos basados en el estado del checkbox del grupo
-    function togglePermissions(moduleId, show) {
-      // Selecciona todos los permisos relacionados con el módulo
-      var permissions = $('.permission-row[data-module="' + moduleId + '"]');
 
-      // Muestra u oculta los permisos basado en el valor de 'show'
-      permissions.toggle(show);
-
-      // Si 'show' es falso, significa que el módulo fue desmarcado, por lo tanto, desmarca todos los permisos
-      if (!show) {
-        permissions.find('input[type="checkbox"]').prop('checked', false);
-      }
-    }
-
-    $(".module-checkbox").change(function () {
-      // Obtiene el ID del módulo desde el atributo id del checkbox del grupo
-      var moduleId = $(this).attr("id").replace("group_", "");
-      var isChecked = $(this).prop("checked");
-      togglePermissions(moduleId, isChecked);
-    });
-
-    // Al inicio, ajusta la visibilidad de los permisos basado en el estado de cada checkbox del grupo
-    $(".module-checkbox").each(function () {
-      var moduleId = $(this).attr("id").replace("group_", "");
-      var isChecked = $(this).prop("checked");
-      togglePermissions(moduleId, isChecked);
-    });
-
-    $(".select-all-permissions").change(function () {
-      var isChecked = $(this).prop("checked");
-      $(this).closest("tr").find('input[name="user_permissions"]').prop("checked", isChecked);
-    });
-  });
-
-  function toggleSelectAllPermissions(source) {
-    var checkboxes = document.querySelectorAll('input[name="user_permissions"]');
-    for (var i = 0; i < checkboxes.length; i++) {
-      checkboxes[i].checked = source.checked;
-    }
-  }
-
-  // Obtén el campo de entrada de búsqueda
-  var searchInput = document.getElementById("search-groups");
-
-  // Agrega un evento de escucha al campo de entrada
-  searchInput.addEventListener("keyup", function (event) {
-    // Obtén la consulta de búsqueda
-    var query = event.target.value.toLowerCase();
-
-    // Obtén todas las filas de la tabla
-    var rows = document.querySelectorAll(".module-row");
-
-    // Itera sobre las filas
-    rows.forEach(function (row) {
-      // Obtén el texto de la celda del módulo
-      var moduleCell = row.querySelector("td:first-child");
-      var moduleText = moduleCell.textContent || moduleCell.innerText;
-
-      // Si el texto del módulo no coincide con la consulta de búsqueda, oculta la fila
-      if (moduleText.toLowerCase().indexOf(query) === -1) {
-        row.style.display = "none";
-      } else {
-        // De lo contrario, asegúrate de que la fila sea visible
-        row.style.display = "";
-      }
-    });
-  });
-</script>
 
 {% endblock content %}

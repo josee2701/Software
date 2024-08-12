@@ -11,7 +11,10 @@ from colorfield.fields import ColorField
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinLengthValidator
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+
+from apps.authentication.models import User
 
 
 class MobileOperator(models.Model):
@@ -140,11 +143,11 @@ class Device(models.Model):
     """
 
     imei = models.CharField(
-        primary_key=True, 
-        max_length=20, 
-        validators=[MinLengthValidator(15)], 
-        verbose_name=_("imei")
-    )    
+        primary_key=True,
+        max_length=20,
+        validators=[MinLengthValidator(15)],
+        verbose_name=_("imei"),
+    )
     familymodel = models.ForeignKey(
         "FamilyModelUEC",
         on_delete=models.CASCADE,
@@ -326,7 +329,8 @@ class Vehicle(models.Model):
         Device, on_delete=models.CASCADE, verbose_name=_("device"), null=True
     )
     line = models.CharField(max_length=50, blank=True, verbose_name=_("line"))
-    camara = models.BooleanField(default=False, verbose_name=_("camara"))
+    camera = models.BooleanField(default=False, verbose_name=_("camera"))
+    asset_type = models.BooleanField(default=True, verbose_name=_("asset type"))
     microphone = models.BooleanField(default=False, verbose_name=_("microphone"))
     remote_shutdown = models.BooleanField(
         default=False, verbose_name=_("remote shutdown")
@@ -335,8 +339,7 @@ class Vehicle(models.Model):
         verbose_name=_("Installation date"),
     )
     visible = models.BooleanField(default=True, verbose_name=_("Visible"))
-    capacity = models.CharField(
-        max_length=10,
+    capacity = models.PositiveIntegerField(
         blank=True,
         verbose_name=_("Capacity"),
         null=True,
@@ -708,3 +711,86 @@ class Io_items_report(models.Model):
         max_length=2000, null=True, verbose_name=_("info_widgets")
     )
     info_io = models.CharField(max_length=2000, null=True, verbose_name=_("info_io"))
+
+
+class Types_assets(models.Model):
+    asset_name = models.CharField(
+        max_length=200, null=True, verbose_name=_("asset_name")
+    )
+    last_updated = models.DateTimeField(
+        auto_now=True,
+        verbose_name=_("last updated"),
+        null=True,
+    )
+
+    def __str__(self):
+        return self.asset_name
+
+    class Meta:
+        verbose_name_plural = _("Types assets")
+
+
+class Brands_assets(models.Model):
+    brand = models.CharField(max_length=100, verbose_name=_("Brand"))
+    type_asset = models.ForeignKey(
+        "realtime.Types_assets",
+        on_delete=models.CASCADE,
+        verbose_name=_("Types assets"),
+        null=True,
+    )
+    last_updated = models.DateTimeField(
+        auto_now=True,
+        verbose_name=_("last updated"),
+        null=True,
+    )
+
+    def __str__(self):
+        return f"{self.brand}"
+
+    class Meta:
+        verbose_name = _("Brands asset")
+        verbose_name_plural = _("Brands assets")
+
+
+class Line_assets(models.Model):
+    line = models.CharField(max_length=100, verbose_name=_("Line"))
+    brand_asset = models.ForeignKey(
+        "realtime.Brands_assets",
+        on_delete=models.CASCADE,
+        verbose_name=_("brands assets"),
+        null=True,
+    )
+    last_updated = models.DateTimeField(
+        auto_now=True,
+        verbose_name=_("last updated"),
+        null=True,
+    )
+
+    def __str__(self):
+        return f"{self.line}"
+
+
+class Type_brand_line(models.Model):
+    type_asset = models.ForeignKey(
+        "realtime.Types_assets",
+        on_delete=models.CASCADE,
+        verbose_name=_("types assets"),
+        null=True,
+    )
+    brand_asset = models.ForeignKey(
+        "realtime.Brands_assets",
+        on_delete=models.CASCADE,
+        verbose_name=_("brands assets"),
+        null=True,
+    )
+    line_asset = models.ForeignKey(
+        "realtime.Line_assets",
+        on_delete=models.CASCADE,
+        verbose_name=_("line assets"),
+        null=True,
+    )
+    last_updated = models.DateTimeField(
+        auto_now=True,
+        verbose_name=_("last updated"),
+        null=True,
+    )

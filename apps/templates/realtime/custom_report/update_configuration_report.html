@@ -46,8 +46,7 @@
                                 <h6>{% trans "Widgets" %}</h6>
                                 <!-- Campo de búsqueda para widgets -->
                                 <div class="search-container mb-2">
-                                    <input type="text" id="widgetSearch" class="search-input" placeholder="Search...">
-                                    <label for="widgetSearch" class="search-label">{% trans "Search..." %}</label>
+                                    <input type="text" id="widgetSearch" class="search-input" placeholder={% trans "Search..." %}>
                                 </div>
                                 <div id="widgetsContainer" class="draggable-container">
                                     <!-- Iterar sobre elementos seleccionados primero -->
@@ -78,8 +77,7 @@
                                 <h6>{% trans "Reports" %}</h6>
                                 <!-- Campo de búsqueda para Reports -->
                                 <div class="search-container mb-2">
-                                    <input type="text" id="reportSearch" class="search-input" placeholder="Search...">
-                                    <label for="reportSearch" class="search-label">{% trans "Search..." %}</label>
+                                    <input type="text" id="reportSearch" class="search-input" placeholder={% trans "Search..." %}>
                                 </div>
                                 <div id="reportsContainer" class="draggable-container">
                                     <!-- Iterar sobre elementos seleccionados primero -->
@@ -123,6 +121,6 @@
         confirmMessage: "{% trans 'Are you sure you want to save this configuration?' %}",
     };
 </script>
-<script src="{% static 'assets/js/configuration_report/update_configuration_report.js' %}"></script>
+<script src="{% static 'assets\js\realtime\configuration_report\update_configuration_report.js' %}"></script>
 
 {% endblock %}

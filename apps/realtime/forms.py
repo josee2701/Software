@@ -9,16 +9,9 @@ from django.utils.translation import gettext_lazy as _
 from apps.whitelabel.forms import MyCheckboxSelectMultiple
 
 from .apis import get_user_vehicles
-from .models import (
-    DataPlan,
-    Device,
-    Geozones,
-    Io_items_report,
-    Sending_Commands,
-    SimCard,
-    Vehicle,
-    VehicleGroup,
-)
+from .models import (DataPlan, Device, Geozones,  # Types_assets
+                     Io_items_report, Sending_Commands, SimCard, Vehicle,
+                     VehicleGroup)
 
 
 class MyCheckboxSelectMultiple(forms.CheckboxSelectMultiple):
@@ -42,32 +35,32 @@ class DataPlanForm(forms.ModelForm):
             "name": forms.TextInput(
                 attrs={
                     "class": "form-control",
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                 }
             ),
             "coin": forms.Select(
                 attrs={
                     "class": "form-control",
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                 }
             ),
             "price": forms.NumberInput(
                 attrs={
                     "class": "form-control",
                     "type": "number",
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                 }
             ),
             "company": forms.Select(
                 attrs={
                     "class": "form-control",
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                 }
             ),
             "operator": forms.Select(
                 attrs={
                     "class": "form-control",
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                 }
             ),
         }
@@ -94,45 +87,45 @@ class SimcardForm(forms.ModelForm):
                 attrs={
                     "class": "form-control form-control-lg",
                     "aria-label": ".form-control-lg example",
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                 }
             ),
             "phone_number": forms.NumberInput(
                 attrs={
                     "class": "form-control",
                     "type": "number",
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                 }
             ),
             "is_active": forms.CheckboxInput(
                 attrs={
                     "class": "form-check-input",
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                 }
             ),
             "activate_date": forms.DateInput(
                 attrs={
                     "class": "form-control",
                     "type": "date",
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                 }
             ),
             "iz_az_simcard": forms.CheckboxInput(
                 attrs={
                     "class": "form-check-input",
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                 }
             ),
             "data_plan": forms.Select(
                 attrs={
                     "class": "form-control",
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                 }
             ),
             "company": forms.Select(
                 attrs={
                     "class": "form-control",
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                 }
             ),
         }
@@ -141,9 +134,12 @@ class SimcardForm(forms.ModelForm):
         cleaned_data = super().clean()
         phone_number = cleaned_data.get("phone_number")
         serial_number = cleaned_data.get("serial_number")
+        # Verificar si el número de teléfono está vacío
+        if not phone_number:
+            raise ValidationError({"phone_number": _("Phone number is required.")})
 
         if self.instance.pk is None:
-        # Validar duplicados solo si estamos creando un nuevo registro
+            # Validar duplicados solo si estamos creando un nuevo registro
             if phone_number:
                 duplicate_phone_count = SimCard.objects.filter(
                     phone_number=phone_number, visible=True
@@ -161,19 +157,6 @@ class SimcardForm(forms.ModelForm):
                     raise ValidationError(
                         {"serial_number": _("This serial number is already in use.")}
                     )
-
-        # if self._state.adding:  # Se verifica si el objeto está siendo creado
-        #     duplicate_phone_count = SimCard.objects.filter(phone_number=phone_number,
-        # visible=False).count()
-        #     if duplicate_phone_count >= 5:
-        #         raise ValidationError({"phone_number": _("No se permite duplicar el mismo número
-        # de teléfono más de 5 veces.")})
-
-        #     duplicate_serial_count = SimCard.objects.filter(serial_number=serial_number,
-        # visible=False).count()
-        #     if duplicate_serial_count >= 5:
-        #         raise ValidationError({"serial_number": _("No se permite duplicar el mismo
-        # número de serie más de 5 veces.")})
 
 
 class DeviceForm(forms.ModelForm):
@@ -196,45 +179,48 @@ class DeviceForm(forms.ModelForm):
                 attrs={
                     "class": "form-control form-control-lg-md-2",
                     "aria-label": ".form-control-lg example",
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                 }
             ),
             "familymodel": forms.Select(
                 attrs={
                     "class": "form-control",
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
+                    "placeholder": _("Seleccione la modelo"), 
                 }
             ),
             "simcard": forms.Select(
                 attrs={
                     "class": "form-control",
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
+                    "placeholder": _("Seleccione la simcard"), 
                 }
             ),
             "serial_number": forms.TextInput(
                 attrs={
                     "class": "form-control form-control-lg-md-2",
                     "aria-label": ".form-control-lg example",
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                 }
             ),
             "firmware": forms.TextInput(
                 attrs={
                     "class": "form-control form-control-lg-md-2",
                     "aria-label": ".form-control-lg example",
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                 }
             ),
             "is_active": forms.CheckboxInput(
                 attrs={
                     "class": "form-check-input",
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                 }
             ),
             "company": forms.Select(
                 attrs={
                     "class": "form-control",
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
+                    "placeholder": _("Seleccione la compañia"), 
                 }
             ),
         }
@@ -242,13 +228,14 @@ class DeviceForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super().clean()
         imei = cleaned_data.get("imei")
+        serial_number = cleaned_data.get("serial_number")
 
         # Busca un dispositivo existente con el mismo IMEI y donde visible sea False
         existing_device = Device.objects.filter(imei=imei, visible=False).first()
         if existing_device:
             existing_device.delete()  # Elimina el dispositivo existente si se encuentra
             return cleaned_data
-        # Verificar si ya existe un conductor con la misma identificación personal
+        
         if Device.objects.filter(imei=imei, visible=True).exists():
             # Si es una actualización y el valor ha cambiado
             if isinstance(self.instance, Device) and self.instance.pk is not None:
@@ -258,6 +245,16 @@ class DeviceForm(forms.ModelForm):
                     )
             else:  # Si es una creación
                 raise forms.ValidationError(_("Device with this Imei already exists."))
+
+        # Verifica duplicados de Serial Number y maneja el caso de eliminación
+        existing_device_by_serial = Device.objects.filter(serial_number=serial_number, visible=False).first()
+        if existing_device_by_serial:
+            existing_device_by_serial.delete()  # Elimina el dispositivo existente si se encuentra
+        elif Device.objects.filter(serial_number=serial_number, visible=True).exists():
+            if self.instance.pk and self.instance.serial_number != serial_number:
+                raise forms.ValidationError(_("Device with this Serial Number already exists."))
+            elif not self.instance.pk:
+                raise forms.ValidationError(_("Device with this Serial Number already exists."))
 
         return cleaned_data
 
@@ -296,7 +293,8 @@ def get_vehicle_icons(AZURE_CUSTOM_DOMAIN):
 
 
 class VehicleForm(forms.ModelForm):
-    """Formulario de vehículo que utiliza la clase ModelForm de Django. La clase Meta especifica
+    """
+    Formulario de vehículo que utiliza la clase ModelForm de Django. La clase Meta especifica
     el modelo y campos, y se usan widgets para personalizar el formulario."""
 
     icon = forms.ChoiceField(choices=[])
@@ -333,7 +331,7 @@ class VehicleForm(forms.ModelForm):
             "color",
             "device",
             "line",
-            "camara",
+            "camera",
             "microphone",
             "remote_shutdown",
             "company",
@@ -342,6 +340,7 @@ class VehicleForm(forms.ModelForm):
             "n_interno",
             "installation_date",
             "id",
+            "asset_type",
         ]
         widgets = {
             "license": forms.TextInput(
@@ -374,7 +373,7 @@ class VehicleForm(forms.ModelForm):
                     "autocomplete": "off",
                 }
             ),
-            "vehicle_type": forms.TextInput(
+            "vehicle_type": forms.Select(
                 attrs={
                     "class": "form-control form-control-lg",
                     "aria-label": ".form-control-lg example",
@@ -391,7 +390,7 @@ class VehicleForm(forms.ModelForm):
                     "autocomplete": "off",
                 }
             ),
-            "brand": forms.TextInput(
+            "brand": forms.Select(
                 attrs={
                     "class": "form-control form-control-lg",
                     "aria-label": ".form-control-lg example",
@@ -457,14 +456,14 @@ class VehicleForm(forms.ModelForm):
                     "class": "form-control",
                 }
             ),
-            "line": forms.TextInput(
+            "line": forms.Select(
                 attrs={
                     "class": "form-control form-control-lg",
                     "aria-label": ".form-control-lg example",
                     "autocomplete": "off",
                 }
             ),
-            "camara": forms.CheckboxInput(
+            "camera": forms.CheckboxInput(
                 attrs={
                     "class": "form-check-input",
                 }
@@ -479,7 +478,7 @@ class VehicleForm(forms.ModelForm):
                     "class": "form-check-input",
                 }
             ),
-            "capacity": forms.TextInput(
+            "capacity": forms.NumberInput(
                 attrs={
                     "class": "form-control form-control-lg",
                     "aria-label": ".form-control-lg example",
@@ -511,19 +510,25 @@ class VehicleForm(forms.ModelForm):
                     "autocomplete": "off",
                 }
             ),
+            "asset_type": forms.CheckboxInput(
+                attrs={
+                    "class": "form-check-input",
+                }
+            ),
         }
 
 
 class VehicleGroupForm(forms.ModelForm):
-    """Formulario de vehículo que utiliza la clase ModelForm de Django. La clase Meta especifica
+    """
+    Formulario de vehículo que utiliza la clase ModelForm de Django. La clase Meta especifica
     el modelo y campos, y se usan widgets para personalizar el formulario."""
 
     vehicles = forms.ModelMultipleChoiceField(
         required=True,
-        queryset=Vehicle.objects.filter(visible = True),
+        queryset=Vehicle.objects.filter(visible=True),
         widget=MyCheckboxSelectMultiple(),
         error_messages={
-            'required': _("Please select an asset."),
+            "required": _("Please select an asset."),
         },
     )
 
@@ -542,13 +547,14 @@ class VehicleGroupForm(forms.ModelForm):
                     "class": "form-check-input",
                 }
             ),
-            
         }
+
     def clean_vehicles(self):
-        vehicles = self.cleaned_data.get('vehicles')
+        vehicles = self.cleaned_data.get("vehicles")
         if not vehicles:
             raise forms.ValidationError(_("Please select an asset."))
         return vehicles
+
 
 class SendingCommandsFrom(forms.ModelForm):
     class Meta:
@@ -561,13 +567,13 @@ class SendingCommandsFrom(forms.ModelForm):
             "device": forms.Select(
                 attrs={
                     "class": "form-control",
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                 }
             ),
             "command": forms.Select(
                 attrs={
                     "class": "form-control",
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                 }
             ),
         }
@@ -620,44 +626,44 @@ class GeozonesForm(forms.ModelForm):
             "name": forms.TextInput(
                 attrs={
                     "class": "form-control",
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                 }
             ),
             "description": forms.Textarea(
                 attrs={
                     "class": "form-control",
                     "style": "height: 50px;",
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                 }
             ),
             "company": forms.Select(
                 attrs={
                     "class": "form-control",
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                 }
             ),
             "radius": forms.NumberInput(
                 attrs={
                     "class": "form-control",
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                 }
             ),
             "speed": forms.NumberInput(
                 attrs={
                     "class": "form-control",
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                 }
             ),
             "latitude": forms.NumberInput(
                 attrs={
                     "class": "form-control",
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                 }
             ),
             "longitude": forms.NumberInput(
                 attrs={
                     "class": "form-control",
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                 }
             ),
             "color": forms.TextInput(
@@ -665,26 +671,26 @@ class GeozonesForm(forms.ModelForm):
                     "class": "form-control",
                     "type": "color",
                     "data-id": "color",
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                 }
             ),
             "type_event": forms.Select(
                 attrs={
                     "class": "form-control",
                     "onchange": "showHide()",
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                 }
             ),
             "alarma": forms.CheckboxInput(
                 attrs={
                     "class": "form-check-input",
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                 }
             ),
             "shape_type": forms.TextInput(
                 attrs={
                     "class": "form-control",
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                 }
             ),
         }

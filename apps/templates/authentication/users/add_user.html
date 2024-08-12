@@ -1,6 +1,6 @@
 {% load i18n static %} {% block content %}
 
-<div class="modal-content">
+<div class="modal-content" id="miModal" style="z-index: 1050;">
   <div class="modal-body">
     <div class="card">
       <div class="modal-header">
@@ -8,7 +8,7 @@
         <button type="button" id="cerrarVenta" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="card-body">
-        <form hx-post="{{ request.path }}">
+        <form hx-post="{{ request.path }}" hx-target="#modal-content">
           {% csrf_token %}
           <div class="row">
             <div class="col">
@@ -49,7 +49,12 @@
               <p></p>
               <div class="input-group input-group-static mb-4">
                 <label for="id_password1">{% trans "Password:" %}<span style="color:red;">*</span></label>
-                {{form.password1}}
+                <div class="input-group">
+                  <input type="password" id="id_password1" name="{{ form.password1.name }}" class="form-control" />
+                  <span class="input-group-text" onclick="togglePasswordVisibility('id_password1', 'togglePassword1')" style="display: none;">
+                    <i id="togglePassword1" class="fa fa-eye"></i>
+                  </span>
+                </div>
               </div>
               <div id="form-errors">{{form.password1.errors}}</div>
             </div>
@@ -57,9 +62,14 @@
               <p></p>
               <div class="input-group input-group-static mb-4">
                 <label for="id_password2">{% trans "Confirm Password:" %}<span style="color:red;">*</span></label>
-                {{form.password2}}
+                <div class="input-group">
+                  <input type="password" id="id_password2" name="{{ form.password2.name }}" class="form-control" />
+                  <span class="input-group-text" onclick="togglePasswordVisibility('id_password2', 'togglePassword2')" style="display: none;">
+                    <i id="togglePassword2" class="fa fa-eye"></i>
+                  </span>
+                </div>
               </div>
-              <div id="form-errors">{{form.password2.errors}}</div>
+              <div id="form-errors">{{ form.password2.errors }}</div>
             </div>
           </div>
           <div class="row">
@@ -87,8 +97,14 @@
               </div>
               <div id="form-errors">{{form.process_type.errors}}</div>
             </div>
-
             <div class="col">
+              {% if leader_button == 'admin' or leader_button == 'administrador' %}
+                <div class="form-check form-switch mb-3">
+                  <label for="id_is_active" class="form-check-label"> {% trans "Leader" %} </label>
+                  {{ form.rol }}
+                </div>
+              <div id="form-errors">{{form.rol.errors}}</div>
+              {% endif %}
               <div class="form-check form-switch mb-3" style="padding-block-start: 18px">
                 <label for="id_is_active" class="form-check-label"> {% trans "Is active?" %} </label>
                 {{form.is_active}}
@@ -96,89 +112,89 @@
               <div id="form-errors">{{form.is_active.errors}}</div>
             </div>
             <div class="row">
-              <div class="col">
-                <label class="form-check-label" for>
-                  <label class="form-check-label" for="{{ form.companies_to_monitor.label_tag|capfirst}}}">{% trans "Company to Monitor:" %}</label>
-                  <div class="input-group input-group-outline">
-                    <label class="form-label"></label>
-                    <input
+              <div class="col-md-4">
+                <label class="form-check-label" for="{{ form.companies_to_monitor.label_tag|capfirst }}">
+                  {% trans "Company to Monitor:" %}
+                </label>
+                <div class="input-group input-group-outline">
+                  <label class="form-label"></label>
+                  <input
                     id="search-companies"
                     type="text"
                     class="form-control"
                     onfocus="focused(this)"
-                    placeholder="Search"
+                    placeholder={% trans "Search" %}
                     onfocusout="defocused(this)"
                     name="q"
                     autocomplete="off"
-                    />
-                  </div>
-                  <div class="scroll">
-                    {% for companies in form.companies_to_monitor %}
-                    <div class="form-check form-switch companies_to_monitor">
-                      <p></p>
-                      {{ companies}}
-                    </div>
-                    {% endfor %}
-                  </label>
-                  <div id="form-errors">{{form.companies.errors}}</div>
+                  />
                 </div>
+                <div class="scroll">
+                  {% for companies in form.companies_to_monitor %}
+                  <div class="form-check form-switch companies_to_monitor">
+                    <p></p>
+                    {{ companies }}
+                  </div>
+                  {% endfor %}
+                </div>
+                <div id="form-errors">{{ form.companies.errors }}</div>
               </div>
-              <div class="col">
-                <label class="form-check-label" for>
-                  <label>{% trans "Assets to Monitor:" %}</label>
-                  <div class="input-group input-group-outline">
-                    <label class="form-label"></label>
-                    <input
+              <div class="col-md-4">
+                <label class="form-check-label" for="{{ form.vehicles_to_monitor.label_tag|capfirst }}">
+                  {% trans "Assets to Monitor:" %}
+                </label>
+                <div class="input-group input-group-outline">
+                  <label class="form-label"></label>
+                  <input
                     id="search-vehicle"
                     type="text"
                     class="form-control"
                     onfocus="focused(this)"
-                    placeholder="Search"
+                    placeholder={% trans "Search" %}
                     onfocusout="defocused(this)"
                     name="q"
                     autocomplete="off"
-                    />
-                  </div>
-                  <div class="scroll">
+                  />
+                </div>
+                <div class="scroll">
                   {% for vehicle in form.vehicles_to_monitor %}
                   <div class="form-check form-switch vehicles_to_monitor">
-                    <!-- Aquí puedes incluir los detalles del vehículo que quieras mostrar -->
                     <p></p>
-                    {{ vehicle}}
+                    {{ vehicle }}
                   </div>
                   {% endfor %}
-                </label>
-                <div id="form-errors">{{form.vehicle.errors}}</div>
+                </div>
+                <div id="form-errors">{{ form.vehicle.errors }}</div>
               </div>
-            </div>
-            <div class="col">
-              <label class="form-check-label" for>
-                <label>{% trans "Group Assets:" %}</label>
+              <div class="col-md-4">
+                <label class="form-check-label" for="{{ form.group_vehicles.label_tag|capfirst }}">
+                  {% trans "Group Assets:" %}
+                </label>
                 <div class="input-group input-group-outline">
-                    <label class="form-label"></label>
-                    <input
+                  <label class="form-label"></label>
+                  <input
                     id="search-group"
                     type="text"
                     class="form-control"
-                      onfocus="focused(this)"
-                      placeholder="Search"
-                      onfocusout="defocused(this)"
-                      name="q"
-                      autocomplete="off"
-                    />
-                  </div>
-                  <div class="scroll">
+                    onfocus="focused(this)"
+                    placeholder={% trans "Search" %}
+                    onfocusout="defocused(this)"
+                    name="q"
+                    autocomplete="off"
+                  />
+                </div>
+                <div class="scroll">
                   {% for group in form.group_vehicles %}
                   <div class="form-check form-switch group_vehicles">
-                    <!-- Aquí puedes incluir los detalles del vehículo que quieras mostrar -->
                     <p></p>
-                    {{ group}}
+                    {{ group }}
                   </div>
                   {% endfor %}
-                </label>
-                <div id="form-errors">{{form.group.errors}}</div>
+                </div>
+                <div id="form-errors">{{ form.group.errors }}</div>
               </div>
-            </div>
+              </div>
+              <input type="hidden" id="id_user" name="user" value="{{ user.id }}" />
               <div class="row">
                 <div class="col">
                   <button class="btn btn-primary mt-3" type="submit"><i class="fa-solid fa-floppy-disk me-2"></i> {% trans "Save" %}</button>
@@ -187,43 +203,27 @@
             </div>
             <head>
               <link rel="stylesheet" type="text/css" href="{% static 'assets/css/estilos_templates.css' %}">
+              <link rel="stylesheet" type="text/css" href="{% static 'assets\css\select2.css' %}">
             </head>
-
-
-            {% endblock content %}
           </div>
         </form>
       </div>
     </div>
   </div>
 </div>
+{% endblock content %}
+<!-- Incluir jQuery primero -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Incluir Select2 después de jQuery -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="{% static 'assets/js/user/filtro_process.js' %}"></script>
+<script src="{% static 'assets/js/user/eye_password.js' %}"></script>
+<script src="{% static 'assets/js/user/searchs.js' %}"></script>
 
-<script>
-  // Función para filtrar las opciones de un campo de formulario
-  function filterOptions(searchInputId, optionsContainerClass) {
-    var searchInput = document.getElementById(searchInputId);
-    console.log("searchInput: ", searchInput);
-
-    searchInput.addEventListener("keyup", function (event) {
-      var query = event.target.value.toLowerCase();
-      // console.log("Query: ", query); // Imprime la consulta de búsqueda
-
-      var labels = document.querySelectorAll("." + optionsContainerClass + " label");
-      //console.log("Labels: ", labels);  Imprime las etiquetas de las opciones del campo de formulario
-
-      labels.forEach(function (label) {
-        if (label.textContent.toLowerCase().indexOf(query) === -1) {
-          label.style.display = "none";
-        } else {
-          label.style.display = "";
-        }
-      });
-    });
+<style>
+  .select2-container--default .select2-results__option--highlighted.select2-results__option--selectable {
+      background-color: {{ button_color }};
+      color: white;
   }
-
-  // Filtrar las opciones de los campos de formulario
-  filterOptions("search-companies", "companies_to_monitor");
-  filterOptions("search-vehicle", "vehicles_to_monitor");
-  filterOptions("search-group", "group_vehicles");
-</script>
+</style>

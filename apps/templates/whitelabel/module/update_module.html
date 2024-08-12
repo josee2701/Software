@@ -1,5 +1,5 @@
-{% load i18n static %} 
-{% block content %} 
+{% load i18n static %}
+{% block content %}
 {{ form.media }}
 <div class="modal-content" data-bs-backdrop="static" data-bs-keyboard="false">
   <div class="modal-body">
@@ -13,11 +13,11 @@
         </div>
         <button type="button" id="cerrarVenta" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <form hx-post="{{ request.path }}" enctype="multipart/form-data">
+      <form hx-post="{{ request.path }}" hx-target="#modal-content" enctype="multipart/form-data">
         <div class="card-body scrollable-content" id="dynamic-scrollable-content1"style="overflow-y: auto;">
           <div class="row">
             <div class="col">
-              {% csrf_token %} 
+              {% csrf_token %}
               {% for form in forms %}
               <div class="row">
                 <div class="col-md-4">
@@ -39,6 +39,15 @@
                 </div>
               </div>
               {% endfor %}
+              {% if errors %}
+    <div class="error-messages">
+        <ul>
+        {% for error in errors %}
+            <li>{{ error }}</li>
+        {% endfor %}
+        </ul>
+    </div>
+{% endif %}
             </div>
           </div>
         </div>
@@ -50,7 +59,7 @@
   </div>
 </div>
 <head>
-  <script src="{% static 'assets/js/dynamic-scrollable-content.js' %}"></script>
+
   <link rel="stylesheet" type="text/css" href="{% static 'assets/css/estilos_templates.css' %}" />
 </head>
 {% endblock content %}

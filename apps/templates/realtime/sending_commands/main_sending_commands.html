@@ -5,10 +5,10 @@
 {% block title %}{% trans "Commands" %}{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
+<div class="container-fluid py-4 custom-padding-container" style="overflow: hidden;">
     <div class="row">
         <div class="col-12">
-            <div class="card my-4">
+            <div class="card my-4 custom-padding-card-my-4">
                     <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
                         <div class="bg-gradient-primary shadow-primary border-radius-lg pt-4 pb-3">
                             <div class=col>
@@ -16,52 +16,151 @@
                             </div>
                         </div>
                     </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col d-flex">
-                                <!-- Es la opcion del buscador de la platilla de Device -->
-                                <form id="search-form" method="GET" onsubmit="return false">
-                                  <div class="input-group input-group-outline">
-                                    <label class="form-label">{% trans "Search..." %}</label>
-                                    <input id="search-input" type="text" class="form-control" onfocus="focused(this)" onfocusout="defocused(this)" name="q" autocomplete="off">
-                                  </div>
-                                </form>
-                              </div>
-                            <!-- Contenido de la vista para usuarios con permiso para poder agregar o crear -->
-                            <div class="col d-flex justify-content-end">
+                    <div class="card-body custom-padding-body">
+                        <div class="row align-items-center mb-3">
+                            <div class="col-12 d-flex flex-column flex-md-row align-items-center justify-content-between">
+                                <div class="d-flex flex-wrap align-items-center mb-2 mb-md-0">
+                                    <form method="POST" action="{% url 'realtime:commands' %}" class="d-flex align-items-center">
+                                        {% csrf_token %}
+                                        <label class="me-2" style="padding-top: 4px;">{% trans "Show" %}</label>
+                                        <select name="paginate_by" onchange="this.form.submit()" class="form-select form-select-sm me-2">
+                                            <option value="20" {% if request.POST.paginate_by == '20' or paginate_by == 20 %} selected {% endif %}>20</option>
+                                            <option value="25" {% if request.POST.paginate_by == '25' or paginate_by == 25 %} selected {% endif %}>25</option>
+                                            <option value="50" {% if request.POST.paginate_by == '50' or paginate_by == 50 %} selected {% endif %}>50</option>
+                                            <option value="100" {% if request.POST.paginate_by == '100' or paginate_by == 100 %} selected {% endif %}>100</option>
+                                        </select>
+                                        <label class="mt-1">{% trans "results" %}</label>
+                                        <input type="hidden" name="q" value="{{ request.POST.q }}">
+                                    </form>
+                                </div>                      
+                                <div class="d-flex justify-content-end align-items-center flex-wrap">
                                     {% if perms.realtime.add_sending_commands %}
-                                    <button type="button" hx-get="{% url 'realtime:add_Commands' %}"  class="btn btn-primary mx-2" hx-target="#dialog"><i class="fa-solid fa-plus"></i> {% trans "Sending Commands" %}</button>
+                                    <button type="button" hx-get="{% url 'realtime:add_Commands' %}" class="btn btn-primary mx-0.5" hx-target="#modal .modal-content" style="padding: 9px 12px; margin: 0 0 0 -1px;">
+                                        <i class="fa-solid fa-plus"></i> {% trans "Sending Commands" %}
+                                    </button>
                                     {% endif %}
-                                    <a href="{% url 'realtime:response_commands' %}"  class="btn btn-primary mx-2" hx-target="#dialog">{% trans "Response Commands" %}</a>
+                                    <a href="{% url 'realtime:response_commands' %}"  class="btn btn-primary mx-2" hx-target="#modal .modal-content" style="padding: 9px 12px; margin: 0 0 0 -1px;">{% trans "Response Commands" %}</a>
+                                    {% if object_list %}
+                                    <a class="btn btn-primary" id="exportExcelBtn" type="button" style="padding: 9px 12px; margin-right: 8px !important; margin: 0 0 0 -1px;">
+                                        <i class="fa-solid fa-file-excel mx-2"></i> {% trans "Export to Excel" %}
+                                    </a>
+                                    {% endif %}
+                                    <form id="search-form" method="GET" class="flex me-md-3 mb-2 mb-md-0" style="max-width: 180px;" onsubmit="return false">
+                                        <div class="input-group input-group-sm input-group-outline">
+                                            <label class="form-label">{% trans "Search..." %}</label>
+                                            <input id="search-input" type="text" class="form-control" onfocus="focused(this)" onfocusout="defocused(this)" name="q" autocomplete="off">
+                                        </div>
+                                    </form>
                                 </div>
-                        </div>
-                        <form method="GET">
-                            <label>{% trans "Show entries" %}</label>
-                            <select name="paginate_by" id="paginate-by" onchange="this.form.submit()">
-                                <option value="10" {% if request.GET.paginate_by == '10' %} selected {% endif %}>10</option>
-                                <option value="25" {% if request.GET.paginate_by == '25' %} selected {% endif %}>25</option>
-                                <option value="50" {% if request.GET.paginate_by == '50' %} selected {% endif %}>50</option>
-                                <option value="100" {% if request.GET.paginate_by == '100' %} selected {% endif %}>100</option>
-                            </select>
-                            <input type="hidden" name="q" value="{{ request.GET.q }}">
-                        </form>
-                        <div class="scrollable-content" id="dynamic-scrollable-content" style="overflow-y: auto;">
-                          <div class="table-responsive p-0">
-                              <!-- Tabla con contenido dinámico -->
-                              <table class="table align-items-center mb-0">
+                            </div>
+                          </div>
+                          <div style="overflow-x: auto;">
+                          <div class="table-responsive">
+                            <table class="table align-items-center mb-0 table-sm">
                                   <thead>
                                       <tr>
-                                          <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"> N°</th>
-                                          <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"> {% trans "command" %} </th>
-                                          <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"> {% trans "code" %} </th>
-                                          <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"> {% trans "model" %} </th>
-                                          <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"> {% trans "plate" %} </th>
-                                          <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"> {% trans "status" %} </th>
-                                          <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"> {% trans "shipping_date" %} </th>
-                                          <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"> {% trans "answer_date" %} </th>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"> N°</th>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                            <form id="sort-form-command" method="post" style="display: none;" action="{% url 'realtime:commands' %}">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="order_by" value="command">
+                                                <input type="hidden" name="direction" value="{% if order_by == 'command' and direction == 'asc' %}desc{% else %}asc{% endif %}">
+                                            </form>
+                                            <a href="#" onclick="document.getElementById('sort-form-command').submit(); return false;">
+                                                {% trans "command" %}
+                                                <span class="sort-indicator">
+                                                    <span class="sort-arrow sort-arrow-up {% if order_by == 'command' and direction == 'asc' %}active{% else %}inactive{% endif %}">↑</span>
+                                                    <span class="sort-arrow sort-arrow-down {% if order_by == 'command' and direction == 'desc' %}active{% else %}inactive{% endif %}">↓</span>
+                                                </span>
+                                            </a>
+                                        </th>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                            <form id="sort-form-codigo" method="post" style="display: none;" action="{% url 'realtime:commands' %}">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="order_by" value="codigo">
+                                                <input type="hidden" name="direction" value="{% if order_by == 'codigo' and direction == 'asc' %}desc{% else %}asc{% endif %}">
+                                            </form>
+                                            <a href="#" onclick="document.getElementById('sort-form-codigo').submit(); return false;">
+                                                {% trans "code" %}
+                                                <span class="sort-indicator">
+                                                    <span class="sort-arrow sort-arrow-up {% if order_by == 'codigo' and direction == 'asc' %}active{% else %}inactive{% endif %}">↑</span>
+                                                    <span class="sort-arrow sort-arrow-down {% if order_by == 'codigo' and direction == 'desc' %}active{% else %}inactive{% endif %}">↓</span>
+                                                </span>
+                                            </a>
+                                        </th>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                            <form id="sort-form-familymodel_name" method="post" style="display: none;" action="{% url 'realtime:commands' %}">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="order_by" value="familymodel_name">
+                                                <input type="hidden" name="direction" value="{% if order_by == 'familymodel_name' and direction == 'asc' %}desc{% else %}asc{% endif %}">
+                                            </form>
+                                            <a href="#" onclick="document.getElementById('sort-form-familymodel_name').submit(); return false;">
+                                                {% trans "model" %}
+                                                <span class="sort-indicator">
+                                                    <span class="sort-arrow sort-arrow-up {% if order_by == 'familymodel_name' and direction == 'asc' %}active{% else %}inactive{% endif %}">↑</span>
+                                                    <span class="sort-arrow sort-arrow-down {% if order_by == 'familymodel_name' and direction == 'desc' %}active{% else %}inactive{% endif %}">↓</span>
+                                                </span>
+                                            </a>
+                                        </th>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                            <form id="sort-form-license" method="post" style="display: none;" action="{% url 'realtime:commands' %}">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="order_by" value="license">
+                                                <input type="hidden" name="direction" value="{% if order_by == 'license' and direction == 'asc' %}desc{% else %}asc{% endif %}">
+                                            </form>
+                                            <a href="#" onclick="document.getElementById('sort-form-license').submit(); return false;">
+                                                {% trans "plate" %}
+                                                <span class="sort-indicator">
+                                                    <span class="sort-arrow sort-arrow-up {% if order_by == 'license' and direction == 'asc' %}active{% else %}inactive{% endif %}">↑</span>
+                                                    <span class="sort-arrow sort-arrow-down {% if order_by == 'license' and direction == 'desc' %}active{% else %}inactive{% endif %}">↓</span>
+                                                </span>
+                                            </a>
+                                        </th>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                            <form id="sort-form-status" method="post" style="display: none;" action="{% url 'realtime:commands' %}">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="order_by" value="status">
+                                                <input type="hidden" name="direction" value="{% if order_by == 'status' and direction == 'asc' %}desc{% else %}asc{% endif %}">
+                                            </form>
+                                            <a href="#" onclick="document.getElementById('sort-form-status').submit(); return false;">
+                                                {% trans "status" %}
+                                                <span class="sort-indicator">
+                                                    <span class="sort-arrow sort-arrow-up {% if order_by == 'status' and direction == 'asc' %}active{% else %}inactive{% endif %}">↑</span>
+                                                    <span class="sort-arrow sort-arrow-down {% if order_by == 'status' and direction == 'desc' %}active{% else %}inactive{% endif %}">↓</span>
+                                                </span>
+                                            </a>
+                                        </th>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                            <form id="sort-form-shipping_date" method="post" style="display: none;" action="{% url 'realtime:commands' %}">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="order_by" value="shipping_date">
+                                                <input type="hidden" name="direction" value="{% if order_by == 'shipping_date' and direction == 'asc' %}desc{% else %}asc{% endif %}">
+                                            </form>
+                                            <a href="#" onclick="document.getElementById('sort-form-shipping_date').submit(); return false;">
+                                                {% trans "shipping_date" %}
+                                                <span class="sort-indicator">
+                                                    <span class="sort-arrow sort-arrow-up {% if order_by == 'shipping_date' and direction == 'asc' %}active{% else %}inactive{% endif %}">↑</span>
+                                                    <span class="sort-arrow sort-arrow-down {% if order_by == 'shipping_date' and direction == 'desc' %}active{% else %}inactive{% endif %}">↓</span>
+                                                </span>
+                                            </a>
+                                        </th>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                            <form id="sort-form-answer_date" method="post" style="display: none;" action="{% url 'realtime:commands' %}">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="order_by" value="answer_date">
+                                                <input type="hidden" name="direction" value="{% if order_by == 'id' or 'answer_date' and direction == 'asc' %}desc{% else %}asc{% endif %}">
+                                            </form>
+                                            <a href="#" onclick="document.getElementById('sort-form-answer_date').submit(); return false;">
+                                                {% trans "answer_date" %}
+                                                <span class="sort-indicator">
+                                                    <span class="sort-arrow sort-arrow-up {% if order_by == 'id' or 'answer_date' and direction == 'asc' %}active{% else %}inactive{% endif %}">↑</span>
+                                                    <span class="sort-arrow sort-arrow-down {% if order_by == 'id' or 'answer_date' and direction == 'desc' %}active{% else %}inactive{% endif %}">↓</span>
+                                                </span>
+                                            </a>
+                                        </th>                       
                                       </tr>
                                   </thead>
-                                  <tbody>
+                                  <tbody id="send-command-tbody">
                                       {% for command in object_list  %}
                                       <tr>
                                           <td class="align-middle text-center text-sm">
@@ -87,7 +186,7 @@
                                               {% endif %}
                                           </td>
                                           <td class="align-middle text-center text-sm">
-                                              <span class="text-secondary font-weight-normal mb-0">{{ command.shipping_date|date:"d/m/Y H:i:s" }}</span>
+                                              <span class="utc-date-5">{{ command.shipping_date|date:"Y-m-d H:i:s" }}</span>
                                           </td>
                                           <td class="align-middle text-center text-sm">
                                               <span class="utc-date">{{ command.answer_date|date:"Y-m-d H:i:s" }}</span>
@@ -98,40 +197,61 @@
                               </table>
                           </div>
                         </div>
-                        <div class="row mt-4">
-                            <div class ="col-6 d-flex justify-content-start">
-                                <nav aria-label="Page navigation">
-                                    <ul class="pagination">
-                                        {% if page_obj.has_previous %}
-                                            <li class="page-item"><a class="page-link" href="?page=1&paginate_by={{ request.GET.paginate_by }}&q={{ request.GET.q }}">{% trans 'Home' %}</a></li>
-                                            <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&paginate_by={{ request.GET.paginate_by }}&q={{ request.GET.q }}">&laquo;</a></li>
-                                        {% endif %}
-
-                                        {% if page_obj.number|add:"-4" > 1 %}
-                                            <li class="page-item"><span class="page-link">...</span></li>
-                                        {% endif %}
-
-                                        {% for num in page_obj.paginator.page_range %}
-                                            {% if num > page_obj.number|add:"-4" and num < page_obj.number|add:"4" %}
-                                                <li class="page-item {% if page_obj.number == num %}active{% endif %}"><a class="page-link" href="?page={{ num }}&paginate_by={{ request.GET.paginate_by }}&q={{ request.GET.q }}">{{ num }}</a></li>
-                                            {% endif %}
-                                        {% endfor %}
-
-                                        {% if page_obj.number|add:"3" < page_obj.paginator.num_pages %}
-                                            <li class="page-item"><span class="page-link">...</span></li>
-                                        {% endif %}
-
-                                        {% if page_obj.has_next %}
-                                            <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&paginate_by={{ request.GET.paginate_by }}&q={{ request.GET.q }}">&raquo;</a></li>
-                                            <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}&paginate_by={{ request.GET.paginate_by }}&q={{ request.GET.q }}">{% trans 'End' %}</a></li>
-                                        {% endif %}
-                                    </ul>
-                                </nav>
-                            </div>
-                            <div class ="col-6 d-flex justify-content-end">
+                        <form id="pagination-form" method="post" action="">
+                            {% csrf_token %}
+                            <input type="hidden" name="paginate_by" value="{{ request.POST.paginate_by }}">
+                            <input type="hidden" name="page" id="page-input" value="{{ page_obj.number }}">
+                        </form>
+                        <div class="row mt-2 custom-row">
+                            <div class="col-6 d-flex justify-content-start align-items-center">
                                 <div class="pagination-info">
                                     {% trans 'Displaying' %} {{ page_obj.start_index }} {% trans 'to' %} {{ page_obj.end_index }} {% trans 'of' %} {{ page_obj.paginator.count }} {% trans 'items.' %}
                                 </div>
+                            </div>
+                            <div class="col-6 d-flex justify-content-end">
+                                <nav aria-label="Page navigation" id="pagination-container">
+                                    <ul class="pagination">
+                                        {% if page_obj.has_previous %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="#" onclick="setPageAndSubmit(1); return false;">
+                                                    {% trans 'Home' %}
+                                                </a>
+                                            </li>
+                                            <li class="page-item">
+                                                <a class="page-link" href="#" onclick="setPageAndSubmit({{ page_obj.previous_page_number }}); return false;">
+                                                    &laquo;
+                                                </a>
+                                            </li>
+                                        {% endif %}
+                                        {% if page_obj.number|add:"-4" > 1 %}
+                                            <li class="page-item"><span class="page-link">...</span></li>
+                                        {% endif %}
+                                        {% for num in page_obj.paginator.page_range %}
+                                            {% if num > page_obj.number|add:"-4" and num < page_obj.number|add:"4" %}
+                                                <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                                                    <a class="page-link" href="#" onclick="setPageAndSubmit({{ num }}); return false;">
+                                                        {{ num }}
+                                                    </a>
+                                                </li>
+                                            {% endif %}
+                                        {% endfor %}
+                                        {% if page_obj.number|add:"3" < page_obj.paginator.num_pages %}
+                                            <li class="page-item"><span class="page-link">...</span></li>
+                                        {% endif %}
+                                        {% if page_obj.has_next %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="#" onclick="setPageAndSubmit({{ page_obj.next_page_number }}); return false;">
+                                                    &raquo;
+                                                </a>
+                                            </li>
+                                            <li class="page-item">
+                                                <a class="page-link" href="#" onclick="setPageAndSubmit({{ page_obj.paginator.num_pages }}); return false;">
+                                                    {% trans 'End' %}
+                                                </a>
+                                            </li>
+                                        {% endif %}
+                                    </ul>
+                                </nav>
                             </div>
                         </div>
                     </div>
@@ -139,8 +259,54 @@
             </div>
         </div>
     </div>
-<script src="{% static 'assets/js/dynamic-scrollable-content.js' %}"></script>
+    <!-- Modal de progreso -->
+    <div class="modal fade" id="downloadModal" tabindex="-1" aria-labelledby="downloadModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-start modal-dialog-scrollable" style="max-width: 25%;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="downloadModalLabel">{% trans "Download Progress" %}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="progress">
+                        <div id="downloadProgressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar">0%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" type="text/css" href="{% static 'assets/css/estilos_templates.css' %}" />
+        <link rel="stylesheet" type="text/css" href="{% static 'assets/css/style_main_list.css' %}" />
+        <link rel="stylesheet" type="text/css" href="{% static 'assets/css/report/report_today.css' %}">
+        <!-- FontAwesome -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.3/xlsx.full.min.js"></script>
+    </head>
+<script>
+    var translations = {
+        confirmMessage: "{% trans 'Are you sure you want to send these command?' %}",
+        selectDevice: "{% trans 'Please select a device.' %}",
+        low: "{% trans 'Low' %}",
+        medium: "{% trans 'Medium' %}",
+        high: "{% trans 'High' %}",
+        end: "{% trans 'End' %}",
+        home: "{% trans 'Home' %}",
+        open: "{% trans 'Open' %}",
+        closed: "{% trans 'Closed' %}",
+        false: "{% trans 'In progress' %}",
+        true: "{% trans 'Done' %}",
+        to: "{% trans 'to' %}",
+        of: "{% trans 'of' %}",
+        unassigned : "{% trans 'Unassigned' %}",
+        displaying: "{% trans 'Displaying' %}",
+        commandsSend: "{% trans 'Commands_Sent' %}",
+    };
+</script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-<script src="{% static 'assets/js/search.js' %}"></script>
+<script src="{% static 'assets/js/realtime/sending_commands/search_send_command.js' %}"></script>
+<script src="{% static 'assets/js/asc_desc.js' %}"></script>
 <script src="{% static 'assets/js/utc_local.js' %}"></script>
+<script src="{% static 'assets/js/realtime/sending_commands/export_excel_sendcommands.js' %}"></script>
 {% endblock %}

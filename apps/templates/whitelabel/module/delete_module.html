@@ -13,7 +13,7 @@
           "
           ></div>
           <div class="card-body">
-            <form hx-post="{{ request.path }}">
+            <form hx-post="{{ request.path }}" hx-target="#modal-content">
               {% csrf_token %}
               <p> {% trans '¿Are you sure you want to delete the billing' %} "{{ object }}" ?</p>
               <button type="submit" class="btn btn-light">{% trans "Confirm" %}</button>

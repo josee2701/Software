@@ -1,7 +1,9 @@
 from colorfield.widgets import ColorWidget
 from django import forms
 from django.utils.translation import gettext_lazy as _
-
+from azure.storage.blob import BlobServiceClient
+from django.conf import settings
+import os
 from .models import Event, EventFeature
 
 
@@ -31,7 +33,7 @@ class EventUserForm(forms.ModelForm):
             "event": forms.Select(
                 attrs={
                     "class": "form-control",
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                 }
             ),
             "alias": forms.TextInput(
@@ -39,31 +41,31 @@ class EventUserForm(forms.ModelForm):
                     "class": "form-control form-control-lg",
                     "aria-label": ".form-control-lg example",
                     "style": "padding-top: 11px; padding-bottom: 5px;",
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                 }
             ),
             "company": forms.Select(
                 attrs={
                     "class": "form-control",
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                 }
             ),
             "central_alarm": forms.CheckboxInput(
                 attrs={
                     "class": "form-check-input",
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                 }
             ),
             "user_alarm": forms.CheckboxInput(
                 attrs={
                     "class": "form-check-input",
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                 }
             ),
             "email_alarm": forms.CheckboxInput(
                 attrs={
                     "class": "form-check-input",
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                 }
             ),
             "start_time": forms.TimeInput(
@@ -71,7 +73,7 @@ class EventUserForm(forms.ModelForm):
                     "class": "form-control",
                     "disabled": "disabled",
                     "type": "time",
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                 }
             ),
             "end_time": forms.TimeInput(
@@ -79,35 +81,28 @@ class EventUserForm(forms.ModelForm):
                     "class": "form-control",
                     "disabled": "disabled",
                     "type": "time",
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                 }
             ),
             "alarm_sound": forms.CheckboxInput(
                 attrs={
                     "class": "form-check-input",
                     "onclick": "activate(this)",
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                 }
             ),
             "sound_priority": forms.Select(
                 attrs={
                     "class": "form-control",
                     "disabled": "enabled",
-                    "autocomplete": "off",  
-                }
-            ),
-            "type_alarm_sound": forms.Select(
-                attrs={
-                    "class": "form-control",
-                    "disabled": "enabled",
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                 }
             ),
             "color": ColorWidget(
                 attrs={
                     "class": "form-control",
                     "disabled": "enabled",
-                    "autocomplete": "off",  
+                    "autocomplete": "off",
                 }
             ),
         }
@@ -116,6 +111,40 @@ class EventUserForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields["color"].widget = ColorWidget()
         self.fields["color"].widget.attrs["disabled"] = "disabled"
+
+        # Configuración de Azure y obtención de sonidos de alarma
+        AZURE_ACCOUNT_NAME = os.environ.get("AZURE_ACCOUNT_NAME")
+        AZURE_ACCOUNT_KEY = os.environ.get("AZURE_ACCOUNT_KEY")
+        AZURE_CUSTOM_DOMAIN = f"{AZURE_ACCOUNT_NAME}.blob.core.windows.net"
+        
+
+        blob_service_client = BlobServiceClient(
+            account_url=f"https://{AZURE_CUSTOM_DOMAIN}",
+            credential=AZURE_ACCOUNT_KEY,
+        )
+
+        blob_container_client = blob_service_client.get_container_client(
+            settings.MEDIA_LOCATION
+        )
+
+        blobs_list = blob_container_client.list_blobs()
+
+        alarm_sound_files = {
+            blob.name.split("/")[-1].split(".")[0]: f"{settings.MEDIA_URL.strip('/')}/{blob.name}"
+            for blob in blobs_list
+            if blob.name.endswith(".wav")
+        }
+
+        TYPE_ALARM_SOUNDS_CHOICES = [(url, name) for name, url in alarm_sound_files.items()]
+
+        self.fields['type_alarm_sound'].widget = forms.Select(
+            attrs={
+                "class": "form-control",
+                "disabled": "enabled",
+                "autocomplete": "off",
+            },
+            choices=TYPE_ALARM_SOUNDS_CHOICES
+        )
 
     def clean_alarm_sound(self):
         alarm_sound = self.cleaned_data.get("alarm_sound")

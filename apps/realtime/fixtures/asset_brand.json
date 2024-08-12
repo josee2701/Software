@@ -1,0 +1,170 @@
+[
+    {
+        "model": "realtime.Brands_assets",
+        "pk": 1,
+        "fields": {
+            "brand": "Alfa Romeo",
+            "type_asset": 1
+        }
+    },
+    {
+        "model": "realtime.Brands_assets",
+        "pk": 2,
+        "fields": {
+            "brand": "Audi",
+            "type_asset": 1
+        }
+    },
+    {
+        "model": "realtime.Brands_assets",
+        "pk": 3,
+        "fields": {
+            "brand": "BMW",
+            "type_asset": 1
+        }
+    },
+    {
+        "model": "realtime.Brands_assets",
+        "pk": 4,
+        "fields": {
+            "brand": "Chevrolet",
+            "type_asset": 1
+        }
+    },
+    {
+        "model": "realtime.Brands_assets",
+        "pk": 5,
+        "fields": {
+            "brand": "Citroen",
+            "type_asset": 1
+        }
+    },
+    {
+        "model": "realtime.Brands_assets",
+        "pk": 6,
+        "fields": {
+            "brand": "Ford",
+            "type_asset": 1
+        }
+    },
+    {
+        "model": "realtime.Brands_assets",
+        "pk": 7,
+        "fields": {
+            "brand": "Honda",
+            "type_asset": 1
+        }
+    },
+    {
+        "model": "realtime.Brands_assets",
+        "pk": 8,
+        "fields": {
+            "brand": "Hyundai",
+            "type_asset": 1
+        }
+    },
+    {
+        "model": "realtime.Brands_assets",
+        "pk": 9,
+        "fields": {
+            "brand": "Jaguar",
+            "type_asset": 1
+        }
+    },
+    {
+        "model": "realtime.Brands_assets",
+        "pk": 10,
+        "fields": {
+            "brand": "Kia",
+            "type_asset": 1
+        }
+    },
+    {
+        "model": "realtime.Brands_assets",
+        "pk": 11,
+        "fields": {
+            "brand": "Lexus",
+            "type_asset": 1
+        }
+    },
+    {
+        "model": "realtime.Brands_assets",
+        "pk": 12,
+        "fields": {
+            "brand": "Mazda",
+            "type_asset": 1
+        }
+    },
+    {
+        "model": "realtime.Brands_assets",
+        "pk": 13,
+        "fields": {
+            "brand": "Mercedes-Benz",
+            "type_asset": 1
+        }
+    },
+    {
+        "model": "realtime.Brands_assets",
+        "pk": 14,
+        "fields": {
+            "brand": "Nissan",
+            "type_asset": 1
+        }
+    },
+    {
+        "model": "realtime.Brands_assets",
+        "pk": 15,
+        "fields": {
+            "brand": "Peugeot",
+            "type_asset": 1
+        }
+    },
+    {
+        "model": "realtime.Brands_assets",
+        "pk": 16,
+        "fields": {
+            "brand": "Renault",
+            "type_asset": 1
+        }
+    },
+    {
+        "model": "realtime.Brands_assets",
+        "pk": 17,
+        "fields": {
+            "brand": "Skoda",
+            "type_asset": 1
+        }
+    },
+    {
+        "model": "realtime.Brands_assets",
+        "pk": 18,
+        "fields": {
+            "brand": "Subaru",
+            "type_asset": 1
+        }
+    },
+    {
+        "model": "realtime.Brands_assets",
+        "pk": 19,
+        "fields": {
+            "brand": "Toyota",
+            "type_asset": 1
+        }
+    },
+    {
+        "model": "realtime.Brands_assets",
+        "pk": 20,
+        "fields": {
+            "brand": "Volkswagen",
+            "type_asset": 1
+        }
+    },
+    {
+        "model": "realtime.Brands_assets",
+        "pk": 21,
+        "fields": {
+            "brand": "Volvo",
+            "type_asset": 1
+        }
+    }
+]

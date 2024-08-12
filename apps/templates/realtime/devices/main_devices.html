@@ -6,10 +6,10 @@
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4" style="overflow: hidden;">
+<div class="container-fluid py-4 custom-padding-container" style="overflow: hidden;">
   <div class="row">
     <div class="col-12">
-      <div class="card my-4">
+      <div class="card my-4 custom-padding-card-my-4">
         <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
           <div class="bg-gradient-primary shadow-primary border-radius-lg pt-4 pb-3">
             <div class="col">
@@ -17,160 +17,329 @@
             </div>
           </div>
         </div>
-        <div class="card-body">
-          <div class="row">
-            <div class="col d-flex">
-              <!-- Es la opción del buscador de la plantilla de Device -->
-              <form id="search-form" method="GET" onsubmit="return false">
-                <div class="input-group input-group-outline">
-                  <label class="form-label">{% trans "Search..." %}</label>
-                  <input
-                    id="search-input"
-                    type="text"
-                    class="form-control"
-                    onfocus="focused(this)"
-                    onfocusout="defocused(this)"
-                    name="q"
-                    autocomplete="off"
-                  />
-                </div>
-              </form>
+        <div class="card-body custom-padding-body">
+          <div class="row align-items-center mb-3">
+              <div class="col-12 d-flex flex-column flex-md-row align-items-center justify-content-between">
+                  <div class="d-flex flex-wrap align-items-center mb-2 mb-md-0">
+                    <form method="POST" action="{% url 'realtime:devices' %}" class="d-flex align-items-center">
+                        {% csrf_token %}
+                        <label class="me-2" style="padding-top: 4px;">{% trans "Show" %}</label>
+                        <select name="paginate_by" onchange="this.form.submit()" class="form-select form-select-sm me-2">
+                            <option value="15" {% if request.POST.paginate_by == '15' or paginate_by == 15 %} selected {% endif %}>15</option>
+                            <option value="25" {% if request.POST.paginate_by == '25' or paginate_by == 25 %} selected {% endif %}>25</option>
+                            <option value="50" {% if request.POST.paginate_by == '50' or paginate_by == 50 %} selected {% endif %}>50</option>
+                            <option value="100" {% if request.POST.paginate_by == '100' or paginate_by == 100 %} selected {% endif %}>100</option>
+                        </select>
+                        <label class="mt-1">{% trans "results" %}</label>
+                        <input type="hidden" name="q" value="{{ request.POST.q }}">
+                    </form>
+                  </div>
+                  <div class="d-flex justify-content-end align-items-center flex-wrap">
+                    {% if perms.realtime.add_device %}
+                      <button type="button" hx-get="{% url 'realtime:add_device' %}" class="btn btn-primary mx-2" hx-target="#modal .modal-content" style="padding: 9px 12px; margin: 0 0 0 -1px;">
+                          <i class="fa-solid fa-plus"></i> {% trans "Add Device" %}
+                      </button>
+                      {% endif %}
+                      {% if object_list %}
+                      <a class="btn btn-primary" id="exportExcelBtn" type="button" style="padding: 9px 12px; margin-right: 8px !important; margin: 0 0 0 -1px;">
+                          <i class="fa-solid fa-file-excel mx-2"></i> {% trans "Export to Excel" %}
+                      </a>
+                      {% endif %}
+                      <form id="search-form" method="GET" class="flex me-md-3 mb-2 mb-md-0" style="max-width: 180px;" onsubmit="return false">
+                          <div class="input-group input-group-sm input-group-outline">
+                              <label class="form-label">{% trans "Search..." %}</label>
+                              <input id="search-input" type="text" class="form-control" onfocus="focused(this)" onfocusout="defocused(this)" name="q" autocomplete="off">
+                          </div>
+                      </form>
+                  </div>
+              </div>
             </div>
-            <!-- Contenido de la vista para usuarios con permiso para poder agregar o crear -->
-            {% if perms.realtime.add_device %}
-            <div class="col d-flex justify-content-end">
-              <button type="button" hx-get="{% url 'realtime:add_device' %}" class="btn btn-primary mx-2" hx-target="#dialog">
-                <i class="fa-solid fa-plus"></i> {% trans "Add Device" %}
-              </button>
-            </div>
-            {% endif %}
-          </div>
-          <form method="GET">
-            <label>{% trans "Show entries" %}</label>
-            <select name="paginate_by" id="paginate-by" onchange="this.form.submit()">
-                <option value="10" {% if request.GET.paginate_by == '10' %} selected {% endif %}>10</option>
-                <option value="25" {% if request.GET.paginate_by == '25' %} selected {% endif %}>25</option>
-                <option value="50" {% if request.GET.paginate_by == '50' %} selected {% endif %}>50</option>
-                <option value="100" {% if request.GET.paginate_by == '100' %} selected {% endif %}>100</option>
-            </select>
-            <input type="hidden" name="q" value="{{ request.GET.q }}">
-        </form>
-          <!-- Contenedor con scroll para la tabla -->
-          <div class="scrollable-content mt-3" id="dynamic-scrollable-content" style="overflow-y: auto;">
-            <div class="table-responsive p-0">
-              <!-- Se realiza la tabla en la cual se estipulan los nombres de cada columna -->
-              <table class="table align-items-center mb-0">
+            <div style="overflow-x: auto;">
+              <div class="table-responsive">
+              <table class="table align-items-center mb-0 table-sm">
                 <thead>
                   <tr>
                     <th></th>
-                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Company" %}</th>
-                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "IMEI" %}</th>
-                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Device Type" %}</th>
-                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Simcard" %}</th>
-                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "IP" %}</th>
-                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Serial Number" %}</th>
-                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Create Date" %}</th>
+                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                      <form id="sort-form-company" method="post" style="display: none;" action="{% url 'realtime:devices' %}">
+                          {% csrf_token %}
+                          <input type="hidden" name="order_by" value="company">
+                          <input type="hidden" name="direction" value="{% if order_by == 'company' and direction == 'asc' %}desc{% else %}asc{% endif %}">
+                      </form>
+                      <a href="#" onclick="document.getElementById('sort-form-company').submit(); return false;">
+                          {% trans "Company" %}
+                          <span class="sort-indicator">
+                              <span class="sort-arrow sort-arrow-up {% if order_by == 'company' and direction == 'asc' %}active{% else %}inactive{% endif %}">↑</span>
+                              <span class="sort-arrow sort-arrow-down {% if order_by == 'company' and direction == 'desc' %}active{% else %}inactive{% endif %}">↓</span>
+                          </span>
+                      </a>
+                    </th>
+                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                        <form id="sort-form-imei" method="post" style="display: none;" action="{% url 'realtime:devices' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="order_by" value="imei">
+                            <input type="hidden" name="direction" value="{% if order_by == 'imei' and direction == 'asc' %}desc{% else %}asc{% endif %}">
+                        </form>
+                        <a href="#" onclick="document.getElementById('sort-form-imei').submit(); return false;">
+                            {% trans "IMEI" %}
+                            <span class="sort-indicator">
+                                <span class="sort-arrow sort-arrow-up {% if order_by == 'imei' and direction == 'asc' %}active{% else %}inactive{% endif %}">↑</span>
+                                <span class="sort-arrow sort-arrow-down {% if order_by == 'imei' and direction == 'desc' %}active{% else %}inactive{% endif %}">↓</span>
+                            </span>
+                        </a>
+                    </th>
+                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                      <form id="sort-form-serial-number" method="post" style="display: none;" action="{% url 'realtime:devices' %}">
+                          {% csrf_token %}
+                          <input type="hidden" name="order_by" value="serial_number">
+                          <input type="hidden" name="direction" value="{% if order_by == 'serial_number' and direction == 'asc' %}desc{% else %}asc{% endif %}">
+                      </form>
+                      <a href="#" onclick="document.getElementById('sort-form-serial-number').submit(); return false;">
+                          {% trans "Serial Number" %}
+                          <span class="sort-indicator">
+                              <span class="sort-arrow sort-arrow-up {% if order_by == 'serial_number' and direction == 'asc' %}active{% else %}inactive{% endif %}">↑</span>
+                              <span class="sort-arrow sort-arrow-down {% if order_by == 'serial_number' and direction == 'desc' %}active{% else %}inactive{% endif %}">↓</  span>
+                          </span>
+                      </a>
+                    </th>
+                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                        <form id="sort-form-familymodel" method="post" style="display: none;" action="{% url 'realtime:devices' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="order_by" value="familymodel">
+                            <input type="hidden" name="direction" value="{% if order_by == 'familymodel' and direction == 'asc' %}desc{% else %}asc{% endif %}">
+                        </form>
+                        <a href="#" onclick="document.getElementById('sort-form-familymodel').submit(); return false;">
+                            {% trans "Device Type" %}
+                            <span class="sort-indicator">
+                                <span class="sort-arrow sort-arrow-up {% if order_by == 'familymodel' and direction == 'asc' %}active{% else %}inactive{% endif %}">↑</span>
+                                <span class="sort-arrow sort-arrow-down {% if order_by == 'familymodel' and direction == 'desc' %}active{% else %}inactive{% endif %}">↓</span>
+                            </span>
+                        </a>
+                    </th>
+                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                        <form id="sort-form-simcard" method="post" style="display: none;" action="{% url 'realtime:devices' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="order_by" value="simcard">
+                            <input type="hidden" name="direction" value="{% if order_by == 'simcard' and direction == 'asc' %}desc{% else %}asc{% endif %}">
+                        </form>
+                        <a href="#" onclick="document.getElementById('sort-form-simcard').submit(); return false;">
+                            {% trans "Simcard" %}
+                            <span class="sort-indicator">
+                                <span class="sort-arrow sort-arrow-up {% if order_by == 'simcard' and direction == 'asc' %}active{% else %}inactive{% endif %}">↑</span>
+                                <span class="sort-arrow sort-arrow-down {% if order_by == 'simcard' and direction == 'desc' %}active{% else %}inactive{% endif %}">↓</span>
+                            </span>
+                        </a>
+                    </th>
+                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                        <form id="sort-form-ip" method="post" style="display: none;" action="{% url 'realtime:devices' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="order_by" value="ip">
+                            <input type="hidden" name="direction" value="{% if order_by == 'ip' and direction == 'asc' %}desc{% else %}asc{% endif %}">
+                        </form>
+                        <a href="#" onclick="document.getElementById('sort-form-ip').submit(); return false;">
+                            {% trans "IP" %}
+                            <span class="sort-indicator">
+                                <span class="sort-arrow sort-arrow-up {% if order_by == 'ip' and direction == 'asc' %}active{% else %}inactive{% endif %}">↑</span>
+                                <span class="sort-arrow sort-arrow-down {% if order_by == 'ip' and direction == 'desc' %}active{% else %}inactive{% endif %}">↓</span>
+                            </span>
+                        </a>
+                    </th>
+                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                        <form id="sort-form-create-date" method="post" style="display: none;" action="{% url 'realtime:devices' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="order_by" value="create_date">
+                            <input type="hidden" name="direction" value="{% if order_by == 'create_date' and direction == 'asc' %}desc{% else %}asc{% endif %}">
+                        </form>
+                        <a href="#" onclick="document.getElementById('sort-form-create-date').submit(); return false;">
+                            {% trans "Create Date" %}
+                            <span class="sort-indicator">
+                                <span class="sort-arrow sort-arrow-up {% if order_by == 'create_date' and direction == 'asc' %}active{% else %}inactive{% endif %}">↑</span>
+                                <span class="sort-arrow sort-arrow-down {% if order_by == 'create_date' and direction == 'desc' %}active{% else %}inactive{% endif %}">↓</span>
+                            </span>
+                        </a>
+                    </th>
+                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                        <form id="sort-form-is_active" method="post" style="display: none;" action="{% url 'realtime:devices' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="order_by" value="is_active">
+                            <input type="hidden" name="direction" value="{% if order_by == 'is_active' and direction == 'asc' %}desc{% else %}asc{% endif %}">
+                        </form>
+                        <a href="#" onclick="document.getElementById('sort-form-is_active').submit(); return false;">
+                            {% trans "Status" %}
+                            <span class="sort-indicator">
+                                <span class="sort-arrow sort-arrow-up {% if order_by == 'is_active' and direction == 'asc' %}active{% else %}inactive{% endif %}">↑</span>
+                                <span class="sort-arrow sort-arrow-down {% if order_by == 'is_active' and direction == 'desc' %}active{% else %}inactive{% endif %}">↓</span>
+                            </span>
+                        </a>
+                    </th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody id="device-tbody">
                   {% for device in object_list %}
                   <tr>
-                    <td>
-                      <!-- Contenido de la vista para usuarios con permiso -->
+                    <td class="text-center p-2">
                       {% if perms.realtime.change_device %}
-                      <button type="button" hx-get="{% url 'realtime:update_device' device.imei %}" class="btn btn-primary" hx-target="#dialog">
-                        <i class="fa-solid fa-pencil"></i>
-                      </button>
-                      {% endif %} {% if perms.realtime.delete_device %}
-                      <button type="button" hx-get="{% url 'realtime:delete_device' device.imei %}" class="btn btn-danger" hx-target="#dialog">
-                        <i class="fa-solid fa-trash"></i>
-                      </button>
+                          <button type="button" hx-get="{% url 'realtime:update_device' device.imei %}" class="btn btn-primary btn-sm" hx-target="#modal .modal-content">
+                              <i class="fa-solid fa-pencil"></i>
+                          </button>
+                      {% endif %}
+                      {% if perms.realtime.delete_device %}
+                          <button type="button" hx-get="{% url 'realtime:delete_device' device.imei %}" class="btn btn-danger btn-sm ml-2" hx-target="#modal .modal-content">
+                              <i class="fa-solid fa-trash"></i>
+                          </button>
                       {% endif %}
                     </td>
                     <td class="align-middle text-center text-sm">
                       <span class="text-secondary mb-0">{{ device.company }}</span>
                     </td>
                     <td class="align-middle text-center text-sm">
-                      <span class="font-weight-normal mb-0"> {{device.imei}} </span>
+                      <span class="text-secondary mb-0"> {{device.imei}} </span>
                     </td>
                     <td class="align-middle text-center text-sm">
-                      <span class="text-secondary font-weight-normal mb-0">{{device.familymodel}}</span>
+                      <span class="text-secondary mb-0">{{device.serial_number}}</span>
+                    </td>
+                    <td class="align-middle text-center text-sm">
+                      <span class="text-secondary mb-0">{{device.familymodel}}</span>
                     </td>
                     <td class="align-middle text-center text-sm">
                       {% if device.simcard_visible %}
-                      <span class="text-secondary font-weight-normal mb-0">{{device.simcard}}</span>
+                      <span class="text-secondary mb-0">{{device.simcard}}</span>
                       {% else %}
-                      <span class="text-secondary font-weight-normal mb-0">-</span>
+                      <span class="text-secondary mb-0">-</span>
                       {% endif %}
                     </td>
                     <td class="align-middle text-center text-sm">
-                      <span class="text-secondary font-weight-normal mb-0">{{ device.ip }}</span>
-                      <!-- Muestra la dirección IP del dispositivo -->
+                      <span class="text-secondary mb-0">{{ device.ip }}</span>
                     </td>
                     <td class="align-middle text-center text-sm">
-                      <span class="text-secondary font-weight-normal mb-0">{{device.serial_number}}</span>
+                      <span class="text-secondary mb-0">{{device.create_date}}</span>
                     </td>
+                    {% if device.is_active %}
                     <td class="align-middle text-center text-sm">
-                      <span class="text-secondary font-weight-normal mb-0">{{device.create_date}}</span>
+                      <span class="text-secondary mb-0">{% trans "Active" %}</span>
                     </td>
+                    {% else %}
+                    <td class="align-middle text-center text-sm">
+                      <span class="text-secondary mb-0">{% trans "Inactive" %}</span>
+                    </td>
+                    {% endif %}
                   </tr>
                   {% endfor %}
                 </tbody>
               </table>
             </div>
           </div>
-          <div class="row mt-4">
-            <div class="col-6 d-flex justify-content-start">
-              <nav aria-label="Page navigation">
-                <ul class="pagination">
-                  {% if page_obj.has_previous %}
-                  <li class="page-item">
-                    <a class="page-link" href="?page=1&paginate_by={{ request.GET.paginate_by }}&q={{ request.GET.q }}">{% trans 'Home' %}</a>
-                  </li>
-                  <li class="page-item">
-                    <a
-                      class="page-link"
-                      href="?page={{ page_obj.previous_page_number }}&paginate_by={{ request.GET.paginate_by }}&q={{ request.GET.q }}"
-                      >&laquo;</a
-                    >
-                  </li>
-                  {% endif %} {% if page_obj.number|add:"-4" > 1 %}
-                  <li class="page-item"><span class="page-link">...</span></li>
-                  {% endif %} {% for num in page_obj.paginator.page_range %} {% if num > page_obj.number|add:"-4" and num < page_obj.number|add:"4" %}
-                  <li class="page-item {% if page_obj.number == num %}active{% endif %}">
-                    <a class="page-link" href="?page={{ num }}&paginate_by={{ request.GET.paginate_by }}&q={{ request.GET.q }}">{{ num }}</a>
-                  </li>
-                  {% endif %} {% endfor %} {% if page_obj.number|add:"3" < page_obj.paginator.num_pages %}
-                  <li class="page-item"><span class="page-link">...</span></li>
-                  {% endif %} {% if page_obj.has_next %}
-                  <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.next_page_number }}&paginate_by={{ request.GET.paginate_by }}&q={{ request.GET.q }}"
-                      >&raquo;</a
-                    >
-                  </li>
-                  <li class="page-item">
-                    <a
-                      class="page-link"
-                      href="?page={{ page_obj.paginator.num_pages }}&paginate_by={{ request.GET.paginate_by }}&q={{ request.GET.q }}"
-                      >{% trans 'End' %}</a
-                    >
-                  </li>
-                  {% endif %}
-                </ul>
-              </nav>
+          <form id="pagination-form" method="post" action="">
+            {% csrf_token %}
+            <input type="hidden" name="paginate_by" value="{{ request.POST.paginate_by }}">
+            <input type="hidden" name="q" value="{{ request.GET.q }}">
+            <input type="hidden" name="page" id="page-input" value="{{ page_obj.number }}">
+          </form>
+          <div class="row mt-2 custom-row">
+            <div class="col-6 d-flex justify-content-start align-items-center">
+                <div class="pagination-info">
+                    {% trans 'Displaying' %} {{ page_obj.start_index }} {% trans 'to' %} {{ page_obj.end_index }} {% trans 'of' %} {{ page_obj.paginator.count }} {% trans 'items.' %}
+                </div>
             </div>
             <div class="col-6 d-flex justify-content-end">
-              <div class="pagination-info">
-                {% trans 'Displaying' %} {{ page_obj.start_index }} {% trans 'to' %} {{ page_obj.end_index }} {% trans 'of' %} {{page_obj.paginator.count }} {% trans 'items.' %}
-              </div>
+                <nav aria-label="Page navigation" id="pagination-container">
+                    <ul class="pagination">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="#" onclick="setPageAndSubmit(1); return false;">
+                                    {% trans 'Home' %}
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="#" onclick="setPageAndSubmit({{ page_obj.previous_page_number }}); return false;">
+                                    &laquo;
+                                </a>
+                            </li>
+                        {% endif %}
+                        {% if page_obj.number|add:"-4" > 1 %}
+                            <li class="page-item"><span class="page-link">...</span></li>
+                        {% endif %}
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if num > page_obj.number|add:"-4" and num < page_obj.number|add:"4" %}
+                                <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                                    <a class="page-link" href="#" onclick="setPageAndSubmit({{ num }}); return false;">
+                                        {{ num }}
+                                    </a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        {% if page_obj.number|add:"3" < page_obj.paginator.num_pages %}
+                            <li class="page-item"><span class="page-link">...</span></li>
+                        {% endif %}
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="#" onclick="setPageAndSubmit({{ page_obj.next_page_number }}); return false;">
+                                    &raquo;
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="#" onclick="setPageAndSubmit({{ page_obj.paginator.num_pages }}); return false;">
+                                    {% trans 'End' %}
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
             </div>
           </div>
-        </div>
       </div>
     </div>
   </div>
 </div>
-<script src="{% static 'assets/js/dynamic-scrollable-content.js' %}"></script>
+<div class="modal fade" id="downloadModal" tabindex="-1" aria-labelledby="downloadModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-start modal-dialog-scrollable" style="max-width: 25%;">
+      <div class="modal-content">
+          <div class="modal-header">
+              <h5 class="modal-title" id="downloadModalLabel">{% trans "Download Progress" %}</h5>
+              <button type="button" id="cerrarVenta" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+              <div class="progress">
+                  <div id="downloadProgressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar">0%</div>
+              </div>
+          </div>
+      </div>
+  </div>
+</div>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" type="text/css" href="{% static 'assets/css/estilos_templates.css' %}" />
+  <link rel="stylesheet" type="text/css" href="{% static 'assets/css/style_main_list.css' %}" />
+  <link rel="stylesheet" type="text/css" href="{% static 'assets/css/report/report_today.css' %}">
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.3/xlsx.full.min.js"></script>
+</head>
+<script>
+  var csrfToken = "{{ csrf_token }}";
+  var permiseChange = "{{ perms.realtime.change_device }}";
+  var permiseDelete = "{{ perms.realtime.delete_device }}";
+  const updateDeviceUrl = "{% url 'realtime:update_device' 0 %}";
+  const deleteDeviceUrl = "{% url 'realtime:delete_device' 0 %}";
+  var translations = {
+      low: "{% trans 'Low' %}",
+      medium: "{% trans 'Medium' %}",
+      high: "{% trans 'High' %}",
+      end: "{% trans 'End' %}",
+      home: "{% trans 'Home' %}",
+      open: "{% trans 'Open' %}",
+      closed: "{% trans 'Closed' %}",
+      false: "{% trans 'Inactive' %}",
+      true: "{% trans 'Active' %}",
+      to: "{% trans 'to' %}",
+      of: "{% trans 'of' %}",
+      unassigned : "{% trans 'Unassigned' %}",
+      displaying: "{% trans 'Displaying' %}",
+      device: "{% trans 'List_Devices' %}",
+  };
+</script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-<script src="{% static 'assets/js/search.js' %}"></script>
+<script src="{% static 'assets/js/asc_desc.js' %}"></script>
+<script src="{% static 'assets/js/realtime/device/search_device.js' %}"></script>
+<script src="{% static 'assets/js/realtime/device/export_excel_devices.js' %}"></script>
 {% endblock %}

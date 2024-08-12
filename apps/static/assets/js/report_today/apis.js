@@ -1,156 +1,134 @@
-
-
 document.addEventListener('DOMContentLoaded', function () {
-    var startDateInput = document.getElementById('id_start_date');
-    var endDateInput = document.getElementById('id_end_date');
-    var errorMessage = document.getElementById('date_error');
-    var reportButton = document.querySelector('.btn-primary');
-    var companySelect = document.getElementById('id_company');
-    var vehicleSelect = document.getElementById('id_Imei');
-    var eventSelect = document.getElementById('id_event');
-    var utcStartDateInput = document.getElementById('utc_start_date');
-    var utcEndDateInput = document.getElementById('utc_end_date');
-    var searchEventInput = document.getElementById('search-event');
+    var companySelect = $('#id_company');
+    var vehicleSelect = $('#id_Imei');
+    var eventSelect = $('#id_event');
 
+    companySelect.select2();
+    vehicleSelect.select2();
+    eventSelect.select2();
 
-    function filterEvents(searchInputId, selectId) {
-        var searchInput = document.getElementById(searchInputId);
-        var select = document.getElementById(selectId);
-        var selectOptions = select.getElementsByTagName('option');
+    // Añade la clase form-control al contenedor de select2
+    $('.select2-container').addClass('form-control');
 
-        searchInput.addEventListener("keyup", function () {
-            var query = event.target.value.toLowerCase();
+    function moveErrorsToSelect2() {
+        $('.select2-error-message').remove();
+        $('.has-error').removeClass('has-error');
 
-            // Desplegar la lista de opciones al empezar a escribir en el campo de búsqueda
-            select.size = selectOptions.length > 5 ? 5 : selectOptions.length;
+        var companyError = $('.error-message:has(#id_company)').text().trim();
+        var vehicleError = $('.error-message:has(#id_Imei)').text().trim();
+        var eventError = $('.error-message:has(#id_event)').text().trim();
 
-            for (var i = 0; i < selectOptions.length; i++) {
-                var option = selectOptions[i];
-                var eventName = option.textContent.toLowerCase();
-
-                if (eventName.indexOf(query) === -1) {
-                    option.style.display = "none"; // Ocultar opciones no coincidentes
-                } else {
-                    option.style.display = ""; // Mostrar opciones coincidentes
-                }
-            }
-        });
-
-        searchInput.addEventListener("focusout", function () {
-            // Esto asegura que la lista se cierre solo si no se está seleccionando una opción
-            if (!select.matches(':hover')) {
-                select.size = 1;
-            }
-        });
-
-        select.addEventListener("change", function () {
-            searchInput.value = ""; // Limpiar el campo de búsqueda
-            select.size = 1; // Cerrar la lista desplegable
-        });
+        if (companyError) {
+            showError(companySelect, companyError);
+        }
+        if (vehicleError) {
+            showError(vehicleSelect, vehicleError);
+        }
+        if (eventError) {
+            showError(eventSelect, eventError);
+        }
     }
 
-    // Llamar a la función para filtrar las opciones del campo de selección de eventos
-    filterEvents("search-event", "id_event");
-
-    // Función para actualizar las opciones de vehicles basadas en la compañía seleccionada
     function updateVehicleOptions() {
-        var selectedCompany = companySelect.value;
-        var previouslySelectedImei = vehicleSelect.value;  // Guarda el IMEI actualmente seleccionado
+        var selectedCompany = companySelect.val();
+        var previouslySelectedVehicle = vehicleSelect.val(); // Guarda el vehículo seleccionado
 
-        // Verifica si se seleccionó una compañía antes de realizar la solicitud AJAX
-        if (selectedCompany && selectedCompany !== 'none') {
-            // Realiza una solicitud AJAX para obtener las opciones de vehicles
+        if (selectedCompany) {
             fetch(`/es/checkpoints/reports/vehicles-by-company/${selectedCompany}/`)
                 .then(response => response.json())
                 .then(data => {
-                    // Elimina las opciones actuales
-                    vehicleSelect.innerHTML = '';
+                    vehicleSelect.empty();
 
-                    // Agrega un elemento de opción con el texto "------------" al principio
-                    var allOption = document.createElement('option');
-                    allOption.value = '';
-                    allOption.text = '------------';  // Texto genérico para representar ninguna selección
-                    vehicleSelect.appendChild(allOption);
-
-                    // Agrega las nuevas opciones
-                    data.forEach(function (vehicle) {
-                        var option = document.createElement('option');
-                        option.value = vehicle.imei;
-                        option.text = vehicle.vehicle__license;  // Ajusta esto según la propiedad de nombre de tu modelo Vehicle
-                        vehicleSelect.appendChild(option);
-                    });
-
-                    // Vuelve a seleccionar el IMEI si aún está disponible en las opciones
-                    if (vehicleSelect.querySelector(`option[value="${previouslySelectedImei}"]`)) {
-                        vehicleSelect.value = previouslySelectedImei;
+                    if (data.length > 0) {
+                        data.forEach(function (vehicle) {
+                            var isSelected = vehicle.imei === previouslySelectedVehicle; // Verifica si es el vehículo seleccionado
+                            var option = new Option(vehicle.vehicle__license, vehicle.imei, isSelected, isSelected);
+                            vehicleSelect.append(option);
+                        });
+                        vehicleSelect.trigger('change'); // Dispara el evento 'change' para actualizar la interfaz
                     }
-
-                    // Habilita el campo una vez se han cargado las opciones
-                    vehicleSelect.disabled = false;
+                    vehicleSelect.prop('disabled', false);
                 })
                 .catch(error => {
-                    console.error('Error fetching vehicles:', error);
-                    vehicleSelect.disabled = false;
+                    console.error('Error al obtener los vehículos:', error);
+                    vehicleSelect.prop('disabled', false);
                 });
         } else {
-            // Si no se selecciona una compañía, deja el campo de vehicle deshabilitado y sin opciones
-
+            vehicleSelect.empty();
+            vehicleSelect.prop('disabled', true);
         }
     }
 
-    // Escucha cambios en la selección de la compañía
-    companySelect.addEventListener('change', updateVehicleOptions);
-
-    // Llama a la función una vez para configurar las opciones de vehicles inicialmente
-    updateVehicleOptions();
-
-    // Bloquea la opcion de busqueda de eventos si aun no se se ha seleccionado compañia
-    searchEventInput.disabled = true
-
-    // Función para actualizar las opciones de events basadas en la compañía seleccionada
     function updateEventsOptions() {
-        var selectedCompany = companySelect.value;
+        var selectedCompany = companySelect.val();
+        var previouslySelectedEvent = eventSelect.val();
 
-        // Verifica si se seleccionó una compañía antes de realizar la solicitud AJAX
-        if (selectedCompany && selectedCompany !== 'none') {
-            // Realiza una solicitud AJAX para obtener las opciones de events
+        if (selectedCompany) {
             fetch(`/es/checkpoints/reports/events-by-company/${selectedCompany}/`)
                 .then(response => response.json())
                 .then(data => {
-                    // Elimina las opciones actuales
-                    eventSelect.innerHTML = '';
+                    eventSelect.empty();
+                    var allOption = new Option(translations.allEvents, '', true, true);
+                    eventSelect.append(allOption);
 
-                    // Agrega un elemento de opción con el texto "Todos" al principio
-                    var allOption = document.createElement('option');
-                    allOption.value = '';
-                    allOption.text = '------------'; // Puedes cambiar 'Todos' por 'All' si prefieres
-                    eventSelect.appendChild(allOption);
-
-                    // Agrega las nuevas opciones
-                    data.forEach(function (eventName) {
-                        var option = document.createElement('option');
-                        // Como no tienes un identificador único, puedes usar el nombre del evento como valor
-                        option.value = eventName;
-                        option.text = eventName;
-                        eventSelect.appendChild(option);
+                    data.forEach(function (event) {
+                        var option = new Option(event, event, false, false);
+                        eventSelect.append(option);
                     });
 
-                    // Habilita el campo una vez se han cargado las opciones
-                    eventSelect.disabled = false;
-                    searchEventInput.disabled = false
+                    if (previouslySelectedEvent) {
+                        eventSelect.val(previouslySelectedEvent).trigger('change');
+                    }
+
+                    eventSelect.prop('disabled', false);
                 })
-                .catch(error => console.error('Error fetching events:', error));
+                .catch(error => {
+                    console.error('Error fetching events:', error);
+                    eventSelect.prop('disabled', false);
+                });
         } else {
-            // Si no se selecciona una compañía, deja el campo de events deshabilitado y sin opciones
-            eventSelect.innerHTML = '';
-            eventSelect.disabled = true;
+            eventSelect.empty();
+            eventSelect.prop('disabled', true);
         }
     }
 
-    // Escucha cambios en la selección de la compañía
-    companySelect.addEventListener('change', updateEventsOptions);
+    companySelect.on('change', updateVehicleOptions);
+    companySelect.on('change', updateEventsOptions);
 
-    // Llama a la función una vez para configurar las opciones de events inicialmente
+    updateVehicleOptions();
     updateEventsOptions();
 
+    function showError(selectElement, message) {
+        var container = selectElement.data('select2').$container;
+        container.addClass('has-error');
+        var errorElement = $('<span class="select2-error-message"></span>').text(message);
+        container.append(errorElement);
+    }
+
+    companySelect.on('change', function() {
+        var container = $(this).data('select2').$container;
+        container.removeClass('has-error');
+        container.find('.select2-error-message').remove();
+    });
+
+    vehicleSelect.on('change', function() {
+        var container = $(this).data('select2').$container;
+        container.removeClass('has-error');
+        container.find('.select2-error-message').remove();
+    });
+
+    eventSelect.on('change', function() {
+        var container = $(this).data('select2').$container;
+        container.removeClass('has-error');
+        container.find('.select2-error-message').remove();
+    });
+
+    moveErrorsToSelect2();
+
+    $('#search-form').on('submit', function(e) {
+        if ($('#id_Imei').val() === "") {
+            e.preventDefault();
+            showError(vehicleSelect, 'Debe seleccionar un vehículo.');
+        }
+    });
 });

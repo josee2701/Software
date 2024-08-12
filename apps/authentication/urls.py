@@ -8,33 +8,16 @@ Para una referencia completa sobre la autenticación de usuarios Django, consult
 https://docs.djangoproject.com/en/4.1/topics/auth/default/
 """
 
-from django.urls import include, path, reverse_lazy
+from django.urls import include, path
 
-from .apis import (
-    list_companies_to_monitor_by_company,
-    list_proces_by_company,
-    list_vehicles_to_monitor_by_company,
-)
-from .views import (
-    AddUserView,
-    ClearEmailView,
-    DeleteUser,
-    IndexView_,
-    LoginView_,
-    Main_,
-    PasswordChangeDoneView_,
-    PasswordChangeView_,
-    PasswordResetCompleteView_,
-    PasswordResetConfirmView_,
-    PasswordResetDoneView_,
-    PasswordResetView_,
-    PasswordUserView,
-    PermissionUserView,
-    ProfileUserView,
-    UpdatePermissionUser,
-    UpdateUserView,
-    UserLisTemplate,
-)
+from .apis import SearchUser, list_proces_by_company, ExportDataUsers
+from .views import (AddUserView, ClearEmailView, DeleteUser, IndexView_,
+                    LoginView_, Main_, PasswordChangeDoneView_,
+                    PasswordChangeView_, PasswordResetCompleteView_,
+                    PasswordResetConfirmView_, PasswordResetDoneView_,
+                    PasswordResetView_, PasswordUserView, PermissionUserView,
+                    ProfileUserView, UpdatePermissionUser, UpdateUserView,
+                    UserLisTemplate)
 
 urlpatterns = [
     # Vista de inicio o bienvenida.
@@ -103,18 +86,12 @@ urlpatterns = [
                     name="DeleteUsers",
                 ),
                 path(
-                    "process/<int:company_id>/", list_proces_by_company, name="process"
+                    "process/<int:company_id>/<int:user_id>/", list_proces_by_company, name="process"
                 ),
-                path(
-                    "api/user/monitored-company/<int:company_id>",
-                    list_companies_to_monitor_by_company,
-                    name="list-monitored-items-by-user",
-                ),
-                path(
-                    "api/user/monitored/<int:company_id>",
-                    list_vehicles_to_monitor_by_company,
-                    name="list-monitored-",
-                ),
+                # API para traer info de usuarios + search
+                path("users-user", SearchUser.as_view(), name="users_user"),
+                path("export-user", ExportDataUsers.as_view(), name="export_user"),
+
             ]
         ),
     ),

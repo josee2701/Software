@@ -1,0 +1,858 @@
+[
+  {
+      "model": "realtime.Line_assets",
+      "pk": 1,
+      "fields": {
+          "line": "Giulia",
+          "brand_asset": 1
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 2,
+      "fields": {
+          "line": "Stelvio",
+          "brand_asset": 1
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 3,
+      "fields": {
+          "line": "Giulietta",
+          "brand_asset": 1
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 4,
+      "fields": {
+          "line": "4C Spider",
+          "brand_asset": 1
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 5,
+      "fields": {
+          "line": "Tonale",
+          "brand_asset": 1
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 6,
+      "fields": {
+          "line": "A3",
+          "brand_asset": 2
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 7,
+      "fields": {
+          "line": "A4",
+          "brand_asset": 2
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 8,
+      "fields": {
+          "line": "A5",
+          "brand_asset": 2
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 9,
+      "fields": {
+          "line": "A6",
+          "brand_asset": 2
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 10,
+      "fields": {
+          "line": "A7",
+          "brand_asset": 2
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 11,
+      "fields": {
+          "line": "3 Series",
+          "brand_asset": 3
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 12,
+      "fields": {
+          "line": "5 Series",
+          "brand_asset": 3
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 13,
+      "fields": {
+          "line": "7 Series",
+          "brand_asset": 3
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 14,
+      "fields": {
+          "line": "8 Series",
+          "brand_asset": 3
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 15,
+      "fields": {
+          "line": "Z4",
+          "brand_asset": 3
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 16,
+      "fields": {
+          "line": "Spark",
+          "brand_asset": 4
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 17,
+      "fields": {
+          "line": "Cruze",
+          "brand_asset": 4
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 18,
+      "fields": {
+          "line": "Malibu",
+          "brand_asset": 4
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 19,
+      "fields": {
+          "line": "Impala",
+          "brand_asset": 4
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 20,
+      "fields": {
+          "line": "Volt",
+          "brand_asset": 4
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 21,
+      "fields": {
+          "line": "C3",
+          "brand_asset": 5
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 22,
+      "fields": {
+          "line": "C4",
+          "brand_asset": 5
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 23,
+      "fields": {
+          "line": "C4 Cactus",
+          "brand_asset": 5
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 24,
+      "fields": {
+          "line": "C-Elysée",
+          "brand_asset": 5
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 25,
+      "fields": {
+          "line": "Ami",
+          "brand_asset": 5
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 26,
+      "fields": {
+          "line": "Focus",
+          "brand_asset": 6
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 27,
+      "fields": {
+          "line": "Fiesta",
+          "brand_asset": 6
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 28,
+      "fields": {
+          "line": "Fusion",
+          "brand_asset": 6
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 29,
+      "fields": {
+          "line": "Mustang",
+          "brand_asset": 6
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 30,
+      "fields": {
+          "line": "Taurus",
+          "brand_asset": 6
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 31,
+      "fields": {
+          "line": "Civic",
+          "brand_asset": 7
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 32,
+      "fields": {
+          "line": "Accord",
+          "brand_asset": 7
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 33,
+      "fields": {
+          "line": "Fit",
+          "brand_asset": 7
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 34,
+      "fields": {
+          "line": "Insight",
+          "brand_asset": 7
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 35,
+      "fields": {
+          "line": "Clarity",
+          "brand_asset": 7
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 36,
+      "fields": {
+          "line": "Elantra",
+          "brand_asset": 8
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 37,
+      "fields": {
+          "line": "Sonata",
+          "brand_asset": 8
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 38,
+      "fields": {
+          "line": "Ioniq",
+          "brand_asset": 8
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 39,
+      "fields": {
+          "line": "Accent",
+          "brand_asset": 8
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 40,
+      "fields": {
+          "line": "Veloster",
+          "brand_asset": 8
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 41,
+      "fields": {
+          "line": "XE",
+          "brand_asset": 9
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 42,
+      "fields": {
+          "line": "XF",
+          "brand_asset": 9
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 43,
+      "fields": {
+          "line": "XJ",
+          "brand_asset": 9
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 44,
+      "fields": {
+          "line": "F-Type",
+          "brand_asset": 9
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 45,
+      "fields": {
+          "line": "XK",
+          "brand_asset": 9
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 46,
+      "fields": {
+          "line": "Rio",
+          "brand_asset": 10
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 47,
+      "fields": {
+          "line": "Cerato",
+          "brand_asset": 10
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 48,
+      "fields": {
+          "line": "Optima",
+          "brand_asset": 10
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 49,
+      "fields": {
+          "line": "Stinger",
+          "brand_asset": 10
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 50,
+      "fields": {
+          "line": "K5",
+          "brand_asset": 10
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 51,
+      "fields": {
+          "line": "ES",
+          "brand_asset": 11
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 52,
+      "fields": {
+          "line": "IS",
+          "brand_asset": 11
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 53,
+      "fields": {
+          "line": "LS",
+          "brand_asset": 11
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 54,
+      "fields": {
+          "line": "GS",
+          "brand_asset": 11
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 55,
+      "fields": {
+          "line": "LC",
+          "brand_asset": 11
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 56,
+      "fields": {
+          "line": "Mazda3",
+          "brand_asset": 12
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 57,
+      "fields": {
+          "line": "Mazda6",
+          "brand_asset": 12
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 58,
+      "fields": {
+          "line": "MX-5 Miata",
+          "brand_asset": 12
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 59,
+      "fields": {
+          "line": "RX-8",
+          "brand_asset": 12
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 60,
+      "fields": {
+          "line": "2",
+          "brand_asset": 12
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 61,
+      "fields": {
+          "line": "C-Class",
+          "brand_asset": 13
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 62,
+      "fields": {
+          "line": "E-Class",
+          "brand_asset": 13
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 63,
+      "fields": {
+          "line": "S-Class",
+          "brand_asset": 13
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 64,
+      "fields": {
+          "line": "CLA",
+          "brand_asset": 13
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 65,
+      "fields": {
+          "line": "A-Class",
+          "brand_asset": 13
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 66,
+      "fields": {
+          "line": "Altima",
+          "brand_asset": 14
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 67,
+      "fields": {
+          "line": "Sentra",
+          "brand_asset": 14
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 68,
+      "fields": {
+          "line": "Maxima",
+          "brand_asset": 14
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 69,
+      "fields": {
+          "line": "Versa",
+          "brand_asset": 14
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 70,
+      "fields": {
+          "line": "370Z",
+          "brand_asset": 14
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 71,
+      "fields": {
+          "line": "208",
+          "brand_asset": 15
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 72,
+      "fields": {
+          "line": "308",
+          "brand_asset": 15
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 73,
+      "fields": {
+          "line": "508",
+          "brand_asset": 15
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 74,
+      "fields": {
+          "line": "208 GTI",
+          "brand_asset": 15
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 75,
+      "fields": {
+          "line": "RCZ",
+          "brand_asset": 15
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 76,
+      "fields": {
+          "line": "Clio",
+          "brand_asset": 16
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 77,
+      "fields": {
+          "line": "Megane",
+          "brand_asset": 16
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 78,
+      "fields": {
+          "line": "Talisman",
+          "brand_asset": 16
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 79,
+      "fields": {
+          "line": "ZOE",
+          "brand_asset": 16
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 80,
+      "fields": {
+          "line": "Laguna",
+          "brand_asset": 16
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 81,
+      "fields": {
+          "line": "Octavia",
+          "brand_asset": 17
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 82,
+      "fields": {
+          "line": "Superb",
+          "brand_asset": 17
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 83,
+      "fields": {
+          "line": "Scala",
+          "brand_asset": 17
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 84,
+      "fields": {
+          "line": "Rapid",
+          "brand_asset": 17
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 85,
+      "fields": {
+          "line": "Citigo",
+          "brand_asset": 17
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 86,
+      "fields": {
+          "line": "Impreza",
+          "brand_asset": 18
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 87,
+      "fields": {
+          "line": "WRX",
+          "brand_asset": 18
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 88,
+      "fields": {
+          "line": "Legacy",
+          "brand_asset": 18
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 89,
+      "fields": {
+          "line": "BRZ",
+          "brand_asset": 18
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 90,
+      "fields": {
+          "line": "Levorg",
+          "brand_asset": 18
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 91,
+      "fields": {
+          "line": "Corolla",
+          "brand_asset": 19
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 92,
+      "fields": {
+          "line": "Camry",
+          "brand_asset": 19
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 93,
+      "fields": {
+          "line": "Prius",
+          "brand_asset": 19
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 94,
+      "fields": {
+          "line": "Yaris",
+          "brand_asset": 19
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 95,
+      "fields": {
+          "line": "Avalon",
+          "brand_asset": 19
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 96,
+      "fields": {
+          "line": "Golf",
+          "brand_asset": 20
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 97,
+      "fields": {
+          "line": "Passat",
+          "brand_asset": 20
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 98,
+      "fields": {
+          "line": "Jetta",
+          "brand_asset": 20
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 99,
+      "fields": {
+          "line": "Arteon",
+          "brand_asset": 20
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 100,
+      "fields": {
+          "line": "Polo",
+          "brand_asset": 20
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 101,
+      "fields": {
+          "line": "S60",
+          "brand_asset": 21
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 102,
+      "fields": {
+          "line": "S90",
+          "brand_asset": 21
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 103,
+      "fields": {
+          "line": "V60",
+          "brand_asset": 21
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 104,
+      "fields": {
+          "line": "V90",
+          "brand_asset": 21
+      }
+  },
+  {
+      "model": "realtime.Line_assets",
+      "pk": 105,
+      "fields": {
+          "line": "XC40",
+          "brand_asset": 21
+      }
+  },
+  {
+    "model": "realtime.Line_assets",
+    "pk": 106,
+    "fields": {
+        "line": "Logan",
+        "brand_asset": 16
+    }
+    },
+    {
+        "model": "realtime.Line_assets",
+        "pk": 107,
+        "fields": {
+            "line": "Stepway",
+            "brand_asset": 16
+        }
+    }
+]

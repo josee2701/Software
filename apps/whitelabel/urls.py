@@ -6,9 +6,20 @@ https://docs.djangoproject.com/en/4.0/ref/urls/
 
 from django.urls import path
 
+from apps.whitelabel.apis import (
+    SearchCompany,
+    SearchModule,
+    SearchTicketsView,
+    SearchTicketsViewOpen,
+    list_proces_by_company,
+    ExportDataCompany,
+    ExportDataTicketsOpen,
+    ExportDataTicketsHistoric,
+    ExportDataModule,
+)
+
 from . import views
 from .views import (
-    ClienteListAPIView,
     ClosedTicketsView,
     CommentTicketView,
     CreateTicketView,
@@ -72,7 +83,6 @@ urlpatterns = [
     path("deleteProcess/<int:pk>/", DeleteProcessView.as_view(), name="deleteProcess"),
     path("theme/<int:pk>/", views.ThemeView.as_view(), name="theme"),
     path("module/", views.ModuleTemplateView.as_view(), name="module"),
-    path("moduleList/", views.ModuleView.as_view(), name="list_create_module"),
     path(
         "updateModule/<int:pk>/",
         views.UpdateModuleView.as_view(),
@@ -86,5 +96,19 @@ urlpatterns = [
     path("tickets/view/<int:pk>/", ViewTicketView.as_view(), name="view_ticket"),
     path("tickets/closed/", ClosedTicketsView.as_view(), name="closed_tickets"),
     # Se realiza API para acceder a company
-    path("api/clientes/", ClienteListAPIView.as_view(), name="api-clientes"),
+    path("process/<int:company_id>/", list_proces_by_company, name="process"),
+    # API para traer info de tickets historicos + search
+    path(
+        "tickets/tickets-company-user",
+        SearchTicketsView.as_view(),
+        name="tickets_company_user",
+    ),
+    # API para traer info de tickets abiertos + search
+    path("tickets/tickets-user", SearchTicketsViewOpen.as_view(), name="tickets_user"),
+    path("company/company-user", SearchCompany.as_view(), name="company_user"),
+    path("module/module-user", SearchModule.as_view(), name="module_user"),
+    path("company/export-company", ExportDataCompany.as_view(), name="export_company"),
+    path("tickets/export-tickets-open", ExportDataTicketsOpen.as_view(), name="export_tickets_open"),
+    path("tickets/export-tickets-historic", ExportDataTicketsHistoric.as_view(), name="export_tickets_historic"),
+    path("module/module-export", ExportDataModule.as_view(), name="module_export"),
 ]

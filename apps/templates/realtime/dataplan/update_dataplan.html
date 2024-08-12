@@ -1,89 +1,84 @@
 {% load i18n static %}
-
 {% block content %}
-{{form.media}}
-<div class="modal-content">
-    <div class="modal-body">
-      <div class="card">
+{{ form.media }}
+<div class="modal-content" id="miModal" style="z-index: 1050">
+  <div class="modal-body">
+    <div class="card">
       <div class="modal-header">
-                <h3>{% trans "Update DataPlan" %}</h3>
-                <button type="button" id="cerrarVenta" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-
+        <h3>{% trans "Update DataPlan" %}</h3>
+        <button type="button" id="cerrarVenta" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="card-body">
+        <form hx-post="{{ request.path }}" hx-target="#modal-content">
+          {% csrf_token %}
+          <div class="row">
+            <div class="col">
+              <div class="input-group input-group-static mb-1">
+                <label for="name">{% trans "Name:" %} <span style="color: red">*</span> </label>
+                {{ form.name }}
               </div>
-            <div class="card-body">
-                <form hx-post="{{ request.path }}" > {% csrf_token %}
-                    <div class="row">
-                        <div class="col">
-                            <p>
-                                <div class="input-group input-group-static mb-1">
-                                    <label for="name">{% trans "Name:" %} <span style="color:red;">*</span> </label>
-                                    {{form.name}}
-                                </div>
-                                <div id="form-errors">
-                                    {{form.name.errors}}
-                                </div>
-                            </p>
-                        </div>
-                        <div class="col">
-                            <p>
-                                <div class="input-group input-group-static mb-4">
-                                    <label for="name">{% trans "Operator: " %} <span style="color:red;">*</span> </label>
-                                    {{form.operator}}
-                                </div>
-                                <div id="form-errors">
-                                    {{form.operator.errors}}
-                                </div>
-                            </p>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-1">
-                            <p>
-                                <div class="input-group input-group-static mb-1">
-                                    <label for="Coin">{% trans "Coin:" %} <span style="color:red;">*</span> </label>
-                                    {{form.coin}}
-                                </div>
-                                <div id="form-errors">
-                                    {{form.coin.errors}}
-                                </div>
-                              </p>
-                        </div>
-                        <div class="col">
-                            <p>
-                                <div class="input-group input-group-static mb-4">
-                                    <label for="price">{% trans "Price:" %} <span style="color:red;">*</span> </label>
-                                    {{form.price}}
-                                </div>
-                                <div id="form-errors">
-                                    {{form.price.errors}}
-                                </div>
-                              </p>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col">
-                            <p>
-                                <div class="input-group input-group-static mb-4">
-                                    <label for="company">{% trans "Company:" %} <span style="color:red;">*</span> </label>
-                                    {{form.company}}
-                                </div>
-                                <div id="form-errors">
-                                    {{form.company.errors}}
-                                </div>
-                              </p>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col">
-                            <button class="btn btn-primary mt-3" type="submit"> <i class="fa-solid fa-floppy-disk me-2"></i> {% trans "Save" %} </button>
-                        </div>
-                    </div>
-                </form>
+              <div id="form-errors">{{ form.name.errors }}</div>
             </div>
-        </div>
+            <div class="col">
+              <div class="input-group input-group-static mb-4">
+                <label for="name">{% trans "Operator: " %} <span style="color: red">*</span> </label>
+                {{ form.operator }}
+              </div>
+              <div id="form-errors">{{ form.operator.errors }}</div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col">
+                <div class="input-group input-group-static mb-1">
+                  <label for="Coin">{% trans "Coin:" %} <span style="color: red">*</span> </label>
+                  {{ form.coin }}
+                </div>
+                <div id="form-errors">{{ form.coin.errors }}</div>
+              </div>
+            <div class="col">
+              <div class="input-group input-group-static mb-4">
+                <label for="price">{% trans "Price:" %} <span style="color: red">*</span> </label>
+                {{ form.price }}
+              </div>
+              <div id="form-errors">{{ form.price.errors }}</div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col">
+              <div class="input-group input-group-static mb-4">
+                <label for="company">{% trans "Company:" %} <span style="color: red">*</span> </label>
+                {{ form.company }}
+              </div>
+              <div id="form-errors">{{ form.company.errors }}</div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col">
+              <button class="btn btn-primary mt-3" type="submit"><i class="fa-solid fa-floppy-disk me-2"></i> {% trans "Save" %}</button>
+            </div>
+          </div>
+        </form>
+      </div>
     </div>
+  </div>
 </div>
-    <head>
-        <link rel="stylesheet" type="text/css" href="{% static 'assets/css/estilos_templates.css' %}">
-    </head>
+<head>
+  <link rel="stylesheet" type="text/css" href="{% static 'assets/css/estilos_templates.css' %}" />
+  <link rel="stylesheet" type="text/css" href="{% static 'assets/css/select2.css' %}" />
+</head>
 {% endblock content %}
+{% block scripts %}
+<!-- Incluir jQuery primero -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Incluir Select2 después de jQuery -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="{% static 'assets\js\realtime\dataplan\select.js' %}"></script>
+
+<style>
+    .select2-container--default .select2-results__option--highlighted.select2-results__option--selectable {
+        background-color: {{ button_color }};
+        color: white;
+    }
+  </style>
+{% endblock %}

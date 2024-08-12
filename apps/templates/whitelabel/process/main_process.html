@@ -1,18 +1,16 @@
 {% load i18n static %}
 
 {% block content %}
-{{ form.media }}
-<div class="modal-content">
-  <div class="modal-body">
+<div class="modal-content" id="miModal" style="z-index: 1050;">
+  <div class="modal-body custom-padding-card-my-4" style="margin-top: 0; padding-top: 0;">
     <div class="card-header pb-0">
-      <div class="card">
-        
-        <div class="modal-header">
+      <div class="card my-4 custom-padding-card-my-4">
+        <div class="modal-header" style="margin-top: 0; margin-bottom: 0; padding-top: 0; padding-bottom: 0;">
           <h3>{% trans "Add Process" %}</h3>
           <button type="button" id="cerrarVenta" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-        <div class="card-body">
-          <form hx-post="{{ request.path }}">
+        <div class="card-body custom-padding-body">
+          <form hx-post="{{ request.path }}" hx-target="#modal-content">
             {% csrf_token %}
             <div class="row">
               <div class="col">
@@ -34,88 +32,95 @@
               </div>
             </div>
           </form>
-          <div class="mt-1 mp-5 container">
+          <div class="mt-1 mp-5 container" style="margin-left: 0; padding: 0;">
             <div class="card">
-              <div class="modal-header">
+              <div class="modal-header" style="margin-top: 0; margin-bottom: 0; padding-top: 0; padding-bottom: 0;">
                 <h3>{% trans "List Process" %}</h3>
               </div>
-              <form method="GET" style="padding-top: 10px;padding-left: 5px;">
-                <label>{% trans "Show entries" %}</label>
-                <select name="paginate_by" id="paginate-by" onchange="this.form.submit()">
-                    <option value="10" {% if request.GET.paginate_by == '10' %} selected {% endif %}>10</option>
-                    <option value="25" {% if request.GET.paginate_by == '25' %} selected {% endif %}>25</option>
-                    <option value="50" {% if request.GET.paginate_by == '50' %} selected {% endif %}>50</option>
-                    <option value="100" {% if request.GET.paginate_by == '100' %} selected {% endif %}>100</option>
-                </select>
-                <input type="hidden" name="q" value="{{ request.GET.q }}">
-              </form>
-              <div class="scrollable-content" style="max-height: 30vh; overflow-y: auto;">
-                <div class="table-responsive p-0">
-                  <table class="table align-items-center mb-0">
-                    <thead>
-                      <tr>
-                        {% if perms.whitelabel.change_company %}
-                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"></th>
-                        {% endif %}
-                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"> N°</th>
-                        <th class="text-start text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Process" %}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {% for process in object_list %}
-                      <tr>
-                        {% if perms.whitelabel.change_company %}
-                        <td class="align-middle text-start text-sm" style="width: 300px">
-                          <!-- Contenido de la vista para usuarios con permiso -->
-                          <button type="button" hx-get="{% url 'companies:updateProcess' process.id %}" class="btn btn-primary" hx-target="#dialog">
-                            <i class="fa-solid fa-pencil"></i>
-                          </button>
-                          {% if perms.whitelabel.delete_company %}
-                          <button type="button" hx-get="{% url 'companies:deleteProcess' process.id %}" class="btn btn-danger" hx-target="#dialog">
-                            <i class="fa-solid fa-trash"></i>
-                          </button>
-                          {% endif %}
-                        </td>
-                        {% endif %}
-                        <td class="align-middle text-center text-sm">
-                          {{ forloop.counter|add:start_number }}
-                        </td>
-                        <td class="align-middle text-start text-sm"><span class="text-xs font-weight-normal mb-0"> {{ process.process_type }}</span></td>
-                      </tr>
-                      {% endfor %}
-                    </tbody>
-                  </table>
-                </div>
+              <div class="d-flex flex-wrap align-items-center mb-2 mb-md-0">
+                <form method="GET" hx-get="{% url 'companies:process' %}" hx-target="#modal-content" class="d-flex align-items-center">
+                    <label class="me-2" style="padding-top: 4px;">{% trans "Show" %}</label>
+                    <select name="paginate_by" id="paginate-by" class="form-select form-select-sm me-2" hx-trigger="change" hx-get="{% url 'companies:process' %}?paginate_by={{ this.value }}&q={{ request.GET.q }}" hx-target="#modal-content">
+                        <option value="10" {% if request.GET.paginate_by == '10' or paginate_by == 10 %} selected {% endif %}>10</option>
+                        <option value="25" {% if request.GET.paginate_by == '25' or paginate_by == 25 %} selected {% endif %}>25</option>
+                        <option value="50" {% if request.GET.paginate_by == '50' or paginate_by == 50 %} selected {% endif %}>50</option>
+                        <option value="100" {% if request.GET.paginate_by == '100' or paginate_by == 100 %} selected {% endif %}>100</option>
+                    </select>
+                    <label class="mt-1">{% trans "results" %}</label>
+                    <input type="hidden" name="q" value="{{ request.GET.q }}">
+                </form>
               </div>
-              <div class="row mt-4">
-                <div class="col-6 d-flex justify-content-start" style="padding-left: 20px;">
-                  <nav aria-label="Page navigation">
-                    <ul class="pagination">
-                      {% if page_obj.has_previous %}
-                      <li class="page-item"><a class="page-link" href="?page=1&paginate_by={{ request.GET.paginate_by }}&q={{ request.GET.q }}">{% trans 'Home' %}</a></li>
-                      <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&paginate_by={{ request.GET.paginate_by }}&q={{ request.GET.q }}">&laquo;</a></li>
-                      {% endif %}
-                      {% if page_obj.number|add:"-4" > 1 %}
-                      <li class="page-item"><span class="page-link">...</span></li>
-                      {% endif %}
-                      {% for num in page_obj.paginator.page_range %}
-                      {% if num > page_obj.number|add:"-4" and num < page_obj.number|add:"4" %}
-                      <li class="page-item {% if page_obj.number == num %}active{% endif %}"><a class="page-link" href="?page={{ num }}&paginate_by={{ request.GET.paginate_by }}&q={{ request.GET.q }}">{{ num }}</a></li>
-                      {% endif %}
-                      {% endfor %}
-                      {% if page_obj.number|add:"3" < page_obj.paginator.num_pages %}
-                      <li class="page-item"><span class="page-link">...</span></li>
-                      {% endif %}
-                      {% if page_obj.has_next %}
-                      <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&paginate_by={{ request.GET.paginate_by }}&q={{ request.GET.q }}">&raquo;</a></li>
-                      <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}&paginate_by={{ request.GET.paginate_by }}&q={{ request.GET.q }}">{% trans 'End' %}</a></li>
-                      {% endif %}
-                    </ul>
-                  </nav>
+              <div id="process-list-container">
+                <div style="overflow-x: auto;">
+                  <div class="table-responsive">
+                      <table class="table align-items-center mb-0 table-sm">
+                      <thead>
+                        <tr>
+                          {% if perms.whitelabel.change_company %}
+                          <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"></th>
+                          {% endif %}
+                          <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"> N°</th>
+                          <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% trans "Process" %}</th>
+                        </tr>
+                      </thead>
+                      <tbody id="process-list">
+                        {% for process in object_list %}
+                        <tr>
+                          {% if perms.whitelabel.change_company %}
+                          <td style="width: 300px; text-align: center">
+                            <button type="button" hx-get="{% url 'companies:updateProcess' process.id %}" class="btn btn-primary btn-sm" hx-target="#modal .modal-content">
+                              <i class="fa-solid fa-pencil"></i>
+                            </button>
+                            {% if perms.whitelabel.delete_company and process.id != process_admin %}
+                            <button type="button" hx-get="{% url 'companies:deleteProcess' process.id %}" class="btn btn-danger btn-sm ml-2" hx-target="#modal .modal-content">
+                              <i class="fa-solid fa-trash"></i>
+                            </button>
+                            {% else %}
+                            <button type="button" style="visibility: hidden; width: 39px; height: 30px; display: inline-block;" class="btn btn-danger btn-sm ml-2"></button>
+                            {% endif %}
+                          </td>
+                          {% endif %}
+                          <td class="align-middle text-center text-sm">
+                            {{ forloop.counter|add:start_number }}
+                          </td>
+                          <td class="align-middle text-center text-sm">
+                            <span class="text-secondary mb-0"> {{ process.process_type }}</span></td>
+                        </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-                <div class="col-6 d-flex justify-content-end">
-                  <div class="pagination-info" style="padding-right: 15px;">
-                    {% trans 'Displaying' %} {{ page_obj.start_index }} {% trans 'to' %} {{ page_obj.end_index }} {% trans 'of' %} {{ page_obj.paginator.count }} {% trans 'items.' %}
+                <div class="row mt-2 custom-row">
+                  <div class="col-6 d-flex justify-content-start align-items-center" style="padding-top: 0; padding-bottom: 0;">
+                    <div class="pagination-info" style="padding-right: 15px; padding-left: 5px !important; margin-left: 5px !important; height: 40px; line-height: 40px;">
+                      {% trans 'Displaying' %} {{ page_obj.start_index }} {% trans 'to' %} {{ page_obj.end_index }} {% trans 'of' %} {{ page_obj.paginator.count }} {% trans 'items.' %}
+                    </div>
+                  </div>
+                  <div class="col-6 d-flex justify-content-end" style="padding-left: 20px; height: 40px; line-height: 40px;">
+                    <nav aria-label="Page navigation">
+                      <ul class="pagination">
+                          {% if page_obj.has_previous %}
+                              <li class="page-item"><a class="page-link" hx-get="{% url 'companies:process' %}?page=1&paginate_by={{ request.GET.paginate_by }}&q={{ request.GET.q }}" hx-target="#modal-content">{% trans 'Home' %}</a></li>
+                              <li class="page-item"><a class="page-link" hx-get="{% url 'companies:process' %}?page={{ page_obj.previous_page_number }}&paginate_by={{ request.GET.paginate_by }}&q={{ request.GET.q }}" hx-target="#modal-content">&laquo;</a></li>
+                          {% endif %}
+                          {% if page_obj.number|add:"-4" > 1 %}
+                              <li class="page-item"><span class="page-link">...</span></li>
+                          {% endif %}
+                          {% for num in page_obj.paginator.page_range %}
+                              {% if num > page_obj.number|add:"-4" and num < page_obj.number|add:"4" %}
+                                  <li class="page-item {% if page_obj.number == num %}active{% endif %}"><a class="page-link" hx-get="{% url 'companies:process' %}?page={{ num }}&paginate_by={{ request.GET.paginate_by }}&q={{ request.GET.q }}" hx-target="#modal-content">{{ num }}</a></li>
+                              {% endif %}
+                          {% endfor %}
+                          {% if page_obj.number|add:"3" < page_obj.paginator.num_pages %}
+                              <li class="page-item"><span class="page-link">...</span></li>
+                          {% endif %}
+                          {% if page_obj.has_next %}
+                              <li class="page-item"><a class="page-link" hx-get="{% url 'companies:process' %}?page={{ page_obj.next_page_number }}&paginate_by={{ request.GET.paginate_by }}&q={{ request.GET.q }}" hx-target="#modal-content">&raquo;</a></li>
+                              <li class="page-item"><a class="page-link" hx-get="{% url 'companies:process' %}?page={{ page_obj.paginator.num_pages }}&paginate_by={{ request.GET.paginate_by }}&q={{ request.GET.q }}" hx-target="#modal-content">{% trans 'End' %}</a></li>
+                          {% endif %}
+                      </ul>
+                    </nav>
                   </div>
                 </div>
               </div>
@@ -128,5 +133,26 @@
 </div>
 <head>
   <link rel="stylesheet" type="text/css" href="{% static 'assets/css/estilos_templates.css' %}" />
+  <link rel="stylesheet" type="text/css" href="{% static 'assets/css/select2.css' %}" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" type="text/css" href="{% static 'assets/css/style_main_list.css' %}" />
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
+{% endblock %}
+{% block scripts %}
+<!-- Incluir jQuery primero -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Incluir Select2 después de jQuery -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="{% static 'assets/js/whitelabel/process/select2.js' %}"></script>
+<script src="{% static 'assets/js/asc_desc.js' %}"></script>
+<style>
+  .select2-container--default .select2-results__option--highlighted.select2-results__option--selectable {
+      background-color: {{ button_color }};
+      color: white;
+  }
+</style>
+
 {% endblock %}

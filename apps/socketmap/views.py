@@ -4,6 +4,8 @@ from django.db import connection
 from django.http import JsonResponse
 from rest_framework.decorators import api_view
 
+from apps.whitelabel.models import CompanyTypeMap
+
 
 def getmapscompany(request, company_id):
     # Reemplaza 'your_parameter' con el nombre real del parámetro que esperas en la URL.
@@ -33,16 +35,35 @@ def getmapscompany(request, company_id):
         LEFT JOIN whitelabel_maptype MP ON MP.ID = CM.map_type_id
         WHERE CF.id = %s OR CD.Id = %s
         ORDER BY MP.ID
-
         """
         cursor.execute(query, [company_id, company_id])
         result = cursor.fetchall()
 
     # Convertir los resultados en un formato JSON amigable.
-    mapas = [
-        {"nombre": name, "clave_mapa": key_map, "id": id}
-        for name, key_map, id in result
-    ]
+    mapas = []
+    for name, key_map, id in result:
+        try:
+            if key_map:
+                # Intenta obtener el objeto CompanyTypeMap correspondiente
+                company_map = CompanyTypeMap.objects.filter(
+                    company_id=company_id
+                ).first()
+                if company_map:
+                    # Si se encuentra el CompanyTypeMap, desencripta la clave
+                    decrypted_key = company_map.decrypt_key(key_map)
+                    mapas.append(
+                        {"nombre": name, "clave_mapa": decrypted_key, "id": id}
+                    )
+                else:
+                    # Si no se encuentra CompanyTypeMap para el ID dado
+                    mapas.append({"nombre": name, "clave_mapa": None, "id": id})
+            else:
+                # Si key_map está vacío
+                mapas.append({"nombre": name, "clave_mapa": None, "id": id})
+
+        except Exception as e:
+            # Captura cualquier excepción que pueda ocurrir durante el procesamiento
+            mapas.append({"nombre": name, "clave_mapa": None, "id": id})
 
     return JsonResponse(
         mapas, safe=False

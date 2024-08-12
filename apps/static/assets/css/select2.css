@@ -1,0 +1,25 @@
+/* Estilo para contenedor select2 con error */
+.select2-container.has-error .select2-selection {
+    border-color: #dc3545; /* Rojo para el borde */
+}
+
+/* Estilo para mensajes de error select2 */
+.select2-error-message {
+    color: #dc3545; /* Rojo para el texto */
+    margin-top: 0.25rem;
+    font-size: 0.875rem;
+}
+
+/* Estilo para la flecha de selección del select2 */
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    top: 7px !important;
+    right: 3px !important;
+    width: 20px !important;
+}
+
+/* Estilo para la selección individual del select2 */
+.select2-container--default .select2-selection--single {
+    background-color: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+}

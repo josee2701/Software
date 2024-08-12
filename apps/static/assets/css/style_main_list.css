@@ -1,0 +1,120 @@
+#search-form {
+    margin-right: 0 !important; /* Eliminar margen derecho */
+}
+.custom-padding-card-my-4 {
+    padding-bottom: 0 !important; /* Eliminar padding inferior */
+    margin-bottom: 0.1rem !important; /* Eliminar margen inferior */
+}
+.custom-padding-container {
+    padding-top: 0 !important; /* Ajusta este valor según sea necesario */
+    padding-bottom: 0 !important; /* Ajusta este valor según sea necesario */
+}
+
+.custom-padding-body {
+    padding-top: 0.5rem !important; /* Ajusta este valor según sea necesario */
+    padding-bottom: 0.25rem !important; /* Ajusta este valor según sea necesario */
+    padding-left: 1rem !important; /* Valor predeterminado para el padding izquierdo */
+    padding-right: 1rem !important; /* Valor predeterminado para el padding derecho */
+    margin-bottom: 0 !important;
+}
+
+.custom-row {
+    margin-top: 1rem !important; /* Ajusta esto según sea necesario */
+}
+
+.pagination-info {
+    padding: 0.20rem 0 !important; /* Reduce el padding vertical */
+    margin: 0 !important; /* Asegúrate de que no haya margen adicional */
+}
+
+#pagination-container ul.pagination {
+    margin: 0 !important;
+    padding: 0.20rem 0 !important; /* Reduce el padding vertical */
+}
+
+/* Ajustar padding y márgenes de las celdas de la tabla */
+.table td, .table th {
+    padding: 0; /* Reducir el padding */
+    margin: 0; /* Eliminar el margen */
+    font-size: 0.875rem; /* Reducir el tamaño de la fuente */
+}
+.table tbody tr {
+    margin-bottom: 0rem; /* Reducir el margen inferior entre filas */
+}
+.table td, .table th {
+    padding-top: 0.1rem; /* Reducir el padding superior e inferior de las celdas */
+    padding-bottom: 0.1rem;
+}
+/* Ajustar la alineación del texto en las celdas */
+.table td span {
+    display: block;
+    text-align: center;
+}
+/* Centrar horizontalmente los botones */
+.table .btn {
+    display: inline-block; /* Hacer que los botones sean elementos en línea */
+    margin: 0 auto; /* Centrar horizontalmente los botones */
+}
+.table-responsive .table thead th {
+    border-bottom: 1px solid #dee2e6 !important; /* Borde gris más oscuro */
+    vertical-align: bottom;
+    padding-top: 0.2rem !important; /* Reducir el espacio superior */
+    padding-bottom: 0.2rem !important; /* Reducir el espacio inferior */
+}
+
+.table-responsive .table tbody tr:nth-of-type(odd) {
+    background-color: #f5f5f5;
+}
+
+.table-responsive .table tbody tr:hover {
+    background-color: #f1f1f1;
+}
+/* Reducir el margen inferior entre las filas */
+.table-responsive .table tbody tr {
+    margin-bottom: 0.2rem !important; /* Ajustar el margen inferior */
+}
+.table-responsive .table td {
+    border-top: 1px solid #dee2e6;
+    border-bottom: 1px solid #dee2e6;
+    padding: 0.75rem;
+    vertical-align: top;
+    padding-top: 0.2rem !important; /* Reducir el espacio superior */
+    padding-bottom: 0.2rem !important; /* Reducir el espacio inferior */
+}
+/* Aumentar la visibilidad de las líneas que separan cada fila */
+.table-responsive .table tbody tr {
+    border-bottom: 1px solid #dee2e6; /* Color del borde inferior de las filas */
+}
+.sort-link {
+    text-decoration: none; /* Quitar subrayado de los enlaces */
+    color: #6c757d; /* Color inicial de los enlaces */
+    position: relative; /* Posición relativa para alinear las flechas */
+}
+
+.sort-link:hover {
+    color: #000;
+
+      /* Color al pasar el mouse sobre el enlace */
+}
+
+.sort-arrow {
+    color: #000; /*
+    opacity: 0.6; /* Opacidad inicial de las flechas */
+}
+
+.sort-arrow.active {
+    opacity: 1;
+    color: #000;
+    font-weight: bold;
+}
+
+.sort-arrow.inactive {
+    opacity: 0.6; /* Opacidad para la flecha inactiva */
+    color: #000; /* Color gris para la flecha inactiva */
+}
+
+
+.no-padding-margin {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+}

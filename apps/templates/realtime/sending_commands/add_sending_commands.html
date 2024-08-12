@@ -2,7 +2,7 @@
 {% block content %}
   {{ form.media }}
 
-  <div class="modal-content">
+  <div class="modal-content" id="miModal" style="z-index: 1050">
     <div class="modal-body">
       <div class="card">
         <div class="modal-header">
@@ -10,16 +10,13 @@
           <button type="button" id="cerrarVenta" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="card-body">
-          <form id="confirmForm" hx-post="{{ request.path }}">
+          <form id="confirmForm" hx-post="{{ request.path }}" hx-target="#modal-content">
             {% csrf_token %}
             <div class="row">
               <p></p>
               <div class="col">
-                <div class="input-group input-group-static mb-4" style="display: flex; align-items: center; gap: 1px;">
+                <div class="input-group input-group-static mb-4">
                   <label for="search-device" style="margin-bottom: 0; margin-right: 5px;">{% trans "Plate:" %} <span style="color:red;">*</span></label>
-                  <div style="flex-grow: 1;">
-                    <input id="search-device" type="text" placeholder="{% trans "Search" %}" autocomplete="off" style="border-radius: 8px; border: 1px solid #ccc; padding: 6px 8px; max-width: 150px; margin-bottom: 1px;">
-                  </div>
                   {{ form.device }}
                 </div>
                 {% if form.device.errors %}
@@ -27,18 +24,15 @@
                 {% endif %}
               </div>
               <div class="col">
-                <div class="col">
-                  <p></p>
-                  <div class="input-group input-group-static mb-4">
-                    <label for="id_command">{% trans "Command:" %} <span style="color:red;">*</span> </label>
-                    <select name="command" id="id_command" class="form-control">
-                    </select>
-                  </div>
-                  <div id="command-error" class="text-danger" style="display: none;">{% trans "This field is required." %}</div>
-                  {% if form.command.errors %}
-                    <div class="text-danger">{{ form.command.errors }}</div>
-                  {% endif %}
+                <div class="input-group input-group-static mb-4">
+                  <label for="id_command">{% trans "Command:" %} <span style="color:red;">*</span> </label>
+                  <select name="command" id="id_command" class="form-control">
+                  </select>
                 </div>
+                <div id="command-error" class="text-danger" style="display: none;">{% trans "This field is required." %}</div>
+                {% if form.command.errors %}
+                  <div class="text-danger">{{ form.command.errors }}</div>
+                {% endif %}
               </div>
             </div>
             <div class="row">
@@ -53,22 +47,40 @@
       </div>
     </div>
   </div>
+  <head>
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/estilos_templates.css' %}" />
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/select2.css' %}" />
+  </head>
   <script>
     var translations = {
-        confirmMessage: "{% trans 'Are you sure you want to send these command?' %}",
-        selectDevice: "{% trans 'Please select a device.' %}",
-    };
+      confirmMessage: "{% trans 'Are you sure you want to send these command?' %}",
+      selectDevice: "{% trans 'Please select a device.' %}",
+      low: "{% trans 'Low' %}",
+      medium: "{% trans 'Medium' %}",
+      high: "{% trans 'High' %}",
+      end: "{% trans 'End' %}",
+      home: "{% trans 'Home' %}",
+      open: "{% trans 'Open' %}",
+      closed: "{% trans 'Closed' %}",
+      false: "{% trans 'In progress' %}",
+      true: "{% trans 'Done' %}",
+      to: "{% trans 'to' %}",
+      of: "{% trans 'of' %}",
+      unassigned : "{% trans 'Unassigned' %}",
+      displaying: "{% trans 'Displaying' %}",
+      commandsSend: "{% trans 'Commands_Sent' %}",
+  };
   </script>
-  <script src="{% static 'assets/js/sending_commands/add_sending_commands.js' %}"></script>
+  <!-- Incluir jQuery primero -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <!-- Incluir Select2 después de jQuery -->
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+  <script src="{% static 'assets/js/realtime/sending_commands/add_sending_commands.js' %}"></script>
   <style>
-    #search-device {
-        width: 100%;
-        margin-bottom: 10px;
-    }
-    #search-device:focus {
-        border-color: {{ user.company.theme_set.all.0.button_color|default_if_none:"#0000FF" }} !important;
-        box-shadow: 0 0 2px {{ user.company.theme_set.all.0.button_color|default_if_none:"#0000FF" }} !important;
-        outline: none !important;
+    .select2-container--default .select2-results__option--highlighted.select2-results__option--selectable {
+        background-color: {{ button_color }};
+        color: white;
     }
   </style>
 {% endblock content %}

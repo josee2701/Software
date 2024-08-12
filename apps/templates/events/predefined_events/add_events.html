@@ -11,7 +11,7 @@
                 <button type="button" id="cerrarVenta" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="card-body">
-                <form hx-post="{{ request.path }}"> {% csrf_token %}
+                <form hx-post="{{ request.path }}" hx-target="#modal-content"> {% csrf_token %}
                     <div class="row">
                         <div class="col">
                             <p>
@@ -38,9 +38,6 @@
                         <div class="row">
                             <div class="col">
                                 <button class="btn btn-primary mt-3" type="submit"> <i class="fa-solid  fa-floppy-disk me-2"></i> {% trans "Save" %} </button>
-                            </div>
-                            <div class="col">
-                                <button type="button" class="btn btn-primary mt-3" data-bs-dismiss="modal">{% trans "Return" %}</button>
                             </div>
                         </div>
                 </form>
