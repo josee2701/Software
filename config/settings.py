@@ -147,15 +147,7 @@ FORM_RENDERER = "django.forms.renderers.DjangoTemplates"
 # Configuración de bases de datos
 # -----------------------------------------------------------------
 
-if DEBUG:
-    DATABASES = {
-        'default': {
-            'ENGINE': os.getenv('SQLITE_ENGINE'),
-            'NAME': os.path.join(BASE_DIR, os.getenv('SQLITE_NAME')),
-        }
-    }
-else:
-    DATABASES = {
+DATABASES = {
         'default': {
             'ENGINE': os.getenv('POSTGRES_ENGINE'),
             'NAME': os.getenv('POSTGRES_NAME'),
