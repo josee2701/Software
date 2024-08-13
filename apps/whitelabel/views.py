@@ -17,7 +17,8 @@ from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db import transaction
 from django.db.models import F, OuterRef, Q, Subquery, Sum
 from django.forms.models import model_to_dict
-from django.http import HttpResponse, JsonResponse, QueryDict
+from django.http import (HttpResponse, HttpResponseNotAllowed,
+                         HttpResponseRedirect, JsonResponse, QueryDict)
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
@@ -58,34 +59,117 @@ from .sql import (fetch_all_company, get_modules_by_user, get_ticket_by_user,
                   get_ticket_closed)
 
 
-class CompaniesView( ListView):
+class CompaniesView(ListView):
     """
-    Vista de lista para el modelo Company, renderiza company_main.html o cliente_final_main.html
-    dependiendo de la compañía del usuario.
+    Vista para listar las compañías con paginación y ordenamiento.
+
+    Atributos:
+        template_name: Plantilla utilizada para renderizar la vista.
+        login_url: URL de redirección para usuarios no autenticados.
+        context_object_name: Nombre del contexto para la lista de objetos.
+        model: Modelo asociado a la vista.
+        paginate_by: Número de elementos por página por defecto.
     """
     template_name = "whitelabel/companies/company_main.html"
     login_url = "login"
     context_object_name = "company_info"
     model = Company
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        paginate_options = [15, 25, 50, 100]
-        context['paginate_options'] = paginate_options
-        return context
-    
-    def get_queryset(self):
-        user = self.request.user
-        queryset =Company.objects.all()
-        return queryset
-    
+    paginate_by = 15  # Número de elementos por página por defecto
+
     def get_template_names(self):
+        """
+        Obtiene la plantilla a utilizar basada en el ID de la compañía del usuario.
+
+        Returns:
+            list: Lista de nombres de plantilla.
+        """
         user = self.request.user
         if user.company_id:
             company_id = user.company_id
             if not Company.objects.filter(provider_id=company_id).exists():
                 return ["whitelabel/companies/cliente_final_main.html"]
         return [self.template_name]
+
+    def get_paginate_by(self, queryset):
+        """
+        Obtiene el número de elementos por página desde los parámetros GET o usa el valor por defecto.
+
+        Args:
+            queryset: El queryset actual (no utilizado en este método).
+
+        Returns:
+            int: Número de elementos por página.
+        """
+        paginate_by = self.request.GET.get('paginate_by', self.paginate_by)
+        try:
+            return int(paginate_by)
+        except ValueError:
+            return self.paginate_by
+
+    def get_queryset(self):
+        """
+        Obtiene el queryset de compañías, con ordenamiento basado en parámetros GET.
+
+        Returns:
+            queryset: El queryset ordenado.
+        """
+        queryset = Company.objects.all()
+
+        # Obtener el parámetro de ordenamiento y dirección de los parámetros GET
+        order_by = self.request.GET.get('order_by', 'company_name')
+        direction = self.request.GET.get('direction', 'asc')
+
+        # Asegúrate de que el parámetro de ordenamiento sea válido
+        valid_order_by = ['nit', 'company_name', 'legal_representative', 'provider_id', 'actived']
+        if order_by not in valid_order_by:
+            order_by = 'company_name'
+
+        # Cambia la dirección de ordenamiento si es necesario
+        if direction == 'desc':
+            order_by = f'-{order_by}'
+
+        queryset = queryset.order_by(order_by)
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        """
+        Agrega información adicional al contexto para la plantilla.
+
+        Args:
+            **kwargs: Argumentos adicionales de contexto.
+
+        Returns:
+            dict: Contexto actualizado.
+        """
+        context = super().get_context_data(**kwargs)
+
+        paginate_by = self.get_paginate_by(self.get_queryset())
+        paginator = context['paginator']
+        page_number = self.request.GET.get('page', 1)
+        page_obj = paginator.get_page(page_number)
+
+        context['page_obj'] = page_obj
+        context['paginate_by'] = paginate_by
+        context['paginate_options'] = [15, 25, 50, 100]
+        context['order_by'] = self.request.GET.get('order_by', 'company_name')
+        context['direction'] = self.request.GET.get('direction', 'asc')
+
+        return context
+
+    def get(self, request, *args, **kwargs):
+        """
+        Maneja solicitudes GET para la vista.
+
+        Args:
+            request (HttpRequest): La solicitud HTTP.
+            *args: Argumentos adicionales.
+            **kwargs: Argumentos de palabra clave adicionales.
+
+        Returns:
+            HttpResponse: Respuesta HTTP con el contexto renderizado.
+        """
+        return super().get(request, *args, **kwargs)
+
 
 
 class CreateDistributionCompanyView(
