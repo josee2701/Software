@@ -23,16 +23,16 @@ from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_protect, csrf_exempt
-from django.views.generic import ListView
 from django.views import generic
+from django.views.decorators.csrf import csrf_exempt, csrf_protect
+from django.views.generic import ListView
 from django.views.generic.list import MultipleObjectMixin
 from rest_framework import generics
 
 from apps.authentication.models import User
-from apps.log.mixins import (CreateAuditLogAsyncMixin, CreateAuditLogSyncMixin,
-                             DeleteAuditLogAsyncMixin,
-                             UpdateAuditLogAsyncMixin, UpdateAuditLogSyncMixin, AuditLogSyncMixin,
+from apps.log.mixins import (AuditLogSyncMixin, CreateAuditLogAsyncMixin,
+                             CreateAuditLogSyncMixin, DeleteAuditLogAsyncMixin,
+                             UpdateAuditLogAsyncMixin, UpdateAuditLogSyncMixin,
                              obtener_ip_publica)
 from apps.log.utils import log_action
 from apps.realtime.apis import (extract_number, extract_number_tp,
@@ -58,195 +58,34 @@ from .sql import (fetch_all_company, get_modules_by_user, get_ticket_by_user,
                   get_ticket_closed)
 
 
-class CompaniesView(PermissionRequiredMixin, LoginRequiredMixin, ListView):
+class CompaniesView( ListView):
     """
-    Esta clase es una vista de lista del modelo de empresas y representará la plantilla
-    company_main.html.
-
-    Atributos:
-        template_name (str): El nombre de la plantilla HTML que se utilizará para renderizar la vista.
-        permission_required (str): El permiso requerido para acceder a esta vista.
-        login_url (str): La URL a la que se redirigirá si el usuario no está autenticado.
-        context_object_name (str): El nombre del objeto de contexto que se utilizará en la plantilla.
-        model (Model): El modelo de la empresa que se utilizará para obtener los datos.
-
-    Métodos:
-        get_paginate_by(queryset): Obtiene el número de elementos a mostrar por página.
-        get_queryset(): Obtiene el conjunto de datos de los comandos de envío filtrados y ordenados.
-        get_context_data(**kwargs): Obtiene el contexto de datos adicionales para la plantilla.
+    Vista de lista para el modelo Company, renderiza company_main.html o cliente_final_main.html
+    dependiendo de la compañía del usuario.
     """
-
     template_name = "whitelabel/companies/company_main.html"
-    permission_required = "whitelabel.view_company"
     login_url = "login"
     context_object_name = "company_info"
     model = Company
-
-    def get_paginate_by(self, queryset):
-        """
-        Obtiene el número de elementos a mostrar por página.
-
-        Args:
-            queryset (QuerySet): El conjunto de datos de la consulta.
-
-        Returns:
-            int: El número de elementos a mostrar por página.
-        """
-        paginate_by = self.request.POST.get('paginate_by', None)  # Obtener paginate_by de los parámetros POST
-
-        if paginate_by is None:
-            session_filters = self.request.session.get(
-                f"filters_sorted_company_{self.request.user.id}", {}
-            )
-            paginate_by = session_filters.get("paginate_by", 15)
-            # Convertir a entero si es una lista
-            try:
-                paginate_by = int(
-                    paginate_by[0]
-                )  # Convertir el primer elemento de la lista a entero
-            except (TypeError, ValueError):
-                paginate_by = int(paginate_by) if paginate_by else 15
-            # Añadir paginate_by a self.request.GET para asegurar que esté presente
-            self.request.POST = self.request.POST.copy()
-            self.request.POST['paginate_by'] = paginate_by
-        return int(self.request.POST['paginate_by'])
-
-    def get_queryset(self):
-        """
-        Obtiene el conjunto de datos de los planes de datos reales de la compañía asociada al
-        usuario que realiza la solicitud.
-
-        Returns:
-            List[dict]: Lista de planes de datos ordenada por 'Company' en forma descendente.
-        """
-        user = self.request.user
-        company = user.company
-        params = self.request.GET if self.request.method == 'GET' else self.request.POST
-        query = params.get("query", "").lower()
-        search = params.get("q", query).lower()
-        if 'order_by' not in params and 'paginate_by' not in params and 'page' not in params:
-            # Limpiar los filtros de la sesión
-            if f"filters_sorted_company_{user.id}" in self.request.session:
-                del self.request.session[f"filters_sorted_company_{user.id}"]
-                self.request.session.modified = True
-        # Recuperar filtros almacenados en la sesión
-        session_filters = self.request.session.get(f'filters_sorted_company_{user.id}', {})
-        order_by = params.get('order_by', session_filters.get('order_by', ['company_name'])[0])
-        direction = params.get('direction', session_filters.get('direction',['asc'])[0])
-        # Actualizar los filtros con los parámetros actuales de la solicitud GET
-        session_filters.update(params)
-        # Actualizar los filtros de la sesión con los nuevos parámetros
-        self.request.session[
-            f"filters_sorted_company_{user.id}"
-        ] = session_filters
-        self.request.session.modified = True
-        # Obtener los planes de datos a través de la función fetch_all_dataplan.
-        queryset = fetch_all_company(company, user, search)
-
-        # Función para convertir los valores a minúsculas y extraer números cuando sea necesario
-        def sort_key(x):
-            value = x.get(order_by)
-            if order_by == "provider_id":
-                if value is None:
-                    return (0, "")  # Prioridad 0 para valores nulos
-                if value == "":
-                    return (4, "")  # Prioridad 4 para valores vacíos
-                if isinstance(value, str):
-                    # Verificar si comienza con números, letras o caracteres especiales
-                    if value[0].isdigit():
-                        return (1, extract_number(value))  # Prioridad 1 para números
-                    elif value[0].isalpha():
-                        return (2, value.lower())  # Prioridad 2 para letras
-                    else:
-                        return (
-                            3,
-                            value.lower(),
-                        )  # Prioridad 3 para caracteres especiales
-            else:
-                if value is None or value == "":
-                    return (4, "")  # Prioridad 4 para valores nulos o vacíos
-                if isinstance(value, str):
-                    # Verificar si comienza con números, letras o caracteres especiales
-                    if value[0].isdigit():
-                        return (1, extract_number(value))  # Prioridad 1 para números
-                    elif value[0].isalpha():
-                        return (2, value.lower())  # Prioridad 2 para letras
-                    else:
-                        return (
-                            3,
-                            value.lower(),
-                        )  # Prioridad 3 para caracteres especiales
-            return (5, value)  # Asegurar que todos los retornos sean tuplas
-
-        # Determinar si es orden descendente
-        reverse = direction == "desc"
-
-        try:
-            sorted_queryset = sorted(queryset, key=sort_key, reverse=reverse)
-        except KeyError:
-            # Ordenamiento por defecto si la clave no existe
-            sorted_queryset = sorted(
-                queryset, key=lambda x: x["company_name"].lower(), reverse=reverse
-            )
-
-        return sorted_queryset
-
+    
     def get_context_data(self, **kwargs):
-        """
-        Obtiene el contexto de datos adicionales para la plantilla.
-
-        Args:
-            **kwargs: Argumentos clave adicionales.
-
-        Returns:
-            dict: El contexto de datos adicionales para la plantilla.
-        """
         context = super().get_context_data(**kwargs)
-        companies = context[
-            self.context_object_name
-        ]  # Usa el objeto ya definido en el contexto
-        paginate_by = self.get_paginate_by(None)
-        context["paginate_by"] = paginate_by
-        # Calcula start_number más eficientemente
-        page_number = context.get("page_obj").number if context.get("page_obj") else 1
-        context["start_number"] = (page_number - 1) * self.get_paginate_by(None)
-
-        # Optimización del cálculo para mostrar el botón de mapa.
-        for company in companies:
-            company_id = company["id"]
-            provider_id = company.get(
-                "provider_id"
-            )  # Asegúrate de que el campo exista en el diccionario
-            # if provider_id is None:
-            # Filtrar los mapas de la compañía.
-            company_maps = CompanyTypeMap.objects.filter(company_id=company_id)
-            total_maps = company_maps.count()
-            # Determinar si se debe mostrar el botón del mapa.
-            has_only_map1 = (
-                total_maps == 1 and company_maps.filter(map_type__id=1).exists()
-            )
-            company["show_map_button"] = not has_only_map1
-            # else:
-            #     company["show_map_button"] = False
-
-        session_filters = self.request.session.get(f'filters_sorted_company_{self.request.user.id}', {})
-        # Obtener el ordenamiento desde la solicitud actual
-        order_by = self.request.GET.get('order_by') or self.request.POST.get('order_by') or session_filters.get('order_by', ['company_name'])[0]
-        direction = self.request.GET.get('direction') or self.request.POST.get('direction') or session_filters.get('direction', ['asc'])[0]
-        context['order_by'] = order_by
-        context['direction'] = direction
+        paginate_options = [15, 25, 50, 100]
+        context['paginate_options'] = paginate_options
         return context
     
-    @method_decorator(csrf_protect)
-    def post(self, request, *args, **kwargs):
-        # Obtén el número de página desde la solicitud POST
-        page_number = request.POST.get('page', 1)
-        # Modifica la consulta para aplicar la paginación
-        self.object_list = self.get_queryset()
-        paginator = Paginator(self.object_list, self.get_paginate_by(None))
-        page_obj = paginator.get_page(page_number)
-        context = self.get_context_data(object_list=page_obj.object_list, page_obj=page_obj)
-        return self.render_to_response(context)
+    def get_queryset(self):
+        user = self.request.user
+        queryset =Company.objects.all()
+        return queryset
+    
+    def get_template_names(self):
+        user = self.request.user
+        if user.company_id:
+            company_id = user.company_id
+            if not Company.objects.filter(provider_id=company_id).exists():
+                return ["whitelabel/companies/cliente_final_main.html"]
+        return [self.template_name]
 
 
 class CreateDistributionCompanyView(

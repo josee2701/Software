@@ -1,0 +1,66 @@
+{% extends "layouts/base.html" %} {% load i18n static %} {% block content %}
+<div class="container-fluid py-4 custom-padding-container">
+  <div class="row">
+    <div class="col-12">
+      <div class="card my-4 custom-padding-card-my-4">
+        <div class="card-header p-0">
+          <div class="bg-gradient-primary shadow-primary border-radius-lg pt-4 pb-3">
+            <div class="d-flex justify-content-between align-items-center px-3">
+              <h5 class="text-white text-capitalize">{% trans "Company information" %}</h5>
+              {% if perms.whitelabel.change_company %}
+              <button
+                class="btn btn-success"
+                type="button"
+                style="padding-top: 0.6rem; padding-bottom: 0.4rem; white-space: nowrap"
+                hx-get="{% url 'companies:updateCompanyLogo' user.company.id %}"
+                hx-target="#modal .modal-content"
+              >
+                <i class="fa-solid fa-pencil"></i> {% trans "Edit" %} {{ user.company.company_name }}
+              </button>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="d-flex justify-content-between">
+            <div>
+              <p class="card-text">
+                {% if user.company.company_logo %}
+                <img src="{{ MEDIA_URL }}{{ user.company.company_logo }}" alt="{{ user.company.company_name }}" class="w-30 mt-n2 mx-auto" />
+                {% else %}
+                <img
+                  src="{{ MEDIA_URL }}{{ user.company.provider.company_logo }}"
+                  alt="{{ user.company.provider.company_name }}"
+                  class="w-30 mt-n2 mx-auto"
+                />
+                {% endif %}
+                <br />
+                <strong>{% trans "NIT:" %}</strong> {{ user.company.nit }}<br />
+                <strong>{% trans "Name of the company:" %}</strong> {{ user.company.company_name }}<br />
+                <strong>{% trans "Legal representative:" %}</strong> {{ user.company.legal_representative }}<br />
+                <strong>{% trans "Address:" %}</strong> {{ user.company.address }}<br />
+                <strong>{% trans "Country:" %}</strong> {{ user.company.country }}<br />
+                <strong>{% trans "City:" %}</strong> {{ user.company.city }}<br />
+                <strong>{% trans "Phone number:" %}</strong> {{ user.company.phone_number }}<br />
+                <strong>{% trans "Signed contract:" %}</strong>
+                {% if user.company.signed_contract %}
+                {% trans "Yes" %}
+                {% else %}
+                {% trans "No" %}
+                {% endif %}
+                <br />
+              </p>
+            </div>
+            <div>
+              <button type="button" hx-get="{% url 'companies:process' %}" class="btn btn-primary mx-2" hx-target="#modal .modal-content">
+                <i class="fa-solid fa-plus"></i> {% trans "Lists Process" %}
+              </button>
+            </div>
+          </div>
+        </div>
+        
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}
