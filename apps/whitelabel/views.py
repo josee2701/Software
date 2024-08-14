@@ -722,108 +722,160 @@ class DeleteCompanyView(
         return context
 
 
-
-
 class KeyMapView(LoginRequiredMixin, UpdateAuditLogAsyncMixin, generic.TemplateView):
+    """
+    Vista para actualizar las claves de los mapas de una compañía. 
+    Requiere autenticación.
+    """
     template_name = "whitelabel/companies/keymap.html"
 
     def get_success_url(self):
+        """
+        Devuelve la URL de éxito tras la actualización de los mapas.
+
+        Returns:
+            str: La URL a la que redirigir tras la actualización.
+        """
         return reverse("companies:companies")
 
     def get_context_data(self, **kwargs):
+        """
+        Agrega los formularios para actualizar las claves de los mapas al contexto.
+
+        Args:
+            **kwargs: Argumentos adicionales de contexto.
+
+        Returns:
+            dict: Contexto actualizado con los formularios y la compañía.
+        """
         context = super().get_context_data(**kwargs)
         company_id = self.kwargs.get("pk")
         company = get_object_or_404(Company, id=company_id)
-        maps = CompanyTypeMap.objects.filter(company_id=company.id).exclude(
-            map_type_id=1
-        )
+
+        # Excluir los mapas con map_type_id=1 (p. ej., "OpenStreetMap")
+        maps = CompanyTypeMap.objects.filter(company_id=company.id).exclude(map_type_id=1)
+
+        # Crear un formulario para cada mapa, usando el prefijo del ID para diferenciarlos
         forms = [
             KeyMapForm(instance=map_instance, prefix=str(map_instance.id))
             for map_instance in maps
         ]
+
+        # Actualizar el contexto con los formularios y la compañía
         context.update({"forms": forms, "company": company})
         return context
 
     def post(self, request, *args, **kwargs):
+        """
+        Maneja la lógica para actualizar las claves de los mapas.
+
+        Args:
+            request (HttpRequest): La solicitud HTTP.
+            *args: Argumentos posicionales.
+            **kwargs: Argumentos de palabra clave.
+
+        Returns:
+            HttpResponse: Respuesta con la redirección o renderizado en caso de error.
+        """
         company_id = self.kwargs.get("pk")
         company = get_object_or_404(Company, id=company_id)
-        maps = CompanyTypeMap.objects.filter(company_id=company.id).exclude(
-            map_type_id=1
-        )
+
+        # Filtrar los mapas de la compañía excluyendo map_type_id=1
+        maps = CompanyTypeMap.objects.filter(company_id=company.id).exclude(map_type_id=1)
+
+        # Cargar los formularios con los datos del POST
         forms = [
             KeyMapForm(request.POST, instance=map_instance, prefix=str(map_instance.id))
             for map_instance in maps
         ]
-        all_valid = True
-        self.obj_before = [
-            map_instance for map_instance in maps
-        ]  # Guardamos el estado anterior
+
+        # Verificar si todos los formularios son válidos
+        all_valid = all([form.is_valid() for form in forms])
 
         if all_valid:
-            self.obj_after = []
+            # Guardar el estado anterior de los mapas para el registro de auditoría
+            self.obj_before = list(maps)  
+            self.obj_after = []  # Lista para almacenar el estado posterior de los objetos
+
             for form in forms:
-                company_map = form.save(commit=False)
-                key_map = form.cleaned_data["key_map"]
+                company_map = form.save(commit=False)  # Guardar sin hacer commit aún
+                key_map = form.cleaned_data.get("key_map")
+
                 if key_map:
-                    # Encriptar la clave antes de guardarla
+                    # Encriptar la clave del mapa antes de guardarla
                     company_map.key_map = company_map.encrypt_key(key_map)
-                company_map.save()
-                self.obj_after.append(company_map)  # Guardamos el estado posterior
+
+                company_map.save()  # Guardar el mapa actualizado en la base de datos
+                self.obj_after.append(company_map)  # Agregar a la lista para la auditoría
 
             # Registrar la acción en el log de auditoría
             async_to_sync(self.log_action)()
 
+            # Si todo es válido, redirigir usando HTMX
             page_update = HttpResponse("")
             page_update["HX-Redirect"] = self.get_success_url()
             return page_update
         else:
+            # Si algún formulario no es válido, volver a renderizar la página con los errores
             context = {"forms": forms, "company": company}
             return render(request, self.template_name, context)
-
 
 class UpdateCompanyLogoView(
     LoginRequiredMixin, UpdateAuditLogAsyncMixin, generic.UpdateView
 ):
     """
-    UpdateCompanyLogoView es un generic.edit.UpdateView que usa el modelo Company,
-    los campos enumerados,
-    CompanyForm y el template_name_suffix para actualizar una empresa.
-    """
+    Vista para actualizar el logotipo de una empresa. 
 
+    Permite a los usuarios autenticados actualizar el logotipo de la empresa a la que tienen acceso.
+    """
     model = Company
     template_name = "whitelabel/companies/company_update_logo.html"
     form_class = CompanyLogoForm
 
     def get_success_url(self):
-        # Asegúrate de que el nombre de la URL sea correcto y esté definido en tus archivos de URL.
+        """
+        Devuelve la URL a la que redirigir tras una actualización exitosa.
+
+        Returns:
+            str: La URL de redirección después de actualizar el logotipo.
+        """
         return reverse("companies:companies")
 
     def form_valid(self, form):
         """
-        Llamado cuando se envía el formulario y es válido.
-        Actualiza el logo de la empresa y responde con un código HTTP 204 y un header "HX-Trigger:
-        reload-page".
+        Llamado cuando el formulario es válido.
+        Actualiza el logotipo de la empresa y maneja la redirección usando HTMX.
+
+        Args:
+            form (CompanyLogoForm): El formulario con los datos válidos.
+
+        Returns:
+            HttpResponse: Respuesta con redirección HTMX.
         """
-        # Asigna la instancia del usuario al campo 'modified_by'
+        # Asigna el usuario actual al campo 'modified_by' antes de guardar el formulario
         form.instance.modified_by = self.request.user
-        form.save()
+        form.save()  # Guarda los cambios en el logotipo
+
         # Llama al método form_valid de la clase padre para registrar la acción en el log de auditoría
         response = super().form_valid(form)
-        pague = HttpResponse("")  # O puedes enviar algún contenido si es necesario.
-        pague["HX-Redirect"] = self.get_success_url()
-        return pague
+
+        # Respuesta HTMX para redirigir después de una actualización exitosa
+        page_update = HttpResponse("")
+        page_update["HX-Redirect"] = self.get_success_url()
+        return page_update
 
     def form_invalid(self, form):
         """
-        Llamado cuando se envía el formulario y es inválido.
-        Muestra de nuevo el formulario con los errores.
+        Llamado cuando el formulario es inválido.
+        Renderiza nuevamente la página con el formulario que contiene errores.
+
+        Args:
+            form (CompanyLogoForm): El formulario con errores.
+
+        Returns:
+            HttpResponse: Respuesta con el formulario inválido renderizado.
         """
         return render(self.request, self.template_name, {"form": form})
-
-
-
-
-
 
 
 class ThemeView(PermissionRequiredMixin, LoginRequiredMixin, UpdateAuditLogAsyncMixin, generic.UpdateView):
