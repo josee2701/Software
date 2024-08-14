@@ -6,29 +6,17 @@ https://docs.djangoproject.com/en/4.0/ref/urls/
 
 from django.urls import path
 
-from apps.whitelabel.apis import (
-    SearchCompany,
-    SearchModule,
-    SearchTicketsView,
-    SearchTicketsViewOpen,
-    list_proces_by_company,
-    ExportDataCompany,
-    ExportDataTicketsOpen,
-    ExportDataTicketsHistoric,
-    ExportDataModule,
-)
+from apps.whitelabel.apis import (ExportDataCompany, ExportDataModule,
+                                  ExportDataTicketsHistoric,
+                                  ExportDataTicketsOpen, SearchCompany,
+                                  SearchModule, SearchTicketsView,
+                                  SearchTicketsViewOpen,
+                                  list_proces_by_company)
 
 from . import views
-from .views import (
-    ClosedTicketsView,
-    CommentTicketView,
-    CreateTicketView,
-    DeleteProcessView,
-    ListProcessAddView,
-    ListTicketTemplate,
-    UpdateProcessView,
-    ViewTicketView,
-)
+from .views import (ClosedTicketsView, CommentTicketView, CreateTicketView,
+                    DeleteProcessView, ListProcessAddView, ListTicketTemplate,
+                    UpdateProcessView, ViewTicketView)
 
 # Creación de un patrón de URL para las vistas de creación de la empresa.
 app_name = "companies"
@@ -40,11 +28,6 @@ urlpatterns = [
         "createDistributionCompany/",
         views.CreateDistributionCompanyView.as_view(),
         name="createDistributionCompany",
-    ),
-    path(
-        "createCustomerAzCompany/",
-        views.CreateCustomerAzCompanyView.as_view(),
-        name="createCustomerAzCompany",
     ),
     path(
         "createCustomerCompany/",

@@ -5,7 +5,8 @@ from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
-from apps.whitelabel.models import Company, CompanyTypeMap, MapType, Module, Theme
+from apps.whitelabel.models import (Company, CompanyTypeMap, MapType, Module,
+                                    Theme)
 
 from .models import Attachment, Comment, Message, Process, Theme, Ticket
 
@@ -175,6 +176,8 @@ class CompanyCustomerForm(forms.ModelForm):
             "modules",
             "key_map",
             "coin",
+            "consultant",
+            "seller",
         )
         labels = {
             "nit": _("Nit"),
@@ -218,6 +221,12 @@ class CompanyCustomerForm(forms.ModelForm):
             "signed_contract": forms.CheckboxInput(attrs={"class": "form-check-input"}),
             "actived": forms.CheckboxInput(attrs={"class": "form-check-input"}),
             "coin": forms.Select(
+                attrs={"class": "form-control", "autocomplete": "off"}
+            ),
+            "consultant": forms.TextInput(
+                attrs={"class": "form-control", "autocomplete": "off"}
+            ),
+            "seller": forms.TextInput(
                 attrs={"class": "form-control", "autocomplete": "off"}
             ),
         }

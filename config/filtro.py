@@ -10,10 +10,10 @@ from apps.whitelabel.models import Company, Theme
 
 class General_Filters:
     @staticmethod
-    def autentication_user(user):
+    def authentication_user(user):
         """
-        Valida si el usuario actual está autenticado. Si el usuario no está autenticado,
-        lanza un error Http404, evitando que se acceda a la funcionalidad o recurso protegido.
+        Verifica si el usuario actual está autenticado. Si el usuario no está autenticado,
+        lanza un error Http404, evitando que acceda a funcionalidades o recursos protegidos.
         """
         if not user.is_authenticated:
             raise Http404("User not authenticated")
@@ -23,27 +23,24 @@ class General_Filters:
         """
         Obtiene las compañías según la lógica de filtrado proporcionada, asumiendo
         que el usuario ya está autenticado.
+        
+        Retorna un QuerySet de compañías basadas en la lógica de permisos y asociaciones del usuario.
         """
-        # Primero, verificamos si el usuario está autenticado
-        General_Filters.autentication_user(user)
-
-        # Procedemos con la lógica para obtener las compañías
+        # Verificamos si el usuario está autenticado
+        General_Filters.authentication_user(user)
+        
         user_company_id = user.company_id
-
+        
         # Caso 1: Usuario con company_id = 1, obtener todas las compañías
         if user_company_id == 1:
-            companies = Company.objects.filter(visible=True)
-
-        # Caso 2: Si el usuario tiene compañías para monitorear, mostrar solo esas
+            companies = Company.objects.all()
+        # Caso 2: Usuario monitorea ciertas compañías, obtener esas compañías
         elif user.companies_to_monitor.exists():
-            companies = user.companies_to_monitor.filter(visible=True, actived=True)
-
-        # Caso 3: Obtener la empresa principal y todas las empresas donde es proveedor
+            companies = user.companies_to_monitor.all()
+        # Caso 3: Mostrar compañías filtradas por el ID de la compañía del usuario
         else:
-            companies = Company.objects.filter(
-                provider_id=user.company_id, visible=True
-            )
-
+            companies = Company.objects.filter(provider_id=user_company_id)
+        
         return companies
 
     @staticmethod
@@ -63,11 +60,8 @@ class General_Filters:
         # Verificación de autenticación del usuario
         General_Filters.autentication_user(user)
 
-        # Inicialización del QuerySet basado en la presencia del campo 'visible'
-        if hasattr(model, "visible"):
-            base_query = model.objects.filter(visible=True)
-        else:
-            base_query = model.objects.all()
+        
+        base_query = model.objects.all()
 
         user_company_id = getattr(user, company_field, None)
 
@@ -81,7 +75,7 @@ class General_Filters:
             # Comprobamos compañías proveedoras si el modelo relaciona compañías
             if hasattr(model, "company"):
                 companys_provider = Company.objects.filter(
-                    provider_id=user_company_id, visible=True, actived=True
+                    provider_id=user_company_id,
                 )
                 if companys_provider.exists():
                     # Extendemos el QuerySet para incluir registros de compañías proveedoras

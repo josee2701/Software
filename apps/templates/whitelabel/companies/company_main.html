@@ -12,12 +12,8 @@
               <h5 class="text-white text-capitalize ps-3">{% trans 'Companies' %}</h5>
             </div>
             <div class="col d-flex justify-content-end">
-              {% if perms.whitelabel.change_company %}
+              {% if perms.whitelabel.change_company  %}
                 <button class="btn btn-success" type="button" hx-get="{% url 'companies:updateCompanyLogo' user.company.id %}" hx-target="#modal .modal-content">
-                  <i class="fa-solid fa-pencil"></i> {% trans "Edit" %} {{ user.company.company_name }}
-                </button>
-              {% else %}
-                <button class="btn btn-success invisible" type="button" hx-get="{% url 'companies:updateCompanyLogo' user.company.id %}" hx-target="#modal .modal-content">
                   <i class="fa-solid fa-pencil"></i> {% trans "Edit Logo" %}
                 </button>
               {% endif %}
@@ -45,10 +41,12 @@
               </div>
               <div class="d-flex justify-content-end align-items-center flex-wrap">
                 {% if perms.whitelabel.add_company %}
-                  <button type="button" hx-get="{% url 'companies:createDistributionCompany' %}" class="btn btn-primary mx-2" hx-target="#modal .modal-content">
-                    <i class="fa-solid fa-plus"></i> {% trans "Add Distributor" %}
-                  </button>
-                  <a hx-get="{% url 'companies:createDistributionCompany' %}" class="btn btn-primary mx-0.5" hx-target="#modal .modal-content">{% trans "Add final customer" %}</a>
+                {% if user.company.id == 1 %}
+                <button type="button" hx-get="{% url 'companies:createDistributionCompany' %}" class="btn btn-primary mx-2" hx-target="#modal .modal-content">
+                  <i class="fa-solid fa-plus"></i> {% trans "Add Distributor" %}
+                </button>
+                {% endif %}
+                  <a hx-get="{% url 'companies:createCustomerCompany' %}" class="btn btn-primary mx-0.5" hx-target="#modal .modal-content">{% trans "Add final customer" %}</a>
                   <a hx-get="{% url 'companies:process' %}" class="btn btn-primary mx-2" hx-target="#modal .modal-content">{% trans "Lists Process" %}</a>
                 {% endif %}
                 {% if company_info %}
@@ -91,6 +89,7 @@
                       </span>
                     </a>
                   </th>
+                  {% if user.company.id == 1 %}
                   <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
                     <a href="?order_by=provider_id&direction={% if order_by == 'provider_id' and direction == 'asc' %}desc{% else %}asc{% endif %}&paginate_by={{ paginate_by }}&page={{ page_obj.number }}&search={{ request.GET.search }}">
                       {% trans "Type" %}
@@ -100,6 +99,7 @@
                       </span>
                     </a>
                   </th>
+                  {% endif %}
                   <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
                     <a href="?order_by=actived&direction={% if order_by == 'actived' and direction == 'asc' %}desc{% else %}asc{% endif %}&paginate_by={{ paginate_by }}&page={{ page_obj.number }}&search={{ request.GET.search }}">
                       {% trans "Status" %}
