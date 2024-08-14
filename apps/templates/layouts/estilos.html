@@ -4333,9 +4333,10 @@
   .navbar > .container-xl,
   .navbar > .container-xxl {
     display: flex;
-    flex-wrap: inherit;
-    align-items: center;
-    justify-content: space-between;
+    align-content: flex-start;
+    align-items: flex-end;
+    flex-direction: column;
+    justify-content: space-around;
   }
   .navbar-brand {
     padding-top: var(--bs-navbar-brand-padding-y);

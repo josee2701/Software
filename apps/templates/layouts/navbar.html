@@ -248,15 +248,19 @@
         class="collapse navbar-collapse mt-sm-0 mt-2 me-md-0 me-sm-4"
         id="navbar"
       >
-        <div class="ms-md-auto pe-md-3 d-flex align-items-center">
-          <div class="input-group input-group-outline">
-            <label class="form-label">Type here...</label>
-            <input type="text" class="form-control" />
-          </div>
-        </div>
+      
+        
         <ul class="navbar-nav justify-content-end">
+          <li class="nav-item px-3 d-flex align-items-center">
+            <form class="flex me-md-3 mb-2 mb-md-0" method="get"  id="search-form">
+              <div class="input-group input-group-sm input-group-outline">
+                <label class="form-label">{% trans "Search..." %}</label>
+                  <input type="text" name="search" value="{{ request.GET.search }}" class="form-control"  id="search-input">
+              </div>
+          </form>
+        </li>
           {% if user.is_authenticated %}
-              <li class="col d-flex justify-content-start">
+              <li class="nav-item px-3 d-flex align-items-center">
                   <a type="button" hx-get="{% url 'Profile' user.id %}" hx-target="#modal .modal-content">
                       <i class="fa fa-user me-sm-1"></i>
                       <span class="d-sm-inline d-none">{{user.first_name}}</span>
@@ -265,27 +269,23 @@
           {% endif %}
           <li class="nav-item px-3 d-flex align-items-center">
             <a href="javascript:;" class="nav-link text-body p-0">
-                <form action="{% url 'set_language' %}" method="post" class="d-inline">
+                <form action="{% url 'set_language' %}" method="post" class="d-inline d-flex align-items-center">
                     {% csrf_token %}
                     <input name="next" type="hidden" value="{{ request.path }}" />
+                    <!-- Icono de idiomas -->
+                    <i class="fa fa-globe me-2">
+                    </i>
                     <select name="language" onchange="this.form.submit()" class="form-select form-select-sm" style="display: inline-block; width: auto;">
-                        {% for lang_code, lang_name in LANGUAGES %}
-                            <option value="{{ lang_code }}" {% if lang_code == LANGUAGE_CODE %}selected{% endif %}>
-                                {{ lang_name }}
-                            </option>
-                        {% endfor %}
-                    </select>
+                      {% for lang_code, lang_name in LANGUAGES %}
+                          <option value="{{ lang_code }}" {% if lang_code == LANGUAGE_CODE %}selected{% endif %}>
+                              {{ lang_name }}
+                          </option>
+                      {% endfor %}
+                  </select>
+                    
                 </form>
             </a>
         </li>
-        <li class="nav-item px-3 d-flex align-items-center">
-          <form class="flex me-md-3 mb-2 mb-md-0" method="get"  id="search-form">
-            <div class="input-group input-group-sm input-group-outline">
-              <label class="form-label">{% trans "Search..." %}</label>
-                <input type="text" name="search" value="{{ request.GET.search }}" class="form-control"  id="search-input">
-            </div>
-        </form>
-      </li>
 
            <li class="nav-item dropdown pe-2 d-flex align-items-center">
             <a
@@ -297,7 +297,7 @@
             >
               <i class="fa fa-bell cursor-pointer"></i>
             </a>
-            <ul
+            {% comment %} <ul
               class="dropdown-menu dropdown-menu-end px-2 py-3 me-sm-n4"
               aria-labelledby="dropdownMenuButton"
             >
@@ -400,7 +400,7 @@
                   </div>
                 </a>
               </li>
-            </ul>
+            </ul> {% endcomment %}
           </li>
         </ul>
       </div>
@@ -409,6 +409,9 @@
   <!-- End Navbar -->
   {% load static %}
   <link rel="stylesheet" type="text/css" href="{% static 'assets/css/navbar_options.css' %}">
+<!-- Bootstrap JS (asegúrate de cargar esto al final del body) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
   <script>
     document.addEventListener("DOMContentLoaded", function() {
         var form = document.querySelector("#search-form");
@@ -493,33 +496,6 @@
               item.nextElementSibling.classList.remove('show'); // Ocultar el menú cuando el puntero sale del área del menú desplegable
           });
       });
+      </script>
 
-      // JavaScript para cambiar el idioma
-      var languageSelect = document.getElementById('languageSelect');
-      if (languageSelect) {
-          languageSelect.addEventListener('change', function(event) {
-              var language = event.target.value;
-              var url = '/i18n/setlang/'; // La URL a tu view de Django para cambiar el idioma
-              var csrfToken = '{{ csrf_token }}'; // Asegúrate de tener disponible el token CSRF
 
-              // Crea los datos del formulario
-              var formData = new FormData();
-              formData.append('language', language);
-              formData.append('csrfmiddlewaretoken', csrfToken);
-
-              // Envía la solicitud POST al servidor para cambiar el idioma
-              fetch(url, {
-                  method: 'POST',
-                  body: formData,
-                  headers: {
-                      'X-CSRFToken': csrfToken
-                  }
-              }).then(function(response) {
-                  // Recarga la página para aplicar el cambio de idioma
-                  window.location.reload();
-              });
-          });
-      }
-  });
-
-  </script>
