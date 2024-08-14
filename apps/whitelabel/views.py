@@ -424,6 +424,303 @@ class CreateCustomerCompanyView(
                 # Si hay otros mapas disponibles, redirigir a la vista `KeyMapView`
                 return redirect("companies:KeyMapView", pk=company.pk)
 
+class UpdateDistributionCompanyView(
+    PermissionRequiredMixin,
+    LoginRequiredMixin,
+    UpdateAuditLogAsyncMixin,
+    generic.UpdateView,
+):
+    """
+    UpdateCompanyView es un generic.edit.UpdateView que usa el modelo Company,
+    los campos enumerados,
+    CompanyForm y el template_name_suffix para actualizar una empresa.
+    """
+
+    model = Company
+    template_name = "whitelabel/companies/company_update.html"
+    permission_required = "whitelabel.change_company"
+    login_url = "login"
+    form_class = DistributionCompanyForm
+
+    def get_success_url(self):
+        """
+        Devuelve la URL de éxito para la redirección después de crear la compañía.
+
+        Returns:
+            str: La URL de redirección después de una creación exitosa.
+        """
+        return reverse("companies:companies")
+
+    def get_context_data(self, **kwargs):
+        """
+        Añade al contexto información adicional para renderizar la plantilla,
+        incluyendo mapas, módulos y la personalización del tema para la compañía.
+
+        Args:
+            **kwargs: Argumentos adicionales para el contexto.
+
+        Returns:
+            dict: Contexto actualizado con información adicional como mapas, módulos y temas.
+        """
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        company_id = user.company_id
+
+        # Obtener los mapas asociados a la compañía del usuario
+        context["type_maps"] = CompanyTypeMap.objects.filter(company_id=company_id)
+        
+        # Obtener los módulos asociados a la compañía del usuario
+        context["modules"] = Module.objects.filter(company__id=company_id)
+
+        # Obtener el color del botón desde el tema asociado a la compañía
+        theme = user.company.theme_set.first()
+        context["button_color"] = theme.button_color if theme else "#000000"
+
+        # Pasar el ID de la compañía al contexto
+        context["company_id"] = company_id
+        return context
+
+    def form_valid(self, form):
+        """
+        Procesa el formulario cuando es válido. Activa la compañía por defecto, asigna
+        valores al campo de creación y modificación, y maneja la redirección basada en 
+        los mapas disponibles.
+
+        Args:
+            form (Form): El formulario validado.
+
+        Returns:
+            HttpResponse: Redirección a la URL de éxito o a la vista de `KeyMapView`.
+        """
+        # Activar la compañía por defecto
+        form.instance.actived = True
+        company = form.save(commit=False)
+
+        # Asignar el usuario actual como creador y modificador
+        company.modified_by = self.request.user
+        company.created_by = self.request.user
+        company.provider_id = None  # Es una distribuidora, por lo que no tiene proveedor
+
+        # Guardar la compañía en la base de datos
+        company.save()
+
+        # Guardar las relaciones ManyToMany
+        form.save_m2m()
+
+        # Llamar al método de la clase base para el registro en el log de auditoría
+        response = super().form_valid(form)
+
+        # Si el ID de la compañía del usuario es 1, crear un tema por defecto si no existe
+        if self.request.user.company_id == 1 and not Theme.objects.filter(company_id=company.id).exists():
+            Theme.objects.create(company_id=company.id)
+
+        # Comprobar si la compañía tiene solo "OpenStreetMap"
+        has_openstreetmap_only = MapType.objects.filter(
+            companytypemap__company=company, name="OpenStreetMap"
+        ).exists()
+
+        if has_openstreetmap_only:
+            # Redirigir directamente a la URL de éxito si solo existe "OpenStreetMap"
+            page_update = HttpResponse("")
+            page_update["HX-Redirect"] = self.get_success_url()
+            return page_update
+        else:
+            # Redirigir a la vista `KeyMapView` si hay otros mapas disponibles
+            return redirect("companies:KeyMapView", pk=company.id)
+
+class UpdateCustomerCompanyView(
+    PermissionRequiredMixin,
+    LoginRequiredMixin,
+    UpdateAuditLogAsyncMixin,
+    generic.UpdateView,
+):
+    """
+    UpdateCompanyView es un generic.edit.UpdateView que usa el modelo Company,
+    los campos enumerados,
+    CompanyForm y el template_name_suffix para actualizar una empresa.
+    """
+
+    model = Company
+    template_name = "whitelabel/companies/company_update.html"
+    permission_required = "whitelabel.change_company"
+    form_class = CompanyCustomerForm
+    success_url = reverse_lazy("companies:companies")
+
+    def get_success_url(self):
+        """
+        Devuelve la URL de éxito para redirigir tras la creación de la compañía.
+
+        Returns:
+            str: La URL de redirección tras una creación exitosa.
+        """
+        return reverse("companies:companies")
+
+    def get_form_kwargs(self):
+        """
+        Pasa el `provider_id` de la compañía del usuario actual como argumento adicional al formulario.
+
+        Returns:
+            dict: Argumentos adicionales para inicializar el formulario.
+        """
+        kwargs = super().get_form_kwargs()
+        provider_id = self.request.user.company_id  # El ID de la compañía del usuario actual
+        kwargs["provider_id"] = provider_id
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        """
+        Agrega datos adicionales al contexto de la plantilla, como mapas, módulos
+        y el color del botón del tema personalizado.
+
+        Args:
+            **kwargs: Argumentos adicionales para el contexto.
+
+        Returns:
+            dict: Contexto actualizado con la información adicional.
+        """
+        context = super().get_context_data(**kwargs)
+        company_id = self.request.user.company_id
+
+        # Añadir mapas y módulos relacionados a la compañía del usuario
+        context["type_maps"] = CompanyTypeMap.objects.filter(company_id=company_id)
+        context["modules"] = Module.objects.filter(company_id=company_id)
+
+        # Obtener el tema personalizado para la compañía del usuario actual
+        theme = self.request.user.company.theme_set.first()
+        if theme:
+            context["button_color"] = theme.button_color  # Asignar el color del botón
+
+        # Añadir el ID de la compañía al contexto
+        context.update({
+            'company_id': company_id
+        })
+        return context
+
+    def form_valid(self, form):
+        """
+        Guarda la nueva compañía y maneja la redirección dependiendo de los mapas
+        asociados a la compañía.
+
+        Args:
+            form (Form): El formulario validado para crear la compañía.
+
+        Returns:
+            HttpResponse: Redirección a la URL de éxito o a la vista de KeyMapView.
+        """
+        with transaction.atomic():  # Ejecutar el proceso en una transacción atómica
+            # Guardar la nueva compañía sin hacer commit
+            company = form.save(commit=False)
+            company.actived = True  # Activar la compañía por defecto
+            company.provider_id = self.request.user.company_id  # Asignar proveedor
+            company.modified_by = self.request.user  # Asignar el modificador
+            company.created_by = self.request.user  # Asignar el creador
+
+            # Si el usuario no es parte de la compañía principal (ID 1), asignar vendedor y consultor
+            if self.request.user.company_id != 1:
+                company.seller = self.request.user.company.seller
+                company.consultant = self.request.user.company.consultant
+
+            # Guardar la compañía en la base de datos
+            company.save()
+            form.save_m2m()  # Guardar las relaciones ManyToMany
+
+            # Registrar en el log de auditoría llamando al form_valid de la clase base
+            response = super().form_valid(form)
+
+            # Verificar si la compañía tiene solo "OpenStreetMap"
+            has_openstreetmap_only = MapType.objects.filter(
+                companytypemap__company=company, name="OpenStreetMap"
+            ).exists()
+
+            if has_openstreetmap_only:
+                # Si solo tiene "OpenStreetMap", redirigir directamente a la URL de éxito
+                page_update = HttpResponse("")
+                page_update["HX-Redirect"] = self.get_success_url()
+                return page_update
+            else:
+                # Si hay otros mapas disponibles, redirigir a la vista `KeyMapView`
+                return redirect("companies:KeyMapView", pk=company.pk)
+
+
+class DeleteCompanyView(
+    PermissionRequiredMixin,
+    LoginRequiredMixin,
+    generic.DeleteView,
+):
+    """
+    Vista para eliminar una compañía. Requiere permisos y autenticación.
+
+    Atributos:
+        model (Model): El modelo que será eliminado, en este caso `Company`.
+        template_name (str): Plantilla utilizada para confirmar la eliminación.
+        permission_required (str): Permiso necesario para acceder a la vista.
+        success_url (str): URL de redirección tras la eliminación exitosa.
+    """
+    model = Company
+    template_name = "whitelabel/companies/company_delete.html"
+    permission_required = "whitelabel.delete_company"
+    success_url = reverse_lazy("companies:companies")
+
+    def get_success_url(self):
+        """
+        Devuelve la URL de éxito para redirigir tras la eliminación de la compañía.
+
+        Returns:
+            str: La URL de redirección tras la eliminación exitosa.
+        """
+        return reverse("companies:companies")
+
+    def form_valid(self, form):
+        """
+        Marca la respuesta como 204 (sin contenido) y agrega un encabezado HX-Redirect
+        para redirigir tras la eliminación.
+
+        Args:
+            form (Form): El formulario de confirmación de eliminación.
+
+        Returns:
+            HttpResponse: La respuesta HTTP con el código 204 y encabezado HX-Redirect.
+        """
+        response = super().form_valid(form)
+        response.status_code = 204  # Indica que la operación fue exitosa pero no hay contenido que devolver
+        response['HX-Redirect'] = self.get_success_url()  # Redirige usando HTMX tras la eliminación
+        return response
+
+    def get_context_data(self, **kwargs):
+        """
+        Agrega al contexto los objetos relacionados que serán eliminados junto con la compañía.
+
+        Args:
+            **kwargs: Argumentos adicionales para el contexto.
+
+        Returns:
+            dict: Contexto actualizado con los objetos relacionados a la compañía.
+        """
+        context = super().get_context_data(**kwargs)
+        company = self.get_object()  # Obtiene la compañía que se eliminará
+
+        try:
+            # Inicializa un recolector de objetos relacionados a eliminar
+            collector = NestedObjects(using=DEFAULT_DB_ALIAS)
+            collector.collect([company])  # Recolecta todos los objetos relacionados
+
+            # Creamos un diccionario donde se almacenarán los objetos relacionados por modelo
+            related_objects = {}
+
+            # Recorremos los modelos y sus objetos relacionados
+            for model, objects in collector.model_objs.items():
+                model_name = model._meta.verbose_name_plural  # Nombre plural del modelo
+                related_objects[model_name] = objects  # Asigna los objetos relacionados al diccionario
+
+            # Agregamos los objetos relacionados al contexto para mostrarlos en la plantilla
+            context['related_objects'] = related_objects
+
+        except Exception as e:
+            # En caso de error, mostrar el mensaje en la consola para depuración
+            print(f"Error al obtener objetos relacionados: {e}")
+
+        return context
+
 
 
 
@@ -524,177 +821,10 @@ class UpdateCompanyLogoView(
         return render(self.request, self.template_name, {"form": form})
 
 
-class UpdateDistributionCompanyView(
-    PermissionRequiredMixin,
-    LoginRequiredMixin,
-    UpdateAuditLogAsyncMixin,
-    generic.UpdateView,
-):
-    """
-    UpdateCompanyView es un generic.edit.UpdateView que usa el modelo Company,
-    los campos enumerados,
-    CompanyForm y el template_name_suffix para actualizar una empresa.
-    """
-
-    model = Company
-    template_name = "whitelabel/companies/company_update.html"
-    permission_required = "whitelabel.change_company"
-    form_class = DistributionCompanyForm
-
-    def get_success_url(self):
-        # Asegúrate de que el nombre de la URL sea correcto y esté definido en tus archivos de URL.
-        return reverse("companies:companies")
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs[
-            "provider_id"
-        ] = self.request.user.company_id  # Asume que el usuario tiene un company_id
-        return kwargs
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        user = self.request.user
-        # Aquí puedes agregar cualquier dato adicional que necesites en tu template
-        context["type_maps"] = CompanyTypeMap.objects.filter(company_id=user.company_id)
-        context["modules"] = Module.objects.filter(
-            company__id=self.request.user.company_id
-        )
-        button_color = self.request.user.company.theme_set.all().first().button_color
-        context["button_color"] = button_color
-        return context
-
-    def form_valid(self, form):
-        """
-        Llamado cuando se envía el formulario y es válido.
-        Actualiza el logo de la empresa y responde con un código HTTP 204 y un header "HX-Trigger:
-        reload-page".
-        """
-        # Manejar relaciones ManyToMany aquí
-        self.object.companytypemap_set.all().delete()
-        type_map_ids = self.request.POST.getlist("type_map")
-        for type_map_id in type_map_ids:
-            CompanyTypeMap.objects.create(company=self.object, map_type_id=type_map_id)
-        self.object.module_set.all().delete()
-        modules_ids = self.request.POST.getlist("modules")
-        for module_id in modules_ids:
-            Module.objects.create(
-                company=self.object, group_id=module_id
-            )  # Asegúrate de que `group_id` sea correcto
-        # Asigna la instancia del usuario al campo 'modified_by'
-        form.instance.modified_by = self.request.user
-        form.save()
-        # Llama al método form_valid de la clase padre para registrar la acción en el log de auditoría
-        response = super().form_valid(form)
-        # Prepara una respuesta con redirección usando HTMX
-        page_update = HttpResponse("")
-        page_update["HX-Redirect"] = self.get_success_url()
-        return page_update
 
 
-class UpdateCustomerCompanyView(
-    PermissionRequiredMixin,
-    LoginRequiredMixin,
-    UpdateAuditLogAsyncMixin,
-    generic.UpdateView,
-):
-    """
-    UpdateCompanyView es un generic.edit.UpdateView que usa el modelo Company,
-    los campos enumerados,
-    CompanyForm y el template_name_suffix para actualizar una empresa.
-    """
-
-    model = Company
-    template_name = "whitelabel/companies/company_update.html"
-    permission_required = "whitelabel.change_company"
-    form_class = CompanyCustomerForm
-    success_url = reverse_lazy("companies:companies")
-
-    def get_success_url(self):
-        # Asegúrate de que el nombre de la URL sea correcto y esté definido en tus archivos de URL.
-        return reverse("companies:companies")
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs[
-            "provider_id"
-        ] = self.request.user.company_id  # Asume que el usuario tiene un company_id
-        return kwargs
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        user = self.request.user
-        # Aquí puedes agregar cualquier dato adicional que necesites en tu template
-        context["type_maps"] = CompanyTypeMap.objects.filter(company_id=user.company_id)
-        context["modules"] = Module.objects.filter(
-            company__id=self.request.user.company_id
-        )
-        button_color = self.request.user.company.theme_set.all().first().button_color
-        context["button_color"] = button_color
-        return context
-
-    def form_valid(self, form):
-        # Manejar relaciones ManyToMany aquí
-        self.object.companytypemap_set.all().delete()
-        type_map_ids = self.request.POST.getlist("type_map")
-        for type_map_id in type_map_ids:
-            CompanyTypeMap.objects.create(company=self.object, map_type_id=type_map_id)
-        self.object.module_set.all().delete()
-        modules_ids = self.request.POST.getlist("modules")
-        for module_id in modules_ids:
-            Module.objects.create(
-                company=self.object, group_id=module_id
-            )  # Asegúrate de que `group_id` sea correcto
-        form.instance.modified_by = self.request.user
-        form.save()
-        # Llama al método form_valid de la clase padre para registrar la acción en el log de auditoría
-        response = super().form_valid(form)
-        # Prepara una respuesta con redirección usando HTMX
-        page_update = HttpResponse("")
-        page_update["HX-Redirect"] = self.get_success_url()
-        return page_update
 
 
-class DeleteCompanyView(
-    PermissionRequiredMixin,
-    LoginRequiredMixin,
-    generic.DeleteView,
-):
-    model = Company
-    template_name = "whitelabel/companies/company_delete.html"
-    permission_required = "whitelabel.delete_company"
-    success_url = reverse_lazy("companies:companies")
-
-    def get_success_url(self):
-        return reverse("companies:companies")
-
-    def form_valid(self, form):
-        response = super().form_valid(form)
-        response.status_code = 204
-        response['HX-Redirect'] = self.get_success_url()
-        return response
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        company = self.get_object()
-
-        # En lugar de obtener todos los objetos relacionados, simplificamos la lógica
-        # Puedes comentar la siguiente sección y ver si el problema persiste
-
-        try:
-            collector = NestedObjects(using=DEFAULT_DB_ALIAS)
-            collector.collect([company])
-            related_objects = {}
-
-            for model, objects in collector.model_objs.items():
-                model_name = _(model._meta.model_name)
-                related_objects[model_name] = objects
-
-            context['related_objects'] = related_objects
-        except Exception as e:
-            print(f"Error al obtener objetos relacionados: {e}")
-        
-        return context
 
 class ThemeView(PermissionRequiredMixin, LoginRequiredMixin, UpdateAuditLogAsyncMixin, generic.UpdateView):
     """

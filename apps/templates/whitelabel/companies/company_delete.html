@@ -13,10 +13,12 @@
               <p>
                 {% trans "Are you sure you want to delete the Company" %} "{{ object }}"?
               </p>
-
+              {% if related_objects %}
+              
               <p>
                 {% trans "This company is related to the following objects:" %}
               </p>
+              {% endif %}
 
               <ul>
                 {% for model_name, related_list in related_objects.items %}

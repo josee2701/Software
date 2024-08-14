@@ -1,121 +1,141 @@
-{% load i18n static %}
+{% load i18n static %} 
 {% block content %}
-  {{ form.media }}
-  <div class="modal-content" id="miModal" style="z-index: 1050;">
-    <div class="modal-body">
-      <div class="card">
-        <div class="modal-header">
-          <h3>
-            {% trans "Update:" %} {{ object.company_name }}
-          </h3>
-          <button type="button" id="cerrarVenta" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <div class="card-body">
-            <form hx-post="{{ request.path }}" hx-target="#modal-content">
-              {% csrf_token %}
-              <div class="row">
-                {% for field in form %}
-                  {% if field.html_name == "nit" or field.html_name == "company_name" or field.html_name == "legal_representative" or field.html_name == "address" %}
-                  <div class="col">
-                    <div class="input-group input-group-static mb-4">
-                      <label for="{{ field.id_for_label }}"
-                        >{{field.label_tag|capfirst}} <span style="color:red;"> *</span> </label
-                      >
-                      {{ field }} {{ field.errors }}
-                    </div>
+{{ form.media }}
+<div class="modal-content" id="miModal" style="z-index: 1050;">
+  <div class="modal-body">
+    <div class="card">
+      <div class="modal-header">
+        <h3>
+          {% trans "Update Company" %}
+        </h3>
+        <button type="button" id="cerrarVenta" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="card-body">
+          <form hx-post="{{ request.path }}" hx-target="#modal-content">
+            {% csrf_token %}
+            <div class="row">
+              {% for field in form %}
+                {% if field.html_name in "nit company_name legal_representative address" %}
+                <div class="col">
+                  <div class="input-group input-group-static mb-4">
+                    <label for="{{ field.id_for_label }}">
+                      {{ field.label_tag|capfirst }} <span style="color:red;"> *</span>
+                    </label>
+                    {{ field }} {{ field.errors }}
                   </div>
-                  {% endif %}
-                {% endfor %}
-                <div class="row">
-                  {% for field in form %}
-                      {% if field.html_name == "country" or field.html_name == "city" or field.html_name == "phone_number" or field.html_name == "consultant" %}
-                          <div class="col">
-                              <div class="input-group input-group-static mb-4">
-                                  <label for="{{ field.id_for_label }}">
-                                      {{ field.label_tag|capfirst }}
-                                      {% if field.html_name == "city" or field.html_name == "country" %}
-                                          <span style="color:red;"> *</span>
-                                      {% endif %}
-                                  </label>
-                                  {{ field }} {{ field.errors }}
-                              </div>
-                          </div>
-                      {% endif %}
-                  {% endfor %}
                 </div>
-              <div class="row">
-                {% for field in form %}
-                  {% if field.html_name == "seller" %}
-                    <div class="col">
-                        <div class="input-group input-group-static mb-4">
-                            <label for="{{ field.id_for_label }}">{{field.label_tag|capfirst}}</label>
-                            {{ field }} {{ field.errors }}
-                        </div>
-                    </div>
-                  {% elif field.html_name == "coin" %}
-                      <div class="col">
-                          <div class="input-group input-group-static mb-4">
-                              <label for="{{ field.id_for_label }}">{{field.label_tag|capfirst}}<span style="color:red;"> *</span></label>
-                              {{ field }} {{ field.errors }}
-                          </div>
-                      </div>
-                  {% endif %}
-                  {% if field.html_name == "signed_contract" or field.html_name == "actived" %}
-                    <div class="col">
-                      <label class="custom-control-label" for="{{ field.id_for_label }}">
-                        {% trans field.label_tag %}
-                      </label>
-                      <div class="form-check form-switch">
-                        {{ field }} {{ field.errors }}
-                      </div>
-                    </div>
-                  {% endif %}
-                {% endfor %}
-              </div>
-              <div class="row">
-                {% for field in form %}
-                    {% if field.html_name == "type_map" or field.html_name == "modules" %}
-                        <div class="col">
-                            {{ field.errors }}
-                            <label class="form-check-label" for="{{ field.id_for_label }}">
-                                {% trans field.label_tag %}
-                                <span style="color:red;"> *</span>
-                            </label>
-                            <div class="scroll-overflow">
-                                {{ field }}
-                            </div>
-                        </div>
-                    {% endif %}
-                {% endfor %}
+                {% endif %}
+              {% endfor %}
             </div>
-              <div class="row mt-10 d-grid gap-2 col-2 mx-2">
-                <input type="submit" value="{% trans "Save" %}" class="btn btn-primary" />
+            <div class="row">
+              {% for field in form %}
+                {% if field.html_name in "country city phone_number coin" %}
+                <div class="col">
+                  <div class="input-group input-group-static mb-4">
+                    <label for="{{ field.id_for_label }}">
+                      {{ field.label_tag|capfirst }}
+                      {% if field.html_name in "city country" %}
+                      <span style="color:red;"> *</span>
+                      {% endif %}
+                    </label>
+                    {{ field }} {{ field.errors }}
+                  </div>
+                </div>
+                {% endif %}
+              {% endfor %}
+            </div>
+            {% if company_id == 1 %}
+            <div class="row">
+              {% for field in form %}
+                {% if field.html_name == "signed_contract" %}
+                <div class="col">
+                  <label class="custom-control-label" for="{{ field.id_for_label }}">
+                    {{ field.label_tag }}
+                  </label>
+                  <div class="form-check form-switch">
+                    {{ field }} {{ field.errors }}
+                  </div>
+                </div>
+                {% endif %}
+                {% if field.html_name == "seller" %}
+                <div class="col">
+                  <div class="input-group input-group-static mb-4">
+                    <label for="{{ field.id_for_label }}">
+                      {{ field.label_tag|capfirst }}
+                    </label>
+                    {{ field }} {{ field.errors }}
+                  </div>
+                </div>
+                {% elif field.html_name == "consultant" %}
+                <div class="col">
+                  <div class="input-group input-group-static mb-4">
+                    <label for="{{ field.id_for_label }}">
+                      {{ field.label_tag|capfirst }}<span style="color:red;"> *</span>
+                    </label>
+                    {{ field }} {{ field.errors }}
+                  </div>
+                </div>
+                {% endif %}
+                {% endfor %}
               </div>
-            </form>
-          </div>
+              {% endif %}
+            <div class="row">
+              {% for field in form %}
+              
+                {% if field.html_name in "type_map modules" %}
+                <div class="col">
+                  {{ field.errors }}
+                  <label class="form-check-label" for="{{ field.id_for_label }}">
+                    {% trans field.label_tag %}
+                    <span style="color:red;"> *</span>
+                  </label>
+                  <div class="scroll-overflow">
+                    {{ field }}
+                  </div>
+                </div>
+                {% endif %}
+                {% if company_id != 1 %}
+              {% if field.html_name == "signed_contract" %}
+                <div class="col">
+                  <label class="custom-control-label" for="{{ field.id_for_label }}">
+                    {{ field.label_tag }}
+                  </label>
+                  <div class="form-check form-switch">
+                    {{ field }} {{ field.errors }}
+                  </div>
+                </div>
+                {% endif %}
+              {% endif %}
+              {% endfor %}
+            </div>
+            <div class="row mt-10 d-grid gap-2 col-2 mx-2">
+              <button class="btn btn-primary mt-3" type="submit">
+                <i class="fa-solid fa-floppy-disk me-2"></i> {% trans "Save" %}
+              </button>
+            </div>
+            <head>
+              <link rel="stylesheet" type="text/css" href="{% static 'assets/css/estilos_templates.css' %}">
+              <link rel="stylesheet" type="text/css" href="{% static 'assets/css/select2.css' %}">
+            </head>
+          </form>
         </div>
       </div>
     </div>
   </div>
-  <head>
-    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/estilos_templates.css' %}">
-    <link rel="stylesheet" type="text/css" href="{% static 'assets\css\select2.css' %}">
-  </head>
+</div>
 {% endblock content %}
+
 {% block scripts %}
-<!-- Incluir jQuery primero -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<!-- Incluir Select2 después de jQuery -->
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="{% static 'assets/js/whitelabel/company/select2.js' %}"></script>
 
 <style>
   .select2-container--default .select2-results__option--highlighted.select2-results__option--selectable {
-      background-color: {{ button_color }};
-      color: white;
+    background-color: {{ button_color }};
+    color: white;
   }
 </style>
-
-{% endblock  %}
+{% endblock %}

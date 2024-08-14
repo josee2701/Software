@@ -116,9 +116,15 @@
                   <tr id="{{ item.id }}">
                     <td class="text-center">
                       {% if perms.whitelabel.change_company %}
+                      {% if item.provider_id is None %}
                         <button type="button" hx-get="{% url 'companies:updateDistributionCompany' item.pk %}" class="btn btn-primary btn-sm" hx-target="#modal .modal-content">
                           <i class="fa-solid fa-pencil"></i>
                         </button>
+                        {% else %}
+                        <button type="button" hx-get="{% url 'companies:UpdateCustomerCompanyView' item.pk %}" class="btn btn-primary btn-sm" hx-target="#modal .modal-content">
+                          <i class="fa-solid fa-pencil"></i>
+                        </button>
+                        {% endif %}
                       {% endif %}
                       {% if perms.whitelabel.delete_company and item.id != 1 %}
                         <button type="button" hx-get="{% url 'companies:deleteCompany' item.id %}" class="btn btn-danger btn-sm ml-2" hx-target="#modal .modal-content">
