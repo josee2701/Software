@@ -40,6 +40,7 @@
                   <input type="hidden" name="page" value="{{ page_obj.number }}">
                   <input type="hidden" name="order_by" value="{{ order_by }}">
                   <input type="hidden" name="direction" value="{{ direction }}">
+                  <input type="hidden" name="search" value="{{ request.GET.search }}">
                 </form>
               </div>
               <div class="d-flex justify-content-end align-items-center flex-wrap">
@@ -55,12 +56,6 @@
                     <i class="fa-solid fa-file-excel mx-2"></i> {% trans "Export to Excel" %}
                   </a>
                 {% endif %}
-                <form id="search-form" method="GET" class="flex me-md-3 mb-2 mb-md-0" style="max-width: 180px;" onsubmit="return false">
-                  <div class="input-group input-group-sm input-group-outline">
-                    <label class="form-label">{% trans "Search..." %}</label>
-                    <input id="search-input" type="text" class="form-control" name="q" autocomplete="off">
-                  </div>
-                </form>
               </div>
             </div>
           </div>
@@ -70,7 +65,7 @@
                 <tr>
                   <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"></th>
                   <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
-                    <a href="?order_by=nit&direction={% if order_by == 'nit' and direction == 'asc' %}desc{% else %}asc{% endif %}&paginate_by={{ paginate_by }}&page={{ page_obj.number }}">
+                    <a href="?order_by=nit&direction={% if order_by == 'nit' and direction == 'asc' %}desc{% else %}asc{% endif %}&paginate_by={{ paginate_by }}&page={{ page_obj.number }}&search={{ request.GET.search }}">
                       {% trans "Nit" %}
                       <span class="sort-indicator">
                         <span class="sort-arrow sort-arrow-up {% if order_by == 'nit' and direction == 'asc' %}active{% else %}inactive{% endif %}">↑</span>
@@ -79,7 +74,7 @@
                     </a>
                   </th>
                   <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
-                    <a href="?order_by=company_name&direction={% if order_by == 'company_name' and direction == 'asc' %}desc{% else %}asc{% endif %}&paginate_by={{ paginate_by }}&page={{ page_obj.number }}">
+                    <a href="?order_by=company_name&direction={% if order_by == 'company_name' and direction == 'asc' %}desc{% else %}asc{% endif %}&paginate_by={{ paginate_by }}&page={{ page_obj.number }}&search={{ request.GET.search }}">
                       {% trans "Company" %}
                       <span class="sort-indicator">
                         <span class="sort-arrow sort-arrow-up {% if order_by == 'company_name' and direction == 'asc' %}active{% else %}inactive{% endif %}">↑</span>
@@ -88,7 +83,7 @@
                     </a>
                   </th>
                   <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
-                    <a href="?order_by=legal_representative&direction={% if order_by == 'legal_representative' and direction == 'asc' %}desc{% else %}asc{% endif %}&paginate_by={{ paginate_by }}&page={{ page_obj.number }}">
+                    <a href="?order_by=legal_representative&direction={% if order_by == 'legal_representative' and direction == 'asc' %}desc{% else %}asc{% endif %}&paginate_by={{ paginate_by }}&page={{ page_obj.number }}&search={{ request.GET.search }}">
                       {% trans "Legal Representative" %}
                       <span class="sort-indicator">
                         <span class="sort-arrow sort-arrow-up {% if order_by == 'legal_representative' and direction == 'asc' %}active{% else %}inactive{% endif %}">↑</span>
@@ -97,7 +92,7 @@
                     </a>
                   </th>
                   <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
-                    <a href="?order_by=provider_id&direction={% if order_by == 'provider_id' and direction == 'asc' %}desc{% else %}asc{% endif %}&paginate_by={{ paginate_by }}&page={{ page_obj.number }}">
+                    <a href="?order_by=provider_id&direction={% if order_by == 'provider_id' and direction == 'asc' %}desc{% else %}asc{% endif %}&paginate_by={{ paginate_by }}&page={{ page_obj.number }}&search={{ request.GET.search }}">
                       {% trans "Type" %}
                       <span class="sort-indicator">
                         <span class="sort-arrow sort-arrow-up {% if order_by == 'provider_id' and direction == 'asc' %}active{% else %}inactive{% endif %}">↑</span>
@@ -106,7 +101,7 @@
                     </a>
                   </th>
                   <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
-                    <a href="?order_by=actived&direction={% if order_by == 'actived' and direction == 'asc' %}desc{% else %}asc{% endif %}&paginate_by={{ paginate_by }}&page={{ page_obj.number }}">
+                    <a href="?order_by=actived&direction={% if order_by == 'actived' and direction == 'asc' %}desc{% else %}asc{% endif %}&paginate_by={{ paginate_by }}&page={{ page_obj.number }}&search={{ request.GET.search }}">
                       {% trans "Status" %}
                       <span class="sort-indicator">
                         <span class="sort-arrow sort-arrow-up {% if order_by == 'actived' and direction == 'asc' %}active{% else %}inactive{% endif %}">↑</span>
@@ -178,6 +173,7 @@
             <input type="hidden" name="page" id="page-input" value="{{ page_obj.number }}">
             <input type="hidden" name="order_by" value="{{ order_by }}">
             <input type="hidden" name="direction" value="{{ direction }}">
+            <input type="hidden" name="search" value="{{ request.GET.search }}">
           </form>
           <div class="row mt-2 custom-row">
             <div class="col-6 d-flex justify-content-start align-items-center">
@@ -190,12 +186,12 @@
                 <ul class="pagination">
                   {% if page_obj.has_previous %}
                     <li class="page-item">
-                      <a class="page-link" href="?page=1&paginate_by={{ paginate_by }}&order_by={{ order_by }}&direction={{ direction }}" aria-label="{% trans 'First page' %}">
+                      <a class="page-link" href="?page=1&paginate_by={{ paginate_by }}&order_by={{ order_by }}&direction={{ direction }}&search={{ request.GET.search }}" aria-label="{% trans 'First page' %}">
                         {% trans 'Home' %}
                       </a>
                     </li>
                     <li class="page-item">
-                      <a class="page-link" href="?page={{ page_obj.previous_page_number }}&paginate_by={{ paginate_by }}&order_by={{ order_by }}&direction={{ direction }}" aria-label="{% trans 'Previous page' %}">
+                      <a class="page-link" href="?page={{ page_obj.previous_page_number }}&paginate_by={{ paginate_by }}&order_by={{ order_by }}&direction={{ direction }}&search={{ request.GET.search }}" aria-label="{% trans 'Previous page' %}">
                         &laquo;
                       </a>
                     </li>
@@ -203,7 +199,7 @@
                   {% for num in page_obj.paginator.page_range %}
                     {% if num > page_obj.number|add:"-4" and num < page_obj.number|add:"4" %}
                       <li class="page-item {% if page_obj.number == num %}active{% endif %}">
-                        <a class="page-link" href="?page={{ num }}&paginate_by={{ paginate_by }}&order_by={{ order_by }}&direction={{ direction }}">
+                        <a class="page-link" href="?page={{ num }}&paginate_by={{ paginate_by }}&order_by={{ order_by }}&direction={{ direction }}&search={{ request.GET.search }}">
                           {{ num }}
                         </a>
                       </li>
@@ -211,12 +207,12 @@
                   {% endfor %}
                   {% if page_obj.has_next %}
                     <li class="page-item">
-                      <a class="page-link" href="?page={{ page_obj.next_page_number }}&paginate_by={{ paginate_by }}&order_by={{ order_by }}&direction={{ direction }}" aria-label="{% trans 'Next page' %}">
+                      <a class="page-link" href="?page={{ page_obj.next_page_number }}&paginate_by={{ paginate_by }}&order_by={{ order_by }}&direction={{ direction }}&search={{ request.GET.search }}" aria-label="{% trans 'Next page' %}">
                         &raquo;
                       </a>
                     </li>
                     <li class="page-item">
-                      <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}&paginate_by={{ paginate_by }}&order_by={{ order_by }}&direction={{ direction }}" aria-label="{% trans 'Last page' %}">
+                      <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}&paginate_by={{ paginate_by }}&order_by={{ order_by }}&direction={{ direction }}&search={{ request.GET.search }}" aria-label="{% trans 'Last page' %}">
                         {% trans 'End' %}
                       </a>
                     </li>

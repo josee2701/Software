@@ -116,17 +116,43 @@ class CompaniesView(ListView):
             queryset: El queryset ordenado.
         """
         queryset = Company.objects.all()
-        # Obtener el parámetro de ordenamiento y dirección de los parámetros GET
+        # Obtener los parámetros de búsqueda
+        search_query = self.request.GET.get('search', '')
+        # Traducciones de los términos en diferentes idiomas
+        active_terms = _("Active").lower() # Convertir términos a minúsculas
+        inactive_terms=_("Inactive").lower()
+        distributor_terms = _("Distributor").lower()
+        final_client_terms = _("Final client").lower()
+        # Inicializar la variable filters
+        filters = Q()  # Crea un objeto Q vacío
+        if search_query:
+            # Convertir la consulta de búsqueda a minúsculas
+            search_query_lower = search_query.lower()
+            # Filtrar los campos de texto
+            filters |= Q(company_name__icontains=search_query) | \
+                      Q(nit__icontains=search_query) | \
+                      Q(legal_representative__icontains=search_query) 
+            # Filtrar el campo booleano
+            if search_query_lower in active_terms:
+                filters |= Q(actived=True)
+            elif search_query_lower in inactive_terms:
+                filters |= Q(actived=False)
+            # Filtrar por tipo de cliente
+            if search_query_lower in distributor_terms:
+                filters |= Q(provider__isnull=True)  # Distribuidor no tiene proveedor
+            elif search_query_lower in final_client_terms:
+                filters |= Q(provider__isnull=False)  # Cliente final tiene proveedor
+        queryset = queryset.filter(filters)
+        # Obtener el parámetro de ordenamiento y dirección
         order_by = self.request.GET.get('order_by', 'company_name')
         direction = self.request.GET.get('direction', 'asc')
-        # Asegúrate de que el parámetro de ordenamiento sea válido
-        valid_order_by = ['nit', 'company_name', 'legal_representative', 'provider_id', 'actived']
+        valid_order_by = ['nit', 'company_name', 'legal_representative', 'provider', 'actived']
         if order_by not in valid_order_by:
             order_by = 'company_name'
-        # Cambia la dirección de ordenamiento si es necesario
         if direction == 'desc':
             order_by = f'-{order_by}'
         queryset = queryset.order_by(order_by)
+
         return queryset
 
     def get_context_data(self, **kwargs):
