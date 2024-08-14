@@ -8,22 +8,24 @@ from decimal import Decimal, InvalidOperation
 
 from asgiref.sync import async_to_sync
 from django.contrib import messages
+from django.contrib.admin.utils import NestedObjects
 from django.contrib.auth.mixins import (LoginRequiredMixin,
                                         PermissionRequiredMixin)
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
-from django.db import transaction
+from django.db import DEFAULT_DB_ALIAS, transaction
 from django.db.models import F, OuterRef, Q, Subquery, Sum
 from django.forms.models import model_to_dict
-from django.http import (HttpResponse, HttpResponseNotAllowed,
+from django.http import (Http404, HttpResponse, HttpResponseNotAllowed,
                          HttpResponseRedirect, JsonResponse, QueryDict)
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from django.utils.decorators import method_decorator
+from django.utils.translation import gettext_lazy as _
 from django.views import generic
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.views.generic import ListView
@@ -114,20 +116,16 @@ class CompaniesView(ListView):
             queryset: El queryset ordenado.
         """
         queryset = Company.objects.all()
-
         # Obtener el parámetro de ordenamiento y dirección de los parámetros GET
         order_by = self.request.GET.get('order_by', 'company_name')
         direction = self.request.GET.get('direction', 'asc')
-
         # Asegúrate de que el parámetro de ordenamiento sea válido
         valid_order_by = ['nit', 'company_name', 'legal_representative', 'provider_id', 'actived']
         if order_by not in valid_order_by:
             order_by = 'company_name'
-
         # Cambia la dirección de ordenamiento si es necesario
         if direction == 'desc':
             order_by = f'-{order_by}'
-
         queryset = queryset.order_by(order_by)
         return queryset
 
@@ -142,18 +140,26 @@ class CompaniesView(ListView):
             dict: Contexto actualizado.
         """
         context = super().get_context_data(**kwargs)
-
+        companies = context[self.context_object_name]  # Lista de objetos Company
         paginate_by = self.get_paginate_by(self.get_queryset())
         paginator = context['paginator']
         page_number = self.request.GET.get('page', 1)
         page_obj = paginator.get_page(page_number)
-
-        context['page_obj'] = page_obj
-        context['paginate_by'] = paginate_by
-        context['paginate_options'] = [15, 25, 50, 100]
-        context['order_by'] = self.request.GET.get('order_by', 'company_name')
-        context['direction'] = self.request.GET.get('direction', 'asc')
-
+        # Optimización del cálculo para mostrar el botón de mapa.
+        for company in companies:
+            company_id = company.id  # Accede al atributo id directamente
+            company_maps = CompanyTypeMap.objects.filter(company_id=company_id)
+            total_maps = company_maps.count()
+            # Determinar si se debe mostrar el botón del mapa.
+            has_only_map1 = total_maps == 1 and company_maps.filter(map_type__id=1).exists()
+            company.show_map_button = not has_only_map1  # Añade el atributo directamente al objeto
+        context.update({
+            'page_obj': page_obj,
+            'paginate_by': paginate_by,
+            'paginate_options': [15, 25, 50, 100],
+            'order_by': self.request.GET.get('order_by', 'company_name'),
+            'direction': self.request.GET.get('direction', 'asc'),
+        })
         return context
 
     def get(self, request, *args, **kwargs):
@@ -585,42 +591,44 @@ class UpdateCustomerCompanyView(
 class DeleteCompanyView(
     PermissionRequiredMixin,
     LoginRequiredMixin,
-    DeleteAuditLogAsyncMixin,
-    generic.UpdateView,
+    generic.DeleteView,
 ):
     """
-    DeleteCompanyView es un generic.edit.UpdateView que usa el modelo Company,
-    los campos enumerados,
-    CompanyForm y el template_name_suffix para actualizar una empresa.
+    DeleteCompanyView es un generic.DeleteView que usa el modelo Company
+    para eliminar una empresa, mostrando también los objetos relacionados.
     """
 
     model = Company
     template_name = "whitelabel/companies/company_delete.html"
     permission_required = "whitelabel.delete_company"
-    form_class = CompanyDeleteForm
     success_url = reverse_lazy("companies:companies")
 
     def get_success_url(self):
-        # Asegúrate de que el nombre de la URL sea correcto y esté definido en tus archivos de URL.
         return reverse("companies:companies")
 
     def form_valid(self, form):
-        """
-        Llamado cuando se envía el formulario y es válido.
-        Actualiza el logo de la empresa y responde con un código HTTP 204 y un header "HX-Trigger:
-        reload-page".
-        """
-        company = form.save(commit=False)
-        company.visible = False
-        company.actived = False
-        form.save()
-        # Llama al método form_valid de la clase padre para registrar la acción en el log de auditoría
         response = super().form_valid(form)
+        response.status_code = 204
+        response['HX-Redirect'] = self.get_success_url()
+        return response
 
-        # Prepara una respuesta con redirección usando HTMX
-        page_update = HttpResponse("")
-        page_update["HX-Redirect"] = self.get_success_url()
-        return page_update
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        company = self.get_object()
+
+        # Obtener los objetos relacionados que serán eliminados
+        collector = NestedObjects(using=DEFAULT_DB_ALIAS)
+        collector.collect([company])
+
+        # Crear un diccionario con el nombre del modelo y los objetos relacionados
+        related_objects = {}
+        for model, objects in collector.model_objs.items():
+            model_name = _(model._meta.model_name)
+            print(model_name)
+            related_objects[model_name] = objects
+
+        context['related_objects'] = related_objects
+        return context
 
 
 class ThemeView(PermissionRequiredMixin, LoginRequiredMixin, UpdateAuditLogAsyncMixin, generic.UpdateView):
