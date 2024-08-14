@@ -1,0 +1,280 @@
+# Traducción global de la aplicación
+msgid ""
+msgstr ""
+"Project-Id-Version: gps-mobile\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-10-04 11:59-0500\n"
+"PO-Revision-Date: 2022-11-04 09:00-0500\n"
+"Last-Translator: Johanna Alfonso\n"
+"Language-Team: \n"
+"Language: es_co\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: apps/authentication/forms.py:48 apps/authentication/forms.py:203
+msgid "user@email.com"
+msgstr "usuario@email.com"
+
+#: apps/authentication/forms.py:64
+#, python-format
+msgid "The email %(email)s is not registered in the application."
+msgstr "El correo %(email)s no se encuentra registrado en la aplicación."
+
+#: apps/authentication/forms.py:86
+msgid "Password"
+msgstr "Contraseña"
+
+#: apps/authentication/forms.py:104 apps/authentication/forms.py:108
+#: apps/authentication/forms.py:159
+msgid "New Password"
+msgstr "Nueva contraseña"
+
+#: apps/authentication/forms.py:114 apps/authentication/forms.py:118
+#: apps/authentication/forms.py:168
+msgid "New password confirmation"
+msgstr "Nueva contraseña (confirmación)"
+
+#: apps/authentication/forms.py:149
+msgid "Current password"
+msgstr "Contraseña actual"
+
+#: apps/authentication/forms.py:197
+msgid "Email"
+msgstr "Correo electrónico"
+
+#: apps/authentication/models.py:27 apps/authentication/models.py:67
+msgid "company"
+msgstr "Empresa"
+
+#: apps/authentication/models.py:29
+msgid "help desk"
+msgstr "Help Desk"
+
+#: apps/authentication/models.py:31
+msgid "receive alarm notifications"
+msgstr "Recibe notificaciones de alarmas"
+
+#: apps/authentication/models.py:33
+msgid "cargaz"
+msgstr "Cargaz"
+
+#: apps/authentication/models.py:41
+msgid "consumers to monitor"
+msgstr "Empresas a monitorear"
+
+#: apps/authentication/models.py:50
+msgid "vehicles to monitor"
+msgstr "Vehiculos a monitorear"
+
+#: apps/authentication/models.py:83
+msgid "user"
+msgstr "Usuario"
+
+#: apps/authentication/models.py:85
+msgid "session key"
+msgstr "Llave de sesión"
+
+#: apps/authentication/views.py:149
+msgid "The password is incorrect. Please try again."
+msgstr "La contraseña es incorrecta. Por favor, intente de nuevo."
+
+#: apps/authentication/views.py:205
+#: apps/templates/authentication/password_reset_complete.html:6
+#: apps/templates/authentication/password_reset_form.html:7
+#: apps/templates/authentication/password_reset_form.html:21
+msgid "Password reset"
+msgstr "Restablecer contraseña"
+
+#: apps/templates/authentication/index.html:6
+#: apps/templates/authentication/index.html:21
+msgid "Home"
+msgstr "Inicio"
+
+#: apps/templates/authentication/index.html:30
+msgid "To login, please enter your email address."
+msgstr "Para iniciar sesión, introduzca su dirección de correo electrónico."
+
+#: apps/templates/authentication/index.html:34
+#: apps/templates/authentication/login.html:42
+#: apps/templates/authentication/password_reset_complete.html:26
+msgid "Log in"
+msgstr "Iniciar sesión"
+
+#: apps/templates/authentication/login.html:6
+msgid "Authentication"
+msgstr "Autenticación"
+
+#: apps/templates/authentication/login.html:27
+#, python-format
+msgid " Hi, %(f)s %(l)s "
+msgstr "Hola, %(f)s %(l)s "
+
+#: apps/templates/authentication/login.html:38
+msgid "Please enter the password for the email:"
+msgstr "Por favor, ingrese una contraseña para el correo:"
+
+#: apps/templates/authentication/login.html:45
+msgid "Forgot your password?"
+msgstr "¿Olvidó su contraseña?"
+
+#: apps/templates/authentication/login.html:46
+msgid "Recover"
+msgstr "Recuperar"
+
+#: apps/templates/authentication/password_change.html:6
+#: apps/templates/authentication/password_change.html:20
+msgid "Password change"
+msgstr "Cambio de contraseña"
+
+#: apps/templates/authentication/password_change.html:24
+msgid "Please enter your old password."
+msgstr "Por favor, introduzca su actual contraseña."
+
+#: apps/templates/authentication/password_change.html:32
+msgid ""
+"Then enter your new password twice so we can verify you typed it in "
+"correctly."
+msgstr ""
+"A continuación, introduzca su nueva contraseña dos veces para que podamos "
+"verificar que la ha escrito correctamente."
+
+#: apps/templates/authentication/password_change.html:49
+#: apps/templates/authentication/password_reset_confirm.html:47
+msgid "Change my password"
+msgstr "Cambiar mi contraseña"
+
+#: apps/templates/authentication/password_change_done.html:7
+#: apps/templates/authentication/password_change_done.html:21
+msgid "Password change successful"
+msgstr "Contraseña cambiada correctamente"
+
+#: apps/templates/authentication/password_change_done.html:25
+msgid "Your password was changed."
+msgstr "Su contraseña ha sido cambiado."
+
+#: apps/templates/authentication/password_reset_complete.html:20
+msgid "Password reset successful"
+msgstr "Contraseña restablecida correctamente"
+
+#: apps/templates/authentication/password_reset_complete.html:25
+msgid "Your password has been set. <br> You may go ahead and log in now."
+msgstr "Su contraseña ha sido establecida. <br> Ya puede iniciar la sesión."
+
+#: apps/templates/authentication/password_reset_confirm.html:7
+#: apps/templates/authentication/password_reset_confirm.html:21
+msgid "Password reset confirmation"
+msgstr "Confirmación del restablecimiento de contraseña"
+
+#: apps/templates/authentication/password_reset_confirm.html:26
+msgid ""
+"Please enter your new password twice so we can verify you typed it in "
+"correctly."
+msgstr ""
+"Por favor, introduzca su nueva contraseña dos veces para que podamos "
+"verificar que la ha escrito correctamente."
+
+#: apps/templates/authentication/password_reset_confirm.html:51
+msgid ""
+"The password reset link was invalid, possibly because it has already been "
+"used. <br><br> Please request a new password reset."
+msgstr ""
+"El enlace para restablecer la contraseña no es válido, posiblemente porque "
+"ya ha sido utilizado. <br><br> Por favor, solicite un nuevo restablecimiento "
+"de contraseña."
+
+#: apps/templates/authentication/password_reset_done.html:7
+#: apps/templates/authentication/password_reset_done.html:21
+msgid "Password reset sent"
+msgstr "Envío de restablecimiento de contraseña"
+
+#: apps/templates/authentication/password_reset_done.html:25
+msgid ""
+"We’ve emailed you instructions for setting your password, if an account "
+"exists with the email you entered. You should receive them shortly."
+msgstr ""
+"Hemos enviado las instrucciones para establecer su contraseña por correo "
+"electrónico. Debería recibirlas en breve."
+
+#: apps/templates/authentication/password_reset_done.html:26
+msgid ""
+"If you don’t receive an email, please make sure you’ve entered the address "
+"you registered with, and check your spam folder."
+msgstr ""
+"Si no recibe nuestro mensaje, asegúrese de haber introducido correctamente "
+"el correo electrónico y compruebe la bandeja de correo no deseado."
+
+#: apps/templates/authentication/password_reset_form.html:25
+msgid ""
+"Forgotten your password? Enter your email address below, and we’ll email "
+"instructions for setting a new one."
+msgstr ""
+"¿Olvidó su contraseña? Introduzca su dirección de correo electrónico y le "
+"enviaremos las instrucciones para establecer una nueva."
+
+#: apps/templates/authentication/password_reset_form.html:35
+msgid "Reset my password"
+msgstr "Restablecer mi contraseña"
+
+#: apps/whitelabel/models.py:32
+msgid "Dark"
+msgstr "Oscuro"
+
+#: apps/whitelabel/models.py:33
+msgid "Light"
+msgstr "Claro"
+
+#: apps/whitelabel/models.py:36 apps/whitelabel/models.py:43
+msgid "Normal"
+msgstr "Normal"
+
+#: apps/whitelabel/models.py:37
+msgid "Normal, right to left"
+msgstr "Normal, derecha a izquierda"
+
+#: apps/whitelabel/models.py:38
+msgid "Mini"
+msgstr "Mini"
+
+#: apps/whitelabel/models.py:39
+msgid "Mini, right to left"
+msgstr "Mini, derecha a izquierda"
+
+#: apps/whitelabel/models.py:42
+msgid "Low"
+msgstr "Bajo"
+
+#: apps/whitelabel/models.py:44
+msgid "High"
+msgstr "Alto"
+
+#: apps/whitelabel/models.py:116 config/settings.py:188
+msgid "Colombia"
+msgstr "Colombia"
+
+#: apps/whitelabel/models.py:117 config/settings.py:189
+msgid "Mexico"
+msgstr "México"
+
+#: apps/whitelabel/models.py:118
+msgid "Peru"
+msgstr "Perú"
+
+#: config/settings.py:186
+msgid "English"
+msgstr "Inglés"
+
+#: config/settings.py:187
+msgid "Spanish"
+msgstr ""
+
+#: config/settings.py:190
+msgid "Spain"
+msgstr ""
+
+#~ msgid "Español"
+#~ msgstr "Español"
+
+#~ msgid "España"
+#~ msgstr "España"

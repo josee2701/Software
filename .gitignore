@@ -44,8 +44,8 @@ conda-requirements.txt
 # Sphinx docfiles
 docs/
 
-# Internationalization & Localization
-locale/
+# Ignore compiled translation files
+locale/**/*.mo
 
 # Doc files
 docs/build/

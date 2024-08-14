@@ -1,0 +1,3766 @@
+# Global translation of the application
+msgid ""
+msgstr ""
+"Project-Id-Version: gps-mobile\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-07-18 15:35-0500\n"
+"PO-Revision-Date: 2022-11-04 09:00-0500\n"
+"Last-Translator: Johanna Alfonso\n"
+"Language-Team: \n"
+"Language: es_co\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: .\apps\authentication\admin.py:49
+msgid "Personal info"
+msgstr ""
+
+#: .\apps\authentication\admin.py:51
+msgid "Permissions"
+msgstr ""
+
+#: .\apps\authentication\admin.py:63
+msgid "Functionalities"
+msgstr ""
+
+#: .\apps\authentication\admin.py:72
+msgid "Important dates"
+msgstr ""
+
+#: .\apps\authentication\admin.py:93
+msgid "groups"
+msgstr ""
+
+#: .\apps\authentication\admin.py:98 .\apps\authentication\models.py:39
+#: .\apps\checkpoints\models.py:23 .\apps\checkpoints\models.py:174
+#: .\apps\events\models.py:61 .\apps\events\models.py:177
+#: .\apps\realtime\models.py:46 .\apps\realtime\models.py:97
+#: .\apps\realtime\models.py:160 .\apps\realtime\models.py:306
+#: .\apps\realtime\models.py:459 .\apps\realtime\models.py:550
+#: .\apps\realtime\models.py:576 .\apps\realtime\models.py:592
+#: .\apps\realtime\models.py:704
+#: .\apps\templates\authentication\users\user_main.html:60
+msgid "company"
+msgstr ""
+
+#: .\apps\authentication\admin.py:184
+msgid "Permisos"
+msgstr ""
+
+#: .\apps\authentication\forms.py:65 .\apps\authentication\forms.py:195
+msgid "user@email.com"
+msgstr ""
+
+#: .\apps\authentication\forms.py:85
+#, python-format
+msgid "The email %(email)s is registered but not active."
+msgstr ""
+
+#: .\apps\authentication\forms.py:92
+#, python-format
+msgid "The email %(email)s is not registered in the application."
+msgstr ""
+
+#: .\apps\authentication\forms.py:115
+#: .\apps\templates\authentication\users\profile_user.html:50
+msgid "Password"
+msgstr ""
+
+#: .\apps\authentication\forms.py:131
+msgid "New Password"
+msgstr ""
+
+#: .\apps\authentication\forms.py:139
+msgid "New password confirmation"
+msgstr ""
+
+#: .\apps\authentication\forms.py:159
+msgid "Your old password was entered incorrectly. Please enter it again."
+msgstr ""
+
+#: .\apps\authentication\forms.py:189 .\apps\authentication\forms.py:361
+#: .\apps\authentication\forms.py:526 .\apps\authentication\forms.py:548
+msgid "Email"
+msgstr ""
+
+#: .\apps\authentication\forms.py:362 .\apps\authentication\forms.py:527
+#: .\apps\templates\checkpoints\driver\main_drivers.html:78
+msgid "First name"
+msgstr ""
+
+#: .\apps\authentication\forms.py:363 .\apps\authentication\forms.py:528
+#: .\apps\templates\checkpoints\driver\main_drivers.html:87
+msgid "Last name"
+msgstr ""
+
+#: .\apps\authentication\forms.py:364 .\apps\authentication\forms.py:529
+#: .\apps\templates\authentication\users\profile_user.html:56
+#: .\apps\templates\checkpoints\driver\main_drivers.html:69
+#: .\apps\templates\checkpoints\reportes\report_today_copy.html:83
+#: .\apps\templates\checkpoints\score_configuration\main_score_configuration.html:53
+#: .\apps\templates\checkpoints\score_configuration\update_score_configuration.html:22
+#: .\apps\templates\events\user_events\main_user_events.html:71
+#: .\apps\templates\realtime\custom_report\main_configuration_report.html:19
+#: .\apps\templates\realtime\custom_report\update_configuration_report.html:39
+#: .\apps\templates\realtime\dataplan\main_dataplan.html:59
+#: .\apps\templates\realtime\devices\main_devices.html:59
+#: .\apps\templates\realtime\geozones\add_geozone.html:19
+#: .\apps\templates\realtime\geozones\main_geozone.html:57
+#: .\apps\templates\realtime\geozones\update_geozone.html:19
+#: .\apps\templates\realtime\simcards\main_simcard.html:60
+#: .\apps\templates\realtime\vehicles\main_vehicles.html:71
+#: .\apps\templates\whitelabel\companies\company_main.html:81
+#: .\apps\templates\whitelabel\companies\company_main.html:279
+#: .\apps\templates\whitelabel\module\main_module.html:54
+#: .\apps\templates\whitelabel\process\main_process.html:18
+#: .\apps\templates\whitelabel\process\update_process.html:16
+#: .\apps\whitelabel\models.py:31 .\apps\whitelabel\models.py:89
+#: .\apps\whitelabel\models.py:121 .\apps\whitelabel\models.py:366
+#: .\apps\whitelabel\models.py:406
+msgid "Company"
+msgstr ""
+
+#: .\apps\authentication\forms.py:365 .\apps\authentication\forms.py:530
+msgid "Companies to monitor"
+msgstr ""
+
+#: .\apps\authentication\forms.py:366 .\apps\authentication\forms.py:531
+msgid "Vehicles to monitor"
+msgstr ""
+
+#: .\apps\authentication\forms.py:367 .\apps\authentication\forms.py:533
+#: .\apps\authentication\models.py:69
+msgid "alarm"
+msgstr ""
+
+#: .\apps\authentication\forms.py:368 .\apps\authentication\forms.py:532
+#: .\apps\checkpoints\models.py:62
+#: .\apps\templates\authentication\users\user_main.html:206
+#: .\apps\templates\checkpoints\driver\main_drivers.html:164
+#: .\apps\templates\checkpoints\driver\main_drivers.html:244
+#: .\apps\templates\checkpoints\reportes\report_driver.html:127
+#: .\apps\templates\checkpoints\score_configuration\main_score_configuration.html:162
+#: .\apps\templates\events\user_events\main_user_events.html:313
+#: .\apps\templates\realtime\dataplan\main_dataplan.html:202
+#: .\apps\templates\realtime\devices\main_devices.html:230
+#: .\apps\templates\realtime\geozones\main_geozone.html:224
+#: .\apps\templates\realtime\group_vehicles\main_group_vehicles.html:165
+#: .\apps\templates\realtime\simcards\main_simcard.html:146
+#: .\apps\templates\realtime\simcards\main_simcard.html:221
+#: .\apps\templates\realtime\vehicles\main_vehicles.html:172
+#: .\apps\templates\realtime\vehicles\main_vehicles.html:250
+#: .\apps\templates\whitelabel\companies\company_main.html:454
+#: .\apps\templates\whitelabel\module\main_module.html:188
+msgid "Active"
+msgstr ""
+
+#: .\apps\authentication\forms.py:369 .\apps\authentication\forms.py:534
+#: .\apps\authentication\models.py:63
+msgid "group vehicles"
+msgstr ""
+
+#: .\apps\authentication\forms.py:370 .\apps\authentication\forms.py:535
+#: .\apps\authentication\models.py:107 .\apps\whitelabel\models.py:427
+msgid "process_type"
+msgstr ""
+
+#: .\apps\authentication\forms.py:452
+msgid "A user with this email address already exists."
+msgstr ""
+
+#: .\apps\authentication\forms.py:467
+msgid "A user with this username already exists in the selected company."
+msgstr ""
+
+#: .\apps\authentication\forms.py:647 .\apps\whitelabel\models.py:91
+msgid "Group"
+msgstr ""
+
+#: .\apps\authentication\forms.py:648
+msgid "Permisssion"
+msgstr ""
+
+#: .\apps\authentication\models.py:26
+msgid "Central"
+msgstr ""
+
+#: .\apps\authentication\models.py:27
+msgid "Client"
+msgstr ""
+
+#: .\apps\authentication\models.py:30
+msgid "email address"
+msgstr ""
+
+#: .\apps\authentication\models.py:32 .\apps\checkpoints\models.py:37
+#: .\apps\templates\authentication\users\user_main.html:87
+msgid "first name"
+msgstr ""
+
+#: .\apps\authentication\models.py:47
+msgid "companies to monitor"
+msgstr ""
+
+#: .\apps\authentication\models.py:55
+msgid "vehicles to monitor"
+msgstr ""
+
+#: .\apps\authentication\models.py:82
+msgid "Profile Picture"
+msgstr ""
+
+#: .\apps\authentication\models.py:85 .\apps\checkpoints\models.py:157
+#: .\apps\events\models.py:151 .\apps\realtime\models.py:56
+#: .\apps\realtime\models.py:722 .\apps\realtime\models.py:743
+#: .\apps\realtime\models.py:765 .\apps\realtime\models.py:794
+#: .\apps\whitelabel\models.py:261
+msgid "last updated"
+msgstr ""
+
+#: .\apps\authentication\models.py:90 .\apps\checkpoints\models.py:67
+#: .\apps\checkpoints\models.py:111 .\apps\checkpoints\models.py:144
+#: .\apps\checkpoints\models.py:195 .\apps\checkpoints\models.py:251
+#: .\apps\checkpoints\models.py:354 .\apps\events\models.py:90
+#: .\apps\events\models.py:146 .\apps\realtime\models.py:61
+#: .\apps\realtime\models.py:116 .\apps\realtime\models.py:192
+#: .\apps\realtime\models.py:360 .\apps\realtime\models.py:389
+#: .\apps\realtime\models.py:637 .\apps\whitelabel\models.py:304
+#: .\apps\whitelabel\models.py:372
+msgid "modified by"
+msgstr ""
+
+#: .\apps\authentication\models.py:99 .\apps\checkpoints\models.py:75
+#: .\apps\checkpoints\models.py:118 .\apps\checkpoints\models.py:151
+#: .\apps\checkpoints\models.py:202 .\apps\checkpoints\models.py:258
+#: .\apps\checkpoints\models.py:361 .\apps\realtime\models.py:69
+#: .\apps\realtime\models.py:123 .\apps\realtime\models.py:199
+#: .\apps\realtime\models.py:367 .\apps\realtime\models.py:396
+#: .\apps\realtime\models.py:542 .\apps\realtime\models.py:644
+#: .\apps\whitelabel\models.py:312 .\apps\whitelabel\models.py:380
+msgid "created by"
+msgstr ""
+
+#: .\apps\authentication\models.py:112
+msgid "rol"
+msgstr ""
+
+#: .\apps\authentication\models.py:114 .\apps\checkpoints\models.py:63
+#: .\apps\events\models.py:125 .\apps\events\models.py:154
+#: .\apps\realtime\models.py:55 .\apps\realtime\models.py:112
+#: .\apps\realtime\models.py:188 .\apps\whitelabel\models.py:300
+#: .\apps\whitelabel\models.py:384
+msgid "visible"
+msgstr ""
+
+#: .\apps\authentication\models.py:144 .\apps\checkpoints\models.py:317
+#: .\apps\events\models.py:202
+msgid "user"
+msgstr ""
+
+#: .\apps\authentication\models.py:147
+msgid "session key"
+msgstr ""
+
+#: .\apps\authentication\views.py:286
+msgid "The password is incorrect. Please try again."
+msgstr ""
+
+#: .\apps\authentication\views.py:342
+#: .\apps\templates\authentication\password_reset_complete.html:6
+#: .\apps\templates\authentication\password_reset_form.html:6
+#: .\apps\templates\authentication\password_reset_form.html:20
+msgid "Password reset"
+msgstr ""
+
+#: .\apps\checkpoints\forms.py:118 .\apps\checkpoints\forms.py:122
+msgid "Driver with this Personal ID already exists."
+msgstr ""
+
+#: .\apps\checkpoints\forms.py:171
+msgid "Date joined can't be in the past"
+msgstr ""
+
+#: .\apps\checkpoints\forms.py:173
+msgid "Invalid date format for date joined"
+msgstr ""
+
+#: .\apps\checkpoints\forms.py:184
+msgid "Date leaving must be in the future of date joined!"
+msgstr ""
+
+#: .\apps\checkpoints\forms.py:187
+msgid "Invalid date format for dates"
+msgstr ""
+
+#: .\apps\checkpoints\forms.py:239
+msgid "The minimum score cannot be higher than or equal to the maximum score!"
+msgstr ""
+
+#: .\apps\checkpoints\forms.py:301
+msgid "The sum of the points of the items to be rated must be equal to 100!"
+msgstr ""
+
+#: .\apps\checkpoints\models.py:27 .\apps\checkpoints\models.py:123
+#: .\apps\checkpoints\models.py:207 .\apps\checkpoints\models.py:263
+#: .\apps\checkpoints\models.py:372 .\apps\realtime\models.py:109
+#: .\apps\realtime\models.py:179 .\apps\realtime\models.py:354
+#: .\apps\realtime\models.py:383 .\apps\realtime\models.py:631
+msgid "last update"
+msgstr ""
+
+#: .\apps\checkpoints\models.py:31
+msgid "personal ID"
+msgstr ""
+
+#: .\apps\checkpoints\models.py:42
+#: .\apps\templates\authentication\users\user_main.html:96
+msgid "last name"
+msgstr ""
+
+#: .\apps\checkpoints\models.py:47 .\apps\whitelabel\models.py:246
+msgid "address"
+msgstr ""
+
+#: .\apps\checkpoints\models.py:52
+msgid "movil number"
+msgstr ""
+
+#: .\apps\checkpoints\models.py:57
+msgid "password"
+msgstr ""
+
+#: .\apps\checkpoints\models.py:61 .\apps\checkpoints\models.py:100
+#: .\apps\whitelabel\models.py:258
+msgid "date joined"
+msgstr ""
+
+#: .\apps\checkpoints\models.py:93 .\apps\realtime\models.py:665
+#: .\apps\realtime\models.py:688
+msgid "vehicle"
+msgstr ""
+
+#: .\apps\checkpoints\models.py:97
+msgid "driver"
+msgstr ""
+
+#: .\apps\checkpoints\models.py:104
+msgid "date leaving"
+msgstr ""
+
+#: .\apps\checkpoints\models.py:138 .\apps\checkpoints\models.py:224
+msgid "item"
+msgstr ""
+
+#: .\apps\checkpoints\models.py:178
+msgid "minimum score"
+msgstr ""
+
+#: .\apps\checkpoints\models.py:183
+msgid "maximum score"
+msgstr ""
+
+#: .\apps\checkpoints\models.py:188
+msgid "cutoff date"
+msgstr ""
+
+#: .\apps\checkpoints\models.py:230
+msgid "company score"
+msgstr ""
+
+#: .\apps\checkpoints\models.py:234
+msgid "points score item"
+msgstr ""
+
+#: .\apps\checkpoints\models.py:239
+msgid "maximum infractions"
+msgstr ""
+
+#: .\apps\checkpoints\models.py:244
+msgid "subtract points"
+msgstr ""
+
+#: .\apps\checkpoints\models.py:280
+#: .\apps\templates\checkpoints\driver_analytic\assign_driver.html:20
+#: .\apps\templates\checkpoints\reportes\report_driver.html:103
+#: .\apps\templates\layouts\navbar.html:188
+#: .\apps\templates\layouts\navbardashboard.html:188
+msgid "Driver"
+msgstr ""
+
+#: .\apps\checkpoints\models.py:285
+msgid "Items_score"
+msgstr ""
+
+#: .\apps\checkpoints\models.py:291
+msgid "AVLData"
+msgstr ""
+
+#: .\apps\checkpoints\models.py:297
+#: .\apps\templates\checkpoints\driver_analytic\assign_driver.html:27
+#: .\apps\templates\checkpoints\driver_analytic\button_view.html:17
+#: .\apps\templates\checkpoints\driver_analytic\update_assign.html:29
+#: .\apps\templates\checkpoints\driver_analytic\update_assign.html:75
+#: .\apps\templates\checkpoints\driver_analytic\update_vehicle_assign.html:22
+msgid "Vehicle"
+msgstr ""
+
+#: .\apps\checkpoints\models.py:322
+msgid "ID Workspace"
+msgstr ""
+
+#: .\apps\checkpoints\models.py:327
+msgid "id_report"
+msgstr ""
+
+#: .\apps\checkpoints\models.py:331
+msgid "workspace"
+msgstr ""
+
+#: .\apps\checkpoints\models.py:335
+msgid "report"
+msgstr ""
+
+#: .\apps\checkpoints\models.py:341 .\apps\realtime\models.py:38
+#: .\apps\whitelabel\models.py:234
+msgid "coin"
+msgstr ""
+
+#: .\apps\checkpoints\models.py:347 .\apps\realtime\models.py:41
+msgid "price"
+msgstr ""
+
+#: .\apps\checkpoints\models.py:366 .\apps\realtime\models.py:183
+msgid "create date"
+msgstr ""
+
+#: .\apps\checkpoints\models.py:375
+msgid "is_report"
+msgstr ""
+
+#: .\apps\checkpoints\views.py:170
+msgid "Date joined can't be before of today"
+msgstr ""
+
+#: .\apps\checkpoints\views.py:417
+msgid ""
+"You already have this driver assigned in this time slot!!\n"
+"            Please select a future time slot\n"
+"            "
+msgstr ""
+
+#: .\apps\events\forms.py:134
+msgid "You must select an event!!"
+msgstr ""
+
+#: .\apps\events\forms.py:154
+msgid "The end time must be later than the start time"
+msgstr ""
+
+#: .\apps\events\forms.py:184
+msgid "An event with this number already exists"
+msgstr ""
+
+#: .\apps\events\forms.py:190
+msgid "An event with this name already exists"
+msgstr ""
+
+#: .\apps\events\models.py:17
+#: .\apps\templates\authentication\users\user_main.html:198
+#: .\apps\templates\checkpoints\driver\main_drivers.html:236
+#: .\apps\templates\checkpoints\score_configuration\main_score_configuration.html:154
+#: .\apps\templates\events\predefined_events\main_events.html:153
+#: .\apps\templates\events\user_events\main_user_events.html:205
+#: .\apps\templates\events\user_events\main_user_events.html:303
+#: .\apps\templates\realtime\dataplan\main_dataplan.html:194
+#: .\apps\templates\realtime\devices\main_devices.html:222
+#: .\apps\templates\realtime\geozones\main_geozone.html:216
+#: .\apps\templates\realtime\group_vehicles\main_group_vehicles.html:157
+#: .\apps\templates\realtime\response_commands\main_response_commands.html:162
+#: .\apps\templates\realtime\sending_commands\add_sending_commands.html:58
+#: .\apps\templates\realtime\sending_commands\main_sending_commands.html:210
+#: .\apps\templates\realtime\simcards\main_simcard.html:213
+#: .\apps\templates\realtime\vehicles\main_vehicles.html:242
+#: .\apps\templates\whitelabel\companies\company_main.html:446
+#: .\apps\templates\whitelabel\module\main_module.html:180
+#: .\apps\templates\whitelabel\tickets\add_ticket.html:118
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:230
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:415
+#: .\apps\templates\whitelabel\tickets\main_ticket.html:167
+#: .\apps\templates\whitelabel\tickets\main_ticket.html:265
+#: .\apps\templates\whitelabel\tickets\view_ticket.html:217
+#: .\apps\whitelabel\models.py:392
+msgid "Low"
+msgstr ""
+
+#: .\apps\events\models.py:18
+#: .\apps\templates\authentication\users\user_main.html:199
+#: .\apps\templates\checkpoints\driver\main_drivers.html:237
+#: .\apps\templates\checkpoints\score_configuration\main_score_configuration.html:155
+#: .\apps\templates\events\predefined_events\main_events.html:154
+#: .\apps\templates\events\user_events\main_user_events.html:207
+#: .\apps\templates\events\user_events\main_user_events.html:304
+#: .\apps\templates\realtime\dataplan\main_dataplan.html:195
+#: .\apps\templates\realtime\devices\main_devices.html:223
+#: .\apps\templates\realtime\geozones\main_geozone.html:217
+#: .\apps\templates\realtime\group_vehicles\main_group_vehicles.html:158
+#: .\apps\templates\realtime\response_commands\main_response_commands.html:163
+#: .\apps\templates\realtime\sending_commands\add_sending_commands.html:59
+#: .\apps\templates\realtime\sending_commands\main_sending_commands.html:211
+#: .\apps\templates\realtime\simcards\main_simcard.html:214
+#: .\apps\templates\realtime\vehicles\main_vehicles.html:243
+#: .\apps\templates\whitelabel\companies\company_main.html:447
+#: .\apps\templates\whitelabel\module\main_module.html:181
+#: .\apps\templates\whitelabel\tickets\add_ticket.html:119
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:232
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:416
+#: .\apps\templates\whitelabel\tickets\main_ticket.html:169
+#: .\apps\templates\whitelabel\tickets\main_ticket.html:266
+#: .\apps\templates\whitelabel\tickets\view_ticket.html:218
+#: .\apps\whitelabel\models.py:393
+msgid "Medium"
+msgstr ""
+
+#: .\apps\events\models.py:19
+#: .\apps\templates\authentication\users\user_main.html:200
+#: .\apps\templates\checkpoints\driver\main_drivers.html:238
+#: .\apps\templates\checkpoints\score_configuration\main_score_configuration.html:156
+#: .\apps\templates\events\predefined_events\main_events.html:155
+#: .\apps\templates\events\user_events\main_user_events.html:209
+#: .\apps\templates\events\user_events\main_user_events.html:305
+#: .\apps\templates\realtime\dataplan\main_dataplan.html:196
+#: .\apps\templates\realtime\devices\main_devices.html:224
+#: .\apps\templates\realtime\geozones\main_geozone.html:218
+#: .\apps\templates\realtime\group_vehicles\main_group_vehicles.html:159
+#: .\apps\templates\realtime\response_commands\main_response_commands.html:164
+#: .\apps\templates\realtime\sending_commands\add_sending_commands.html:60
+#: .\apps\templates\realtime\sending_commands\main_sending_commands.html:212
+#: .\apps\templates\realtime\simcards\main_simcard.html:215
+#: .\apps\templates\realtime\vehicles\main_vehicles.html:244
+#: .\apps\templates\whitelabel\companies\company_main.html:448
+#: .\apps\templates\whitelabel\module\main_module.html:182
+#: .\apps\templates\whitelabel\tickets\add_ticket.html:120
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:234
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:417
+#: .\apps\templates\whitelabel\tickets\main_ticket.html:171
+#: .\apps\templates\whitelabel\tickets\main_ticket.html:267
+#: .\apps\templates\whitelabel\tickets\view_ticket.html:219
+#: .\apps\whitelabel\models.py:394
+msgid "High"
+msgstr ""
+
+#: .\apps\events\models.py:56
+msgid "event"
+msgstr ""
+
+#: .\apps\events\models.py:66
+msgid "Nombre Evento"
+msgstr ""
+
+#: .\apps\events\models.py:70
+msgid "Alarma Central"
+msgstr ""
+
+#: .\apps\events\models.py:74
+msgid "user notification"
+msgstr ""
+
+#: .\apps\events\models.py:78
+msgid "start time"
+msgstr ""
+
+#: .\apps\events\models.py:83
+msgid "end time"
+msgstr ""
+
+#: .\apps\events\models.py:100
+msgid "email notification"
+msgstr ""
+
+#: .\apps\events\models.py:105
+msgid "alarm color"
+msgstr ""
+
+#: .\apps\events\models.py:113
+msgid "priority"
+msgstr ""
+
+#: .\apps\events\models.py:120
+msgid "sound type"
+msgstr ""
+
+#: .\apps\events\models.py:137
+msgid "number"
+msgstr ""
+
+#: .\apps\events\models.py:141 .\apps\realtime\models.py:25
+#: .\apps\realtime\models.py:36 .\apps\realtime\models.py:377
+#: .\apps\realtime\models.py:505 .\apps\realtime\models.py:587
+#: .\apps\whitelabel\models.py:106 .\apps\whitelabel\models.py:355
+msgid "name"
+msgstr ""
+
+#: .\apps\events\models.py:172
+msgid "check"
+msgstr ""
+
+#: .\apps\events\models.py:185 .\apps\realtime\models.py:329
+#: .\apps\realtime\models.py:416 .\apps\realtime\models.py:522
+#: .\apps\realtime\models.py:564
+msgid "device"
+msgstr ""
+
+#: .\apps\events\models.py:187 .\apps\realtime\models.py:419
+msgid "main event"
+msgstr ""
+
+#: .\apps\events\models.py:188 .\apps\realtime\models.py:420
+msgid "server date"
+msgstr ""
+
+#: .\apps\events\models.py:190 .\apps\realtime\models.py:424
+msgid "signal date"
+msgstr ""
+
+#: .\apps\events\models.py:192 .\apps\realtime\models.py:426
+#: .\apps\realtime\models.py:469
+#: .\apps\templates\checkpoints\reportes\report_today_copy.html:91
+msgid "odometer"
+msgstr ""
+
+#: .\apps\events\models.py:193 .\apps\realtime\models.py:427
+#: .\apps\realtime\models.py:464 .\apps\realtime\models.py:603
+msgid "latitude"
+msgstr ""
+
+#: .\apps\events\models.py:194 .\apps\realtime\models.py:428
+#: .\apps\realtime\models.py:465 .\apps\realtime\models.py:604
+msgid "longitude"
+msgstr ""
+
+#: .\apps\events\models.py:196 .\apps\realtime\models.py:430
+msgid "calculated speed"
+msgstr ""
+
+#: .\apps\events\models.py:198 .\apps\realtime\models.py:432
+#: .\apps\realtime\models.py:468
+msgid "angle"
+msgstr ""
+
+#: .\apps\events\models.py:208
+msgid "probability"
+msgstr ""
+
+#: .\apps\events\models.py:211
+msgid "real prediction"
+msgstr ""
+
+#: .\apps\events\models.py:213
+msgid "real"
+msgstr ""
+
+#: .\apps\events\models.py:216
+msgid "alarm type"
+msgstr ""
+
+#: .\apps\events\views.py:380
+msgid ""
+"You already have this event visible, can't create it again!!\n"
+"                Select another one"
+msgstr ""
+
+#: .\apps\realtime\forms.py:146
+msgid "Phone number is required."
+msgstr ""
+
+#: .\apps\realtime\forms.py:156
+msgid "This phone number is already in use."
+msgstr ""
+
+#: .\apps\realtime\forms.py:165
+msgid "This serial number is already in use."
+msgstr ""
+
+#: .\apps\realtime\forms.py:247 .\apps\realtime\forms.py:250
+msgid "Device with this Imei already exists."
+msgstr ""
+
+#: .\apps\realtime\forms.py:522 .\apps\realtime\forms.py:546
+msgid "Please select an asset."
+msgstr ""
+
+#: .\apps\realtime\models.py:51
+msgid "operator"
+msgstr ""
+
+#: .\apps\realtime\models.py:88
+msgid "ICCID or serial number"
+msgstr ""
+
+#: .\apps\realtime\models.py:91 .\apps\whitelabel\models.py:256
+msgid "phone number"
+msgstr ""
+
+#: .\apps\realtime\models.py:93 .\apps\realtime\models.py:171
+#: .\apps\realtime\models.py:326
+msgid "active"
+msgstr ""
+
+#: .\apps\realtime\models.py:100
+msgid "activate date"
+msgstr ""
+
+#: .\apps\realtime\models.py:104
+msgid "data plan"
+msgstr ""
+
+#: .\apps\realtime\models.py:149 .\apps\realtime\models.py:451
+msgid "imei"
+msgstr ""
+
+#: .\apps\realtime\models.py:154
+msgid "familymodel"
+msgstr ""
+
+#: .\apps\realtime\models.py:166
+msgid "serial number"
+msgstr ""
+
+#: .\apps\realtime\models.py:170
+msgid "firmware"
+msgstr ""
+
+#: .\apps\realtime\models.py:176
+msgid "simcard"
+msgstr ""
+
+#: .\apps\realtime\models.py:203 .\apps\realtime\models.py:456
+#: .\apps\realtime\models.py:572
+#: .\apps\templates\realtime\response_commands\main_response_commands.html:62
+msgid "ip"
+msgstr ""
+
+#: .\apps\realtime\models.py:214
+msgid "Manufacture"
+msgstr ""
+
+#: .\apps\realtime\models.py:225 .\apps\realtime\models.py:241
+#: .\apps\realtime\models.py:284 .\apps\realtime\models.py:453
+#: .\apps\realtime\models.py:502
+#: .\apps\templates\realtime\sending_commands\main_sending_commands.html:77
+msgid "model"
+msgstr ""
+
+#: .\apps\realtime\models.py:226
+msgid "family_uec"
+msgstr ""
+
+#: .\apps\realtime\models.py:227
+msgid "network type"
+msgstr ""
+
+#: .\apps\realtime\models.py:236
+msgid "manufacture"
+msgstr ""
+
+#: .\apps\realtime\models.py:256
+msgid "Gasoline"
+msgstr ""
+
+#: .\apps\realtime\models.py:257
+msgid "Diesel"
+msgstr ""
+
+#: .\apps\realtime\models.py:258
+msgid "Gas"
+msgstr ""
+
+#: .\apps\realtime\models.py:259
+msgid "Electric"
+msgstr ""
+
+#: .\apps\realtime\models.py:260
+msgid "Hybrid"
+msgstr ""
+
+#: .\apps\realtime\models.py:264
+msgid "license "
+msgstr ""
+
+#: .\apps\realtime\models.py:272
+msgid "chassis"
+msgstr ""
+
+#: .\apps\realtime\models.py:275
+msgid "cylinder capacity"
+msgstr ""
+
+#: .\apps\realtime\models.py:278
+msgid "km per gallon"
+msgstr ""
+
+#: .\apps\realtime\models.py:280
+msgid "vehicle type"
+msgstr ""
+
+#: .\apps\realtime\models.py:290
+msgid "brand"
+msgstr ""
+
+#: .\apps\realtime\models.py:293
+msgid "engine serial"
+msgstr ""
+
+#: .\apps\realtime\models.py:297 .\apps\realtime\models.py:597
+msgid "fuel type"
+msgstr ""
+
+#: .\apps\realtime\models.py:301
+msgid "max speed allowed"
+msgstr ""
+
+#: .\apps\realtime\models.py:310
+msgid "insurance"
+msgstr ""
+
+#: .\apps\realtime\models.py:313
+msgid "owner"
+msgstr ""
+
+#: .\apps\realtime\models.py:316
+msgid "fuel tank capacity"
+msgstr ""
+
+#: .\apps\realtime\models.py:321
+msgid "icon"
+msgstr ""
+
+#: .\apps\realtime\models.py:327
+msgid "color"
+msgstr ""
+
+#: .\apps\realtime\models.py:331
+msgid "line"
+msgstr ""
+
+#: .\apps\realtime\models.py:332
+msgid "camera"
+msgstr ""
+
+#: .\apps\realtime\models.py:333
+msgid "asset type"
+msgstr ""
+
+#: .\apps\realtime\models.py:334
+msgid "microphone"
+msgstr ""
+
+#: .\apps\realtime\models.py:336
+msgid "remote shutdown"
+msgstr ""
+
+#: .\apps\realtime\models.py:339
+msgid "Installation date"
+msgstr ""
+
+#: .\apps\realtime\models.py:341 .\apps\realtime\models.py:381
+#: .\apps\realtime\models.py:648 .\apps\realtime\models.py:670
+msgid "Visible"
+msgstr ""
+
+#: .\apps\realtime\models.py:344
+msgid "Capacity"
+msgstr ""
+
+#: .\apps\realtime\models.py:349
+msgid "N° internal"
+msgstr ""
+
+#: .\apps\realtime\models.py:352
+msgid "Alias"
+msgstr ""
+
+#: .\apps\realtime\models.py:379
+msgid "vehicles"
+msgstr ""
+
+#: .\apps\realtime\models.py:434
+msgid "data stream"
+msgstr ""
+
+#: .\apps\realtime\models.py:436 .\apps\realtime\models.py:476
+msgid "info"
+msgstr ""
+
+#: .\apps\realtime\models.py:452
+msgid "manufacturer"
+msgstr ""
+
+#: .\apps\realtime\models.py:454
+msgid "license"
+msgstr ""
+
+#: .\apps\realtime\models.py:455
+msgid "conn_type"
+msgstr ""
+
+#: .\apps\realtime\models.py:457
+msgid "port"
+msgstr ""
+
+#: .\apps\realtime\models.py:458
+msgid "socket"
+msgstr ""
+
+#: .\apps\realtime\models.py:460
+msgid "main_event"
+msgstr ""
+
+#: .\apps\realtime\models.py:461
+msgid "event_name"
+msgstr ""
+
+#: .\apps\realtime\models.py:462
+msgid "server_date"
+msgstr ""
+
+#: .\apps\realtime\models.py:463
+msgid "signal_date"
+msgstr ""
+
+#: .\apps\realtime\models.py:466
+msgid "altitude"
+msgstr ""
+
+#: .\apps\realtime\models.py:467 .\apps\realtime\models.py:602
+msgid "speed"
+msgstr ""
+
+#: .\apps\realtime\models.py:470
+msgid "satellites"
+msgstr ""
+
+#: .\apps\realtime\models.py:471
+msgid "central_alarm"
+msgstr ""
+
+#: .\apps\realtime\models.py:472
+msgid "user_alarm"
+msgstr ""
+
+#: .\apps\realtime\models.py:473
+msgid "geofence"
+msgstr ""
+
+#: .\apps\realtime\models.py:474
+msgid "nearly"
+msgstr ""
+
+#: .\apps\realtime\models.py:475
+msgid "status_events"
+msgstr ""
+
+#: .\apps\realtime\models.py:478
+msgid "unrecognized_events"
+msgstr ""
+
+#: .\apps\realtime\models.py:504 .\apps\realtime\models.py:529
+#: .\apps\templates\realtime\sending_commands\main_sending_commands.html:59
+msgid "command"
+msgstr ""
+
+#: .\apps\realtime\models.py:531
+#: .\apps\templates\realtime\sending_commands\main_sending_commands.html:95
+msgid "status"
+msgstr ""
+
+#: .\apps\realtime\models.py:534
+msgid "shipping date"
+msgstr ""
+
+#: .\apps\realtime\models.py:537 .\apps\realtime\models.py:570
+msgid "answer date"
+msgstr ""
+
+#: .\apps\realtime\models.py:567
+#: .\apps\templates\realtime\response_commands\main_response_commands.html:71
+msgid "response"
+msgstr ""
+
+#: .\apps\realtime\models.py:583
+#: .\apps\templates\realtime\geozones\main_geozone.html:132
+#: .\apps\templates\realtime\geozones\main_geozone.html:231
+msgid "Entry"
+msgstr ""
+
+#: .\apps\realtime\models.py:584
+#: .\apps\templates\realtime\geozones\main_geozone.html:130
+#: .\apps\templates\realtime\geozones\main_geozone.html:230
+msgid "Exit"
+msgstr ""
+
+#: .\apps\realtime\models.py:585
+#: .\apps\templates\realtime\geozones\main_geozone.html:134
+#: .\apps\templates\realtime\geozones\main_geozone.html:232
+msgid "Entry and Exit"
+msgstr ""
+
+#: .\apps\realtime\models.py:588
+msgid "description"
+msgstr ""
+
+#: .\apps\realtime\models.py:601
+msgid "radius"
+msgstr ""
+
+#: .\apps\realtime\models.py:607
+msgid "geographical polygon"
+msgstr ""
+
+#: .\apps\realtime\models.py:614
+msgid "color de geozona"
+msgstr ""
+
+#: .\apps\realtime\models.py:621
+msgid "color de borde"
+msgstr ""
+
+#: .\apps\realtime\models.py:623
+msgid "alarma"
+msgstr ""
+
+#: .\apps\realtime\models.py:625
+msgid "notification by mail"
+msgstr ""
+
+#: .\apps\realtime\models.py:628
+msgid "shape type"
+msgstr ""
+
+#: .\apps\realtime\models.py:668
+msgid "geozones"
+msgstr ""
+
+#: .\apps\realtime\models.py:671
+#: .\apps\templates\authentication\users\user_main.html:105
+msgid "email"
+msgstr ""
+
+#: .\apps\realtime\models.py:674
+msgid "contact name"
+msgstr ""
+
+#: .\apps\realtime\models.py:685
+msgid "geozone"
+msgstr ""
+
+#: .\apps\realtime\models.py:691
+msgid "time entry"
+msgstr ""
+
+#: .\apps\realtime\models.py:695
+msgid "time exit"
+msgstr ""
+
+#: .\apps\realtime\models.py:708
+msgid "info_reports"
+msgstr ""
+
+#: .\apps\realtime\models.py:711
+msgid "info_widgets"
+msgstr ""
+
+#: .\apps\realtime\models.py:713
+msgid "info_io"
+msgstr ""
+
+#: .\apps\realtime\models.py:718
+msgid "asset_name"
+msgstr ""
+
+#: .\apps\realtime\models.py:730 .\apps\realtime\models.py:738
+msgid "Types assets"
+msgstr ""
+
+#: .\apps\realtime\models.py:734
+msgid "Brand"
+msgstr ""
+
+#: .\apps\realtime\models.py:751
+msgid "Brands asset"
+msgstr ""
+
+#: .\apps\realtime\models.py:752
+msgid "Brands assets"
+msgstr ""
+
+#: .\apps\realtime\models.py:756
+msgid "Line"
+msgstr ""
+
+#: .\apps\realtime\models.py:760 .\apps\realtime\models.py:783
+msgid "brands assets"
+msgstr ""
+
+#: .\apps\realtime\models.py:777
+msgid "types assets"
+msgstr ""
+
+#: .\apps\realtime\models.py:789
+msgid "line assets"
+msgstr ""
+
+#: .\apps\templates\authentication\dashboard_test.html:5
+#: .\apps\templates\layouts\navbar.html:83
+#: .\apps\templates\layouts\navbardashboard.html:83
+msgid "Real Time"
+msgstr ""
+
+#: .\apps\templates\authentication\index.html:6
+#: .\apps\templates\authentication\index.html:21
+#: .\apps\templates\authentication\users\user_main.html:153
+#: .\apps\templates\authentication\users\user_main.html:202
+#: .\apps\templates\checkpoints\driver\main_drivers.html:191
+#: .\apps\templates\checkpoints\driver\main_drivers.html:240
+#: .\apps\templates\checkpoints\reportes\report_today.html:171
+#: .\apps\templates\checkpoints\score_configuration\main_score_configuration.html:113
+#: .\apps\templates\checkpoints\score_configuration\main_score_configuration.html:158
+#: .\apps\templates\events\predefined_events\main_events.html:109
+#: .\apps\templates\events\predefined_events\main_events.html:157
+#: .\apps\templates\events\user_events\main_user_events.html:257
+#: .\apps\templates\events\user_events\main_user_events.html:309
+#: .\apps\templates\realtime\dataplan\main_dataplan.html:150
+#: .\apps\templates\realtime\dataplan\main_dataplan.html:198
+#: .\apps\templates\realtime\devices\main_devices.html:179
+#: .\apps\templates\realtime\devices\main_devices.html:226
+#: .\apps\templates\realtime\geozones\main_geozone.html:169
+#: .\apps\templates\realtime\geozones\main_geozone.html:220
+#: .\apps\templates\realtime\group_vehicles\main_group_vehicles.html:114
+#: .\apps\templates\realtime\group_vehicles\main_group_vehicles.html:161
+#: .\apps\templates\realtime\response_commands\main_response_commands.html:123
+#: .\apps\templates\realtime\response_commands\main_response_commands.html:166
+#: .\apps\templates\realtime\sending_commands\add_sending_commands.html:62
+#: .\apps\templates\realtime\sending_commands\main_sending_commands.html:169
+#: .\apps\templates\realtime\sending_commands\main_sending_commands.html:214
+#: .\apps\templates\realtime\simcards\main_simcard.html:169
+#: .\apps\templates\realtime\simcards\main_simcard.html:217
+#: .\apps\templates\realtime\vehicles\main_vehicles.html:196
+#: .\apps\templates\realtime\vehicles\main_vehicles.html:246
+#: .\apps\templates\whitelabel\companies\company_main.html:168
+#: .\apps\templates\whitelabel\companies\company_main.html:347
+#: .\apps\templates\whitelabel\companies\company_main.html:450
+#: .\apps\templates\whitelabel\module\main_module.html:137
+#: .\apps\templates\whitelabel\module\main_module.html:184
+#: .\apps\templates\whitelabel\process\main_process.html:100
+#: .\apps\templates\whitelabel\tickets\add_ticket.html:122
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:301
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:419
+#: .\apps\templates\whitelabel\tickets\main_ticket.html:224
+#: .\apps\templates\whitelabel\tickets\main_ticket.html:268
+#: .\apps\templates\whitelabel\tickets\view_ticket.html:221
+msgid "Home"
+msgstr ""
+
+#: .\apps\templates\authentication\index.html:30
+msgid "To login, please enter your email address."
+msgstr ""
+
+#: .\apps\templates\authentication\index.html:34
+#: .\apps\templates\authentication\login.html:40
+#: .\apps\templates\authentication\password_reset_complete.html:26
+msgid "Log in"
+msgstr ""
+
+#: .\apps\templates\authentication\login.html:6
+msgid "Authentication"
+msgstr ""
+
+#: .\apps\templates\authentication\login.html:24
+#, python-format
+msgid " Hi, %(f)s %(l)s "
+msgstr ""
+
+#: .\apps\templates\authentication\login.html:33
+msgid "Please enter the password for the email:"
+msgstr ""
+
+#: .\apps\templates\authentication\login.html:44
+msgid "Forgot your password?"
+msgstr ""
+
+#: .\apps\templates\authentication\login.html:45
+msgid "Recover"
+msgstr ""
+
+#: .\apps\templates\authentication\password_change.html:6
+#: .\apps\templates\authentication\password_change.html:20
+#: .\apps\templates\authentication\users\password_user.html:21
+msgid "Password change"
+msgstr ""
+
+#: .\apps\templates\authentication\password_change.html:24
+msgid "Please enter your old password."
+msgstr ""
+
+#: .\apps\templates\authentication\password_change.html:32
+#: .\apps\templates\authentication\users\password_user.html:34
+msgid ""
+"Then enter your new password twice so we can verify you typed it in "
+"correctly."
+msgstr ""
+
+#: .\apps\templates\authentication\password_change.html:49
+#: .\apps\templates\authentication\password_reset_confirm.html:45
+#: .\apps\templates\authentication\users\password_user.html:51
+msgid "Change my password"
+msgstr ""
+
+#: .\apps\templates\authentication\password_change_done.html:6
+#: .\apps\templates\authentication\password_change_done.html:20
+msgid "Password change successful"
+msgstr ""
+
+#: .\apps\templates\authentication\password_change_done.html:24
+msgid "Your password was changed."
+msgstr ""
+
+#: .\apps\templates\authentication\password_reset_complete.html:20
+msgid "Password reset successful"
+msgstr ""
+
+#: .\apps\templates\authentication\password_reset_complete.html:25
+msgid "Your password has been set. <br> You may go ahead and log in now."
+msgstr ""
+
+#: .\apps\templates\authentication\password_reset_confirm.html:6
+#: .\apps\templates\authentication\password_reset_confirm.html:20
+msgid "Password reset confirmation"
+msgstr ""
+
+#: .\apps\templates\authentication\password_reset_confirm.html:25
+msgid ""
+"Please enter your new password twice so we can verify you typed it in "
+"correctly."
+msgstr ""
+
+#: .\apps\templates\authentication\password_reset_confirm.html:49
+msgid ""
+"The password reset link was invalid, possibly because it has already been "
+"used. <br><br> Please request a new password reset."
+msgstr ""
+
+#: .\apps\templates\authentication\password_reset_done.html:6
+#: .\apps\templates\authentication\password_reset_done.html:20
+msgid "Password reset sent"
+msgstr ""
+
+#: .\apps\templates\authentication\password_reset_done.html:24
+msgid ""
+"We’ve emailed you instructions for setting your password, if an account "
+"exists with the email you entered. You should receive them shortly."
+msgstr ""
+
+#: .\apps\templates\authentication\password_reset_done.html:25
+msgid ""
+"If you don’t receive an email, please make sure you’ve entered the address "
+"you registered with, and check your spam folder."
+msgstr ""
+
+#: .\apps\templates\authentication\password_reset_form.html:24
+msgid ""
+"Forgotten your password? Enter your email address below, and we’ll email "
+"instructions for setting a new one."
+msgstr ""
+
+#: .\apps\templates\authentication\password_reset_form.html:34
+msgid "Reset my password"
+msgstr ""
+
+#: .\apps\templates\authentication\users\add_user.html:7
+msgid "Add User"
+msgstr ""
+
+#: .\apps\templates\authentication\users\add_user.html:17
+#: .\apps\templates\authentication\users\update_user.html:17
+msgid "User Name:"
+msgstr ""
+
+#: .\apps\templates\authentication\users\add_user.html:25
+#: .\apps\templates\authentication\users\update_user.html:25
+#: .\apps\templates\realtime\dataplan\update_dataplan.html:17
+msgid "Name:"
+msgstr ""
+
+#: .\apps\templates\authentication\users\add_user.html:33
+#: .\apps\templates\authentication\users\update_user.html:33
+msgid "Last Name:"
+msgstr ""
+
+#: .\apps\templates\authentication\users\add_user.html:43
+#: .\apps\templates\authentication\users\update_user.html:41
+msgid "Email:"
+msgstr ""
+
+#: .\apps\templates\authentication\users\add_user.html:51
+#: .\apps\templates\checkpoints\driver\add_driver.html:63
+#: .\apps\templates\checkpoints\driver\update_driver.html:63
+msgid "Password:"
+msgstr ""
+
+#: .\apps\templates\authentication\users\add_user.html:64
+msgid "Confirm Password:"
+msgstr ""
+
+#: .\apps\templates\authentication\users\add_user.html:79
+#: .\apps\templates\authentication\users\update_user.html:51
+#: .\apps\templates\checkpoints\driver\add_driver.html:15
+#: .\apps\templates\checkpoints\driver\update_driver.html:15
+#: .\apps\templates\checkpoints\reportes\report_driver.html:29
+#: .\apps\templates\checkpoints\reportes\report_today.html:20
+#: .\apps\templates\checkpoints\reportes\report_today_copy.html:35
+#: .\apps\templates\events\user_events\add_user_events.html:15
+#: .\apps\templates\events\user_events\update_user_events.html:15
+#: .\apps\templates\realtime\dataplan\add_dataplan.html:49
+#: .\apps\templates\realtime\dataplan\update_dataplan.html:49
+#: .\apps\templates\realtime\devices\add_device.html:27
+#: .\apps\templates\realtime\devices\update_device.html:27
+#: .\apps\templates\realtime\simcards\add_simcard.html:22
+#: .\apps\templates\realtime\simcards\update_simcard.html:22
+#: .\apps\templates\realtime\vehicles\add_vehicle.html:46
+#: .\apps\templates\realtime\vehicles\update_vehicle.html:48
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:46
+msgid "Company:"
+msgstr ""
+
+#: .\apps\templates\authentication\users\add_user.html:87
+#: .\apps\templates\authentication\users\update_user.html:59
+msgid "Alarm:"
+msgstr ""
+
+#: .\apps\templates\authentication\users\add_user.html:95
+#: .\apps\templates\authentication\users\update_user.html:68
+msgid "Area or process:"
+msgstr ""
+
+#: .\apps\templates\authentication\users\add_user.html:102
+#: .\apps\templates\authentication\users\update_user.html:76
+#: .\apps\templates\checkpoints\driver\add_driver.html:71
+#: .\apps\templates\checkpoints\driver\update_driver.html:71
+#: .\apps\templates\realtime\devices\add_device.html:80
+#: .\apps\templates\realtime\devices\update_device.html:85
+#: .\apps\templates\realtime\simcards\add_simcard.html:46
+#: .\apps\templates\realtime\simcards\update_simcard.html:47
+#: .\apps\templates\realtime\vehicles\update_vehicle.html:163
+msgid "Is active?"
+msgstr ""
+
+#: .\apps\templates\authentication\users\add_user.html:110
+#: .\apps\templates\authentication\users\update_user.html:85
+msgid "Company to Monitor:"
+msgstr ""
+
+#: .\apps\templates\authentication\users\add_user.html:137
+#: .\apps\templates\authentication\users\update_user.html:112
+msgid "Assets to Monitor:"
+msgstr ""
+
+#: .\apps\templates\authentication\users\add_user.html:164
+#: .\apps\templates\authentication\users\update_user.html:139
+msgid "Group Assets:"
+msgstr ""
+
+#: .\apps\templates\authentication\users\add_user.html:192
+#: .\apps\templates\authentication\users\update_permissions.html:104
+#: .\apps\templates\authentication\users\update_user.html:167
+#: .\apps\templates\authentication\users\user_permissions.html:109
+#: .\apps\templates\checkpoints\driver\add_driver.html:85
+#: .\apps\templates\checkpoints\driver\update_driver.html:85
+#: .\apps\templates\checkpoints\driver_analytic\assign_driver.html:52
+#: .\apps\templates\checkpoints\driver_analytic\button_view.html:42
+#: .\apps\templates\checkpoints\driver_analytic\update_assign.html:61
+#: .\apps\templates\checkpoints\driver_analytic\update_vehicle_assign.html:54
+#: .\apps\templates\checkpoints\score_configuration\update_score_configuration.html:116
+#: .\apps\templates\events\predefined_events\add_events.html:40
+#: .\apps\templates\events\predefined_events\update_events.html:40
+#: .\apps\templates\events\user_events\add_user_events.html:121
+#: .\apps\templates\events\user_events\update_user_events.html:121
+#: .\apps\templates\realtime\custom_report\update_configuration_report.html:111
+#: .\apps\templates\realtime\dataplan\add_dataplan.html:57
+#: .\apps\templates\realtime\dataplan\update_dataplan.html:57
+#: .\apps\templates\realtime\devices\add_device.html:93
+#: .\apps\templates\realtime\devices\update_device.html:100
+#: .\apps\templates\realtime\geozones\add_geozone.html:76
+#: .\apps\templates\realtime\geozones\update_geozone.html:91
+#: .\apps\templates\realtime\group_vehicles\add_group_vehicles.html:56
+#: .\apps\templates\realtime\group_vehicles\update_group_vehicles.html:56
+#: .\apps\templates\realtime\sending_commands\add_sending_commands.html:41
+#: .\apps\templates\realtime\simcards\add_simcard.html:68
+#: .\apps\templates\realtime\simcards\update_simcard.html:69
+#: .\apps\templates\realtime\vehicles\add_vehicle.html:193
+#: .\apps\templates\realtime\vehicles\update_vehicle.html:202
+#: .\apps\templates\whitelabel\companies\add_company.html:91
+#: .\apps\templates\whitelabel\companies\company_update.html:93
+#: .\apps\templates\whitelabel\companies\company_update_logo.html:33
+#: .\apps\templates\whitelabel\companies\keymap.html:29
+#: .\apps\templates\whitelabel\module\update_module.html:55
+#: .\apps\templates\whitelabel\process\main_process.html:31
+#: .\apps\templates\whitelabel\process\update_process.html:31
+#: .\apps\templates\whitelabel\theme\theme.html:92
+#: .\apps\templates\whitelabel\tickets\add_ticket.html:72
+msgid "Save"
+msgstr ""
+
+#: .\apps\templates\authentication\users\delete_user.html:12
+msgid "¿Are you sure you want to delete the user"
+msgstr ""
+
+#: .\apps\templates\authentication\users\delete_user.html:14
+#: .\apps\templates\checkpoints\driver\delete_driver.html:14
+#: .\apps\templates\events\predefined_events\delete_events.html:14
+#: .\apps\templates\events\user_events\delete_user_events.html:15
+#: .\apps\templates\realtime\dataplan\delete_dataplan.html:14
+#: .\apps\templates\realtime\devices\delete_devices.html:14
+#: .\apps\templates\realtime\geozones\delete_geozone.html:14
+#: .\apps\templates\realtime\group_vehicles\delete_group_vehicles.html:14
+#: .\apps\templates\realtime\simcards\delete_simcard.html:14
+#: .\apps\templates\realtime\vehicles\delete_vehicle.html:14
+#: .\apps\templates\whitelabel\companies\company_delete.html:17
+#: .\apps\templates\whitelabel\module\delete_module.html:19
+#: .\apps\templates\whitelabel\process\delete_process.html:14
+msgid "Confirm"
+msgstr ""
+
+#: .\apps\templates\authentication\users\delete_user.html:15
+#: .\apps\templates\checkpoints\driver\delete_driver.html:15
+#: .\apps\templates\events\predefined_events\delete_events.html:15
+#: .\apps\templates\events\user_events\delete_user_events.html:16
+#: .\apps\templates\realtime\custom_report\update_configuration_report.html:113
+#: .\apps\templates\realtime\dataplan\delete_dataplan.html:15
+#: .\apps\templates\realtime\devices\delete_devices.html:15
+#: .\apps\templates\realtime\geozones\delete_geozone.html:15
+#: .\apps\templates\realtime\group_vehicles\delete_group_vehicles.html:15
+#: .\apps\templates\realtime\simcards\delete_simcard.html:15
+#: .\apps\templates\realtime\vehicles\delete_vehicle.html:15
+#: .\apps\templates\whitelabel\companies\company_delete.html:24
+#: .\apps\templates\whitelabel\module\delete_module.html:21
+#: .\apps\templates\whitelabel\process\delete_process.html:15
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:355
+msgid "Cancel"
+msgstr ""
+
+#: .\apps\templates\authentication\users\profile_user.html:25
+msgid ""
+"The image should be in PNG, JPG, or JPEG format and weigh less than 2 MB."
+msgstr ""
+
+#: .\apps\templates\authentication\users\profile_user.html:42
+msgid "User information"
+msgstr ""
+
+#: .\apps\templates\authentication\users\profile_user.html:44
+msgid "Id: "
+msgstr ""
+
+#: .\apps\templates\authentication\users\profile_user.html:45
+msgid "Name: "
+msgstr ""
+
+#: .\apps\templates\authentication\users\profile_user.html:46
+msgid "Email: "
+msgstr ""
+
+#: .\apps\templates\authentication\users\profile_user.html:47
+msgid "Registration Date: "
+msgstr ""
+
+#: .\apps\templates\authentication\users\profile_user.html:52
+msgid "Change password"
+msgstr ""
+
+#: .\apps\templates\authentication\users\profile_user.html:58
+#: .\apps\templates\whitelabel\companies\company_main.html:408
+msgid "Name of the company: "
+msgstr ""
+
+#: .\apps\templates\authentication\users\profile_user.html:59
+#: .\apps\templates\whitelabel\companies\company_main.html:409
+msgid "Legal representative:"
+msgstr ""
+
+#: .\apps\templates\authentication\users\profile_user.html:60
+#: .\apps\templates\whitelabel\companies\company_main.html:407
+msgid "NIT:"
+msgstr ""
+
+#: .\apps\templates\authentication\users\profile_user.html:61
+#: .\apps\templates\checkpoints\driver\add_driver.html:57
+#: .\apps\templates\checkpoints\driver\update_driver.html:57
+#: .\apps\templates\whitelabel\companies\company_main.html:410
+msgid "Address:"
+msgstr ""
+
+#: .\apps\templates\authentication\users\profile_user.html:62
+#: .\apps\templates\whitelabel\companies\company_main.html:411
+msgid "Country:"
+msgstr ""
+
+#: .\apps\templates\authentication\users\profile_user.html:63
+msgid "Modules:"
+msgstr ""
+
+#: .\apps\templates\authentication\users\profile_user.html:67
+msgid "Save changes"
+msgstr ""
+
+#: .\apps\templates\authentication\users\update_permissions.html:7
+#: .\apps\templates\authentication\users\user_permissions.html:7
+msgid "Permissions User: "
+msgstr ""
+
+#: .\apps\templates\authentication\users\update_permissions.html:37
+#: .\apps\templates\authentication\users\user_permissions.html:36
+#: .\apps\templates\whitelabel\module\main_module.html:70
+#: .\apps\whitelabel\forms.py:32 .\apps\whitelabel\forms.py:74
+#: .\apps\whitelabel\forms.py:151 .\apps\whitelabel\forms.py:191
+msgid "Modules"
+msgstr ""
+
+#: .\apps\templates\authentication\users\update_permissions.html:40
+#: .\apps\templates\authentication\users\user_permissions.html:39
+msgid "Add"
+msgstr ""
+
+#: .\apps\templates\authentication\users\update_permissions.html:43
+#: .\apps\templates\authentication\users\user_permissions.html:42
+msgid "Update"
+msgstr ""
+
+#: .\apps\templates\authentication\users\update_permissions.html:46
+#: .\apps\templates\authentication\users\user_permissions.html:45
+msgid "Delete"
+msgstr ""
+
+#: .\apps\templates\authentication\users\update_permissions.html:49
+#: .\apps\templates\authentication\users\user_permissions.html:48
+msgid "View"
+msgstr ""
+
+#: .\apps\templates\authentication\users\update_permissions.html:52
+#: .\apps\templates\authentication\users\user_permissions.html:51
+#: .\apps\templates\checkpoints\reportes\report_today.html:274
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:48
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:57
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:65
+msgid "All"
+msgstr ""
+
+#: .\apps\templates\authentication\users\update_user.html:7
+msgid "Update User"
+msgstr ""
+
+#: .\apps\templates\authentication\users\user_main.html:6
+#: .\apps\templates\authentication\users\user_main.html:17
+#: .\apps\templates\layouts\navbar.html:100
+#: .\apps\templates\layouts\navbardashboard.html:100
+msgid "Users"
+msgstr ""
+
+#: .\apps\templates\authentication\users\user_main.html:26
+#: .\apps\templates\checkpoints\driver\main_drivers.html:23
+#: .\apps\templates\checkpoints\score_configuration\main_score_configuration.html:24
+#: .\apps\templates\events\predefined_events\main_events.html:25
+#: .\apps\templates\events\user_events\main_user_events.html:25
+#: .\apps\templates\realtime\dataplan\main_dataplan.html:25
+#: .\apps\templates\realtime\devices\main_devices.html:25
+#: .\apps\templates\realtime\geozones\main_geozone.html:23
+#: .\apps\templates\realtime\group_vehicles\main_group_vehicles.html:25
+#: .\apps\templates\realtime\response_commands\main_response_commands.html:24
+#: .\apps\templates\realtime\sending_commands\main_sending_commands.html:24
+#: .\apps\templates\realtime\simcards\main_simcard.html:25
+#: .\apps\templates\realtime\vehicles\main_vehicles.html:25
+#: .\apps\templates\whitelabel\companies\company_main.html:35
+#: .\apps\templates\whitelabel\companies\company_main.html:234
+#: .\apps\templates\whitelabel\module\main_module.html:25
+#: .\apps\templates\whitelabel\process\main_process.html:42
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:24
+#: .\apps\templates\whitelabel\tickets\main_ticket.html:24
+msgid "Show"
+msgstr ""
+
+#: .\apps\templates\authentication\users\user_main.html:33
+#: .\apps\templates\checkpoints\driver\main_drivers.html:30
+#: .\apps\templates\checkpoints\score_configuration\main_score_configuration.html:31
+#: .\apps\templates\events\predefined_events\main_events.html:32
+#: .\apps\templates\events\user_events\main_user_events.html:32
+#: .\apps\templates\realtime\dataplan\main_dataplan.html:32
+#: .\apps\templates\realtime\devices\main_devices.html:32
+#: .\apps\templates\realtime\geozones\main_geozone.html:30
+#: .\apps\templates\realtime\group_vehicles\main_group_vehicles.html:32
+#: .\apps\templates\realtime\response_commands\main_response_commands.html:31
+#: .\apps\templates\realtime\sending_commands\main_sending_commands.html:31
+#: .\apps\templates\realtime\simcards\main_simcard.html:32
+#: .\apps\templates\realtime\vehicles\main_vehicles.html:32
+#: .\apps\templates\whitelabel\companies\company_main.html:42
+#: .\apps\templates\whitelabel\companies\company_main.html:241
+#: .\apps\templates\whitelabel\module\main_module.html:32
+#: .\apps\templates\whitelabel\process\main_process.html:49
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:31
+#: .\apps\templates\whitelabel\tickets\main_ticket.html:31
+msgid "results"
+msgstr ""
+
+#: .\apps\templates\authentication\users\user_main.html:40
+msgid "Add Users"
+msgstr ""
+
+#: .\apps\templates\authentication\users\user_main.html:45
+#: .\apps\templates\checkpoints\driver\main_drivers.html:45
+#: .\apps\templates\checkpoints\reportes\report_driver.html:87
+#: .\apps\templates\checkpoints\reportes\report_today.html:69
+#: .\apps\templates\checkpoints\score_configuration\main_score_configuration.html:38
+#: .\apps\templates\events\predefined_events\main_events.html:42
+#: .\apps\templates\events\user_events\main_user_events.html:47
+#: .\apps\templates\realtime\custom_report\update_configuration_report.html:50
+#: .\apps\templates\realtime\custom_report\update_configuration_report.html:82
+#: .\apps\templates\realtime\dataplan\main_dataplan.html:44
+#: .\apps\templates\realtime\devices\main_devices.html:44
+#: .\apps\templates\realtime\geozones\main_geozone.html:42
+#: .\apps\templates\realtime\group_vehicles\main_group_vehicles.html:44
+#: .\apps\templates\realtime\response_commands\main_response_commands.html:38
+#: .\apps\templates\realtime\sending_commands\main_sending_commands.html:44
+#: .\apps\templates\realtime\simcards\main_simcard.html:44
+#: .\apps\templates\realtime\vehicles\main_vehicles.html:47
+#: .\apps\templates\whitelabel\companies\company_main.html:57
+#: .\apps\templates\whitelabel\companies\company_main.html:255
+#: .\apps\templates\whitelabel\module\main_module.html:39
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:84
+#: .\apps\templates\whitelabel\tickets\main_ticket.html:42
+msgid "Search..."
+msgstr ""
+
+#: .\apps\templates\authentication\users\user_main.html:69
+msgid "process"
+msgstr ""
+
+#: .\apps\templates\authentication\users\user_main.html:78
+msgid "username"
+msgstr ""
+
+#: .\apps\templates\authentication\users\user_main.html:146
+#: .\apps\templates\authentication\users\user_main.html:210
+#: .\apps\templates\checkpoints\driver\main_drivers.html:184
+#: .\apps\templates\checkpoints\driver\main_drivers.html:248
+#: .\apps\templates\checkpoints\reportes\report_today.html:207
+#: .\apps\templates\checkpoints\score_configuration\main_score_configuration.html:106
+#: .\apps\templates\checkpoints\score_configuration\main_score_configuration.html:166
+#: .\apps\templates\events\predefined_events\main_events.html:102
+#: .\apps\templates\events\predefined_events\main_events.html:165
+#: .\apps\templates\events\user_events\main_user_events.html:250
+#: .\apps\templates\events\user_events\main_user_events.html:317
+#: .\apps\templates\realtime\dataplan\main_dataplan.html:143
+#: .\apps\templates\realtime\dataplan\main_dataplan.html:206
+#: .\apps\templates\realtime\devices\main_devices.html:172
+#: .\apps\templates\realtime\devices\main_devices.html:234
+#: .\apps\templates\realtime\geozones\main_geozone.html:162
+#: .\apps\templates\realtime\geozones\main_geozone.html:234
+#: .\apps\templates\realtime\group_vehicles\main_group_vehicles.html:107
+#: .\apps\templates\realtime\group_vehicles\main_group_vehicles.html:169
+#: .\apps\templates\realtime\response_commands\main_response_commands.html:116
+#: .\apps\templates\realtime\response_commands\main_response_commands.html:174
+#: .\apps\templates\realtime\sending_commands\add_sending_commands.html:70
+#: .\apps\templates\realtime\sending_commands\main_sending_commands.html:162
+#: .\apps\templates\realtime\sending_commands\main_sending_commands.html:222
+#: .\apps\templates\realtime\simcards\main_simcard.html:162
+#: .\apps\templates\realtime\simcards\main_simcard.html:225
+#: .\apps\templates\realtime\vehicles\main_vehicles.html:189
+#: .\apps\templates\realtime\vehicles\main_vehicles.html:254
+#: .\apps\templates\whitelabel\companies\company_main.html:161
+#: .\apps\templates\whitelabel\companies\company_main.html:340
+#: .\apps\templates\whitelabel\companies\company_main.html:458
+#: .\apps\templates\whitelabel\module\main_module.html:130
+#: .\apps\templates\whitelabel\module\main_module.html:192
+#: .\apps\templates\whitelabel\process\main_process.html:93
+#: .\apps\templates\whitelabel\tickets\add_ticket.html:128
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:293
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:426
+#: .\apps\templates\whitelabel\tickets\main_ticket.html:217
+#: .\apps\templates\whitelabel\tickets\main_ticket.html:276
+#: .\apps\templates\whitelabel\tickets\view_ticket.html:228
+msgid "Displaying"
+msgstr ""
+
+#: .\apps\templates\authentication\users\user_main.html:146
+#: .\apps\templates\authentication\users\user_main.html:207
+#: .\apps\templates\checkpoints\driver\main_drivers.html:184
+#: .\apps\templates\checkpoints\driver\main_drivers.html:245
+#: .\apps\templates\checkpoints\reportes\report_today.html:207
+#: .\apps\templates\checkpoints\score_configuration\main_score_configuration.html:106
+#: .\apps\templates\checkpoints\score_configuration\main_score_configuration.html:163
+#: .\apps\templates\events\predefined_events\main_events.html:102
+#: .\apps\templates\events\predefined_events\main_events.html:162
+#: .\apps\templates\events\user_events\main_user_events.html:250
+#: .\apps\templates\events\user_events\main_user_events.html:314
+#: .\apps\templates\realtime\dataplan\main_dataplan.html:143
+#: .\apps\templates\realtime\dataplan\main_dataplan.html:203
+#: .\apps\templates\realtime\devices\main_devices.html:172
+#: .\apps\templates\realtime\devices\main_devices.html:231
+#: .\apps\templates\realtime\geozones\main_geozone.html:162
+#: .\apps\templates\realtime\geozones\main_geozone.html:225
+#: .\apps\templates\realtime\group_vehicles\main_group_vehicles.html:107
+#: .\apps\templates\realtime\group_vehicles\main_group_vehicles.html:166
+#: .\apps\templates\realtime\response_commands\main_response_commands.html:116
+#: .\apps\templates\realtime\response_commands\main_response_commands.html:171
+#: .\apps\templates\realtime\sending_commands\add_sending_commands.html:67
+#: .\apps\templates\realtime\sending_commands\main_sending_commands.html:162
+#: .\apps\templates\realtime\sending_commands\main_sending_commands.html:219
+#: .\apps\templates\realtime\simcards\main_simcard.html:162
+#: .\apps\templates\realtime\simcards\main_simcard.html:222
+#: .\apps\templates\realtime\vehicles\main_vehicles.html:189
+#: .\apps\templates\realtime\vehicles\main_vehicles.html:251
+#: .\apps\templates\whitelabel\companies\company_main.html:161
+#: .\apps\templates\whitelabel\companies\company_main.html:340
+#: .\apps\templates\whitelabel\companies\company_main.html:455
+#: .\apps\templates\whitelabel\module\main_module.html:130
+#: .\apps\templates\whitelabel\module\main_module.html:189
+#: .\apps\templates\whitelabel\process\main_process.html:93
+#: .\apps\templates\whitelabel\tickets\add_ticket.html:125
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:293
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:422
+#: .\apps\templates\whitelabel\tickets\main_ticket.html:217
+#: .\apps\templates\whitelabel\tickets\main_ticket.html:272
+#: .\apps\templates\whitelabel\tickets\view_ticket.html:224
+msgid "to"
+msgstr ""
+
+#: .\apps\templates\authentication\users\user_main.html:146
+#: .\apps\templates\authentication\users\user_main.html:208
+#: .\apps\templates\checkpoints\driver\main_drivers.html:184
+#: .\apps\templates\checkpoints\driver\main_drivers.html:246
+#: .\apps\templates\checkpoints\reportes\report_today.html:207
+#: .\apps\templates\checkpoints\score_configuration\main_score_configuration.html:106
+#: .\apps\templates\checkpoints\score_configuration\main_score_configuration.html:164
+#: .\apps\templates\events\predefined_events\main_events.html:102
+#: .\apps\templates\events\predefined_events\main_events.html:163
+#: .\apps\templates\events\user_events\main_user_events.html:250
+#: .\apps\templates\events\user_events\main_user_events.html:315
+#: .\apps\templates\realtime\dataplan\main_dataplan.html:143
+#: .\apps\templates\realtime\dataplan\main_dataplan.html:204
+#: .\apps\templates\realtime\devices\main_devices.html:172
+#: .\apps\templates\realtime\devices\main_devices.html:232
+#: .\apps\templates\realtime\geozones\main_geozone.html:162
+#: .\apps\templates\realtime\geozones\main_geozone.html:226
+#: .\apps\templates\realtime\group_vehicles\main_group_vehicles.html:107
+#: .\apps\templates\realtime\group_vehicles\main_group_vehicles.html:167
+#: .\apps\templates\realtime\response_commands\main_response_commands.html:116
+#: .\apps\templates\realtime\response_commands\main_response_commands.html:172
+#: .\apps\templates\realtime\sending_commands\add_sending_commands.html:68
+#: .\apps\templates\realtime\sending_commands\main_sending_commands.html:162
+#: .\apps\templates\realtime\sending_commands\main_sending_commands.html:220
+#: .\apps\templates\realtime\simcards\main_simcard.html:162
+#: .\apps\templates\realtime\simcards\main_simcard.html:223
+#: .\apps\templates\realtime\vehicles\main_vehicles.html:189
+#: .\apps\templates\realtime\vehicles\main_vehicles.html:252
+#: .\apps\templates\whitelabel\companies\company_main.html:161
+#: .\apps\templates\whitelabel\companies\company_main.html:340
+#: .\apps\templates\whitelabel\companies\company_main.html:456
+#: .\apps\templates\whitelabel\module\main_module.html:130
+#: .\apps\templates\whitelabel\module\main_module.html:190
+#: .\apps\templates\whitelabel\process\main_process.html:93
+#: .\apps\templates\whitelabel\tickets\add_ticket.html:126
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:293
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:423
+#: .\apps\templates\whitelabel\tickets\main_ticket.html:217
+#: .\apps\templates\whitelabel\tickets\main_ticket.html:273
+#: .\apps\templates\whitelabel\tickets\view_ticket.html:225
+msgid "of"
+msgstr ""
+
+#: .\apps\templates\authentication\users\user_main.html:146
+#: .\apps\templates\checkpoints\driver\main_drivers.html:184
+#: .\apps\templates\checkpoints\reportes\report_today.html:207
+#: .\apps\templates\checkpoints\score_configuration\main_score_configuration.html:106
+#: .\apps\templates\events\predefined_events\main_events.html:102
+#: .\apps\templates\events\user_events\main_user_events.html:250
+#: .\apps\templates\realtime\dataplan\main_dataplan.html:143
+#: .\apps\templates\realtime\devices\main_devices.html:172
+#: .\apps\templates\realtime\geozones\main_geozone.html:162
+#: .\apps\templates\realtime\group_vehicles\main_group_vehicles.html:107
+#: .\apps\templates\realtime\response_commands\main_response_commands.html:116
+#: .\apps\templates\realtime\sending_commands\main_sending_commands.html:162
+#: .\apps\templates\realtime\simcards\main_simcard.html:162
+#: .\apps\templates\realtime\vehicles\main_vehicles.html:189
+#: .\apps\templates\whitelabel\companies\company_main.html:161
+#: .\apps\templates\whitelabel\companies\company_main.html:340
+#: .\apps\templates\whitelabel\module\main_module.html:130
+#: .\apps\templates\whitelabel\process\main_process.html:93
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:293
+#: .\apps\templates\whitelabel\tickets\main_ticket.html:217
+msgid "items."
+msgstr ""
+
+#: .\apps\templates\authentication\users\user_main.html:173
+#: .\apps\templates\authentication\users\user_main.html:201
+#: .\apps\templates\checkpoints\driver\main_drivers.html:211
+#: .\apps\templates\checkpoints\driver\main_drivers.html:239
+#: .\apps\templates\checkpoints\reportes\report_today.html:199
+#: .\apps\templates\checkpoints\score_configuration\main_score_configuration.html:133
+#: .\apps\templates\checkpoints\score_configuration\main_score_configuration.html:157
+#: .\apps\templates\events\predefined_events\main_events.html:129
+#: .\apps\templates\events\predefined_events\main_events.html:156
+#: .\apps\templates\events\user_events\main_user_events.html:277
+#: .\apps\templates\events\user_events\main_user_events.html:308
+#: .\apps\templates\realtime\dataplan\main_dataplan.html:170
+#: .\apps\templates\realtime\dataplan\main_dataplan.html:197
+#: .\apps\templates\realtime\devices\main_devices.html:199
+#: .\apps\templates\realtime\devices\main_devices.html:225
+#: .\apps\templates\realtime\geozones\main_geozone.html:189
+#: .\apps\templates\realtime\geozones\main_geozone.html:219
+#: .\apps\templates\realtime\group_vehicles\main_group_vehicles.html:134
+#: .\apps\templates\realtime\group_vehicles\main_group_vehicles.html:160
+#: .\apps\templates\realtime\response_commands\main_response_commands.html:143
+#: .\apps\templates\realtime\response_commands\main_response_commands.html:165
+#: .\apps\templates\realtime\sending_commands\add_sending_commands.html:61
+#: .\apps\templates\realtime\sending_commands\main_sending_commands.html:189
+#: .\apps\templates\realtime\sending_commands\main_sending_commands.html:213
+#: .\apps\templates\realtime\simcards\main_simcard.html:189
+#: .\apps\templates\realtime\simcards\main_simcard.html:216
+#: .\apps\templates\realtime\vehicles\main_vehicles.html:216
+#: .\apps\templates\realtime\vehicles\main_vehicles.html:245
+#: .\apps\templates\whitelabel\companies\company_main.html:188
+#: .\apps\templates\whitelabel\companies\company_main.html:367
+#: .\apps\templates\whitelabel\companies\company_main.html:449
+#: .\apps\templates\whitelabel\module\main_module.html:157
+#: .\apps\templates\whitelabel\module\main_module.html:183
+#: .\apps\templates\whitelabel\process\main_process.html:116
+#: .\apps\templates\whitelabel\tickets\add_ticket.html:121
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:325
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:418
+#: .\apps\templates\whitelabel\tickets\main_ticket.html:244
+#: .\apps\templates\whitelabel\tickets\main_ticket.html:269
+#: .\apps\templates\whitelabel\tickets\view_ticket.html:220
+msgid "End"
+msgstr ""
+
+#: .\apps\templates\authentication\users\user_main.html:203
+#: .\apps\templates\checkpoints\driver\main_drivers.html:241
+#: .\apps\templates\checkpoints\score_configuration\main_score_configuration.html:159
+#: .\apps\templates\events\predefined_events\main_events.html:158
+#: .\apps\templates\events\user_events\main_user_events.html:310
+#: .\apps\templates\realtime\dataplan\main_dataplan.html:199
+#: .\apps\templates\realtime\devices\main_devices.html:227
+#: .\apps\templates\realtime\geozones\main_geozone.html:221
+#: .\apps\templates\realtime\group_vehicles\main_group_vehicles.html:162
+#: .\apps\templates\realtime\response_commands\main_response_commands.html:167
+#: .\apps\templates\realtime\sending_commands\add_sending_commands.html:63
+#: .\apps\templates\realtime\sending_commands\main_sending_commands.html:215
+#: .\apps\templates\realtime\simcards\main_simcard.html:218
+#: .\apps\templates\realtime\vehicles\main_vehicles.html:247
+#: .\apps\templates\whitelabel\companies\company_main.html:451
+#: .\apps\templates\whitelabel\module\main_module.html:185
+#: .\apps\templates\whitelabel\tickets\add_ticket.html:123
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:58
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:249
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:420
+#: .\apps\templates\whitelabel\tickets\list_tickets.html:39
+#: .\apps\templates\whitelabel\tickets\main_ticket.html:186
+#: .\apps\templates\whitelabel\tickets\main_ticket.html:270
+#: .\apps\templates\whitelabel\tickets\view_ticket.html:68
+#: .\apps\templates\whitelabel\tickets\view_ticket.html:222
+msgid "Open"
+msgstr ""
+
+#: .\apps\templates\authentication\users\user_main.html:204
+#: .\apps\templates\checkpoints\driver\main_drivers.html:242
+#: .\apps\templates\checkpoints\score_configuration\main_score_configuration.html:160
+#: .\apps\templates\events\predefined_events\main_events.html:159
+#: .\apps\templates\events\user_events\main_user_events.html:311
+#: .\apps\templates\realtime\dataplan\main_dataplan.html:200
+#: .\apps\templates\realtime\devices\main_devices.html:228
+#: .\apps\templates\realtime\geozones\main_geozone.html:222
+#: .\apps\templates\realtime\group_vehicles\main_group_vehicles.html:163
+#: .\apps\templates\realtime\response_commands\main_response_commands.html:168
+#: .\apps\templates\realtime\sending_commands\add_sending_commands.html:64
+#: .\apps\templates\realtime\sending_commands\main_sending_commands.html:216
+#: .\apps\templates\realtime\simcards\main_simcard.html:219
+#: .\apps\templates\realtime\vehicles\main_vehicles.html:248
+#: .\apps\templates\whitelabel\companies\company_main.html:452
+#: .\apps\templates\whitelabel\module\main_module.html:186
+#: .\apps\templates\whitelabel\tickets\add_ticket.html:124
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:59
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:251
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:421
+#: .\apps\templates\whitelabel\tickets\list_tickets.html:41
+#: .\apps\templates\whitelabel\tickets\main_ticket.html:188
+#: .\apps\templates\whitelabel\tickets\main_ticket.html:271
+#: .\apps\templates\whitelabel\tickets\view_ticket.html:70
+#: .\apps\templates\whitelabel\tickets\view_ticket.html:223
+msgid "Closed"
+msgstr ""
+
+#: .\apps\templates\authentication\users\user_main.html:205
+#: .\apps\templates\checkpoints\driver\main_drivers.html:168
+#: .\apps\templates\checkpoints\driver\main_drivers.html:243
+#: .\apps\templates\checkpoints\score_configuration\main_score_configuration.html:161
+#: .\apps\templates\events\user_events\main_user_events.html:312
+#: .\apps\templates\realtime\dataplan\main_dataplan.html:201
+#: .\apps\templates\realtime\devices\main_devices.html:229
+#: .\apps\templates\realtime\geozones\main_geozone.html:223
+#: .\apps\templates\realtime\group_vehicles\main_group_vehicles.html:164
+#: .\apps\templates\realtime\simcards\main_simcard.html:150
+#: .\apps\templates\realtime\simcards\main_simcard.html:220
+#: .\apps\templates\realtime\vehicles\main_vehicles.html:176
+#: .\apps\templates\realtime\vehicles\main_vehicles.html:249
+#: .\apps\templates\whitelabel\companies\company_main.html:453
+#: .\apps\templates\whitelabel\module\main_module.html:187
+msgid "Inactive"
+msgstr ""
+
+#: .\apps\templates\authentication\users\user_main.html:209
+#: .\apps\templates\checkpoints\driver\main_drivers.html:247
+#: .\apps\templates\checkpoints\score_configuration\main_score_configuration.html:165
+#: .\apps\templates\events\predefined_events\main_events.html:164
+#: .\apps\templates\events\user_events\main_user_events.html:316
+#: .\apps\templates\realtime\dataplan\main_dataplan.html:205
+#: .\apps\templates\realtime\devices\main_devices.html:233
+#: .\apps\templates\realtime\geozones\main_geozone.html:233
+#: .\apps\templates\realtime\group_vehicles\main_group_vehicles.html:168
+#: .\apps\templates\realtime\response_commands\main_response_commands.html:173
+#: .\apps\templates\realtime\sending_commands\add_sending_commands.html:69
+#: .\apps\templates\realtime\sending_commands\main_sending_commands.html:221
+#: .\apps\templates\realtime\simcards\main_simcard.html:224
+#: .\apps\templates\realtime\vehicles\main_vehicles.html:253
+#: .\apps\templates\whitelabel\companies\company_main.html:457
+#: .\apps\templates\whitelabel\module\main_module.html:191
+#: .\apps\templates\whitelabel\tickets\add_ticket.html:127
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:67
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:244
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:424
+#: .\apps\templates\whitelabel\tickets\list_tickets.html:34
+#: .\apps\templates\whitelabel\tickets\main_ticket.html:181
+#: .\apps\templates\whitelabel\tickets\main_ticket.html:274
+#: .\apps\templates\whitelabel\tickets\view_ticket.html:226
+msgid "Unassigned"
+msgstr ""
+
+#: .\apps\templates\checkpoints\driver\add_driver.html:9
+#: .\apps\templates\checkpoints\driver\main_drivers.html:37
+msgid "Add Driver"
+msgstr ""
+
+#: .\apps\templates\checkpoints\driver\add_driver.html:24
+#: .\apps\templates\checkpoints\driver\update_driver.html:24
+msgid "Personal ID:"
+msgstr ""
+
+#: .\apps\templates\checkpoints\driver\add_driver.html:35
+#: .\apps\templates\checkpoints\driver\update_driver.html:35
+msgid "First name:"
+msgstr ""
+
+#: .\apps\templates\checkpoints\driver\add_driver.html:42
+#: .\apps\templates\checkpoints\driver\update_driver.html:42
+msgid "Last name:"
+msgstr ""
+
+#: .\apps\templates\checkpoints\driver\add_driver.html:51
+#: .\apps\templates\checkpoints\driver\update_driver.html:51
+msgid "Movil number:"
+msgstr ""
+
+#: .\apps\templates\checkpoints\driver\add_driver.html:78
+#: .\apps\templates\checkpoints\driver\update_driver.html:78
+msgid "Date joined:"
+msgstr ""
+
+#: .\apps\templates\checkpoints\driver\delete_driver.html:12
+msgid "¿Are you sure you want to delete the Driver"
+msgstr ""
+
+#: .\apps\templates\checkpoints\driver\main_drivers.html:4
+msgid "Drivers"
+msgstr ""
+
+#: .\apps\templates\checkpoints\driver\main_drivers.html:14
+msgid "List Drivers"
+msgstr ""
+
+#: .\apps\templates\checkpoints\driver\main_drivers.html:41
+#: .\apps\templates\checkpoints\score_configuration\main_score_configuration.html:5
+msgid "Score Configuration"
+msgstr ""
+
+#: .\apps\templates\checkpoints\driver\main_drivers.html:60
+msgid "Personal ID"
+msgstr ""
+
+#: .\apps\templates\checkpoints\driver\main_drivers.html:96
+msgid "Movil number"
+msgstr ""
+
+#: .\apps\templates\checkpoints\driver\main_drivers.html:105
+#: .\apps\templates\checkpoints\driver_analytic\assign_driver.html:35
+#: .\apps\templates\checkpoints\driver_analytic\button_view.html:26
+#: .\apps\templates\checkpoints\driver_analytic\update_assign.html:38
+#: .\apps\templates\checkpoints\driver_analytic\update_assign.html:76
+#: .\apps\templates\checkpoints\driver_analytic\update_vehicle_assign.html:31
+msgid "Date joined"
+msgstr ""
+
+#: .\apps\templates\checkpoints\driver\main_drivers.html:114
+#: .\apps\templates\realtime\vehicles\main_vehicles.html:125
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:160
+#: .\apps\templates\whitelabel\tickets\main_ticket.html:111
+msgid "Status"
+msgstr ""
+
+#: .\apps\templates\checkpoints\driver\main_drivers.html:123
+#: .\apps\templates\checkpoints\reportes\report_driver.html:128
+#: .\apps\whitelabel\forms.py:66 .\apps\whitelabel\forms.py:183
+msgid "Address"
+msgstr ""
+
+#: .\apps\templates\checkpoints\driver\update_driver.html:9
+msgid "Edit Driver"
+msgstr ""
+
+#: .\apps\templates\checkpoints\driver_analytic\assign_driver.html:8
+#: .\apps\templates\checkpoints\driver_analytic\update_assign.html:11
+#: .\apps\templates\checkpoints\driver_analytic\update_vehicle_assign.html:11
+msgid "Assign Vehicle"
+msgstr ""
+
+#: .\apps\templates\checkpoints\driver_analytic\assign_driver.html:44
+#: .\apps\templates\checkpoints\driver_analytic\button_view.html:35
+#: .\apps\templates\checkpoints\driver_analytic\update_assign.html:50
+#: .\apps\templates\checkpoints\driver_analytic\update_assign.html:77
+#: .\apps\templates\checkpoints\driver_analytic\update_vehicle_assign.html:43
+msgid "Date leaving"
+msgstr ""
+
+#: .\apps\templates\checkpoints\driver_analytic\update_assign.html:69
+msgid "List Assign Vehicle"
+msgstr ""
+
+#: .\apps\templates\checkpoints\powerbi\advanced_analytical.html:5
+msgid "Advanced Analytical"
+msgstr ""
+
+#: .\apps\templates\checkpoints\reportes\report_driver.html:9
+msgid "Driver Qualification Report"
+msgstr ""
+
+#: .\apps\templates\checkpoints\reportes\report_driver.html:20
+msgid "Report Driver"
+msgstr ""
+
+#: .\apps\templates\checkpoints\reportes\report_driver.html:34
+msgid "Driver:"
+msgstr ""
+
+#: .\apps\templates\checkpoints\reportes\report_driver.html:43
+#: .\apps\templates\checkpoints\reportes\report_today.html:36
+#: .\apps\templates\checkpoints\reportes\report_today_copy.html:45
+msgid "Start date:"
+msgstr ""
+
+#: .\apps\templates\checkpoints\reportes\report_driver.html:47
+#: .\apps\templates\checkpoints\reportes\report_today.html:48
+#: .\apps\templates\checkpoints\reportes\report_today_copy.html:56
+msgid "Ending date:"
+msgstr ""
+
+#: .\apps\templates\checkpoints\reportes\report_driver.html:57
+#: .\apps\templates\checkpoints\score_configuration\update_score_configuration.html:73
+msgid "Item to evaluate"
+msgstr ""
+
+#: .\apps\templates\checkpoints\reportes\report_driver.html:58
+#: .\apps\templates\checkpoints\score_configuration\update_score_configuration.html:74
+msgid "points by items"
+msgstr ""
+
+#: .\apps\templates\checkpoints\reportes\report_driver.html:59
+#: .\apps\templates\checkpoints\score_configuration\update_score_configuration.html:76
+msgid "Points to subtract for violation"
+msgstr ""
+
+#: .\apps\templates\checkpoints\reportes\report_driver.html:78
+#: .\apps\templates\checkpoints\reportes\report_today.html:62
+#: .\apps\templates\checkpoints\reportes\report_today_copy.html:71
+msgid "Generate Report"
+msgstr ""
+
+#: .\apps\templates\checkpoints\reportes\report_driver.html:104
+msgid "License"
+msgstr ""
+
+#: .\apps\templates\checkpoints\reportes\report_driver.html:105
+msgid "Date"
+msgstr ""
+
+#: .\apps\templates\checkpoints\reportes\report_driver.html:106
+msgid "Total points"
+msgstr ""
+
+#: .\apps\templates\checkpoints\reportes\report_driver.html:107
+msgid "Distance"
+msgstr ""
+
+#: .\apps\templates\checkpoints\reportes\report_driver.html:107
+msgid "(Km)"
+msgstr ""
+
+#: .\apps\templates\checkpoints\reportes\report_driver.html:108
+msgid "Engine On"
+msgstr ""
+
+#: .\apps\templates\checkpoints\reportes\report_driver.html:109
+msgid "Max Speed"
+msgstr ""
+
+#: .\apps\templates\checkpoints\reportes\report_driver.html:111
+msgid "Excess Speed Time"
+msgstr ""
+
+#: .\apps\templates\checkpoints\reportes\report_driver.html:113
+#: .\apps\templates\checkpoints\reportes\report_driver.html:123
+msgid "Speeding Score"
+msgstr ""
+
+#: .\apps\templates\checkpoints\reportes\report_driver.html:113
+#: .\apps\templates\checkpoints\reportes\report_driver.html:115
+#: .\apps\templates\checkpoints\reportes\report_driver.html:119
+#: .\apps\templates\checkpoints\reportes\report_driver.html:123
+msgid "Time"
+msgstr ""
+
+#: .\apps\templates\checkpoints\reportes\report_driver.html:114
+msgid "Idle Time"
+msgstr ""
+
+#: .\apps\templates\checkpoints\reportes\report_driver.html:115
+msgid "Idle Time Score"
+msgstr ""
+
+#: .\apps\templates\checkpoints\reportes\report_driver.html:117
+msgid "Harsh Accelerations"
+msgstr ""
+
+#: .\apps\templates\checkpoints\reportes\report_driver.html:119
+msgid "Harsh Acceleration Score"
+msgstr ""
+
+#: .\apps\templates\checkpoints\reportes\report_driver.html:121
+msgid "Speeding"
+msgstr ""
+
+#: .\apps\templates\checkpoints\reportes\report_driver.html:125
+msgid "Speeding Time"
+msgstr ""
+
+#: .\apps\templates\checkpoints\reportes\report_driver.html:125
+msgid "(Excess Speed)"
+msgstr ""
+
+#: .\apps\templates\checkpoints\reportes\report_today.html:11
+#: .\apps\templates\checkpoints\reportes\report_today_copy.html:27
+msgid "Operation Report"
+msgstr ""
+
+#: .\apps\templates\checkpoints\reportes\report_today.html:27
+#: .\apps\templates\checkpoints\reportes\report_today_copy.html:39
+msgid "Vehicles:"
+msgstr ""
+
+#: .\apps\templates\checkpoints\reportes\report_today.html:41
+#: .\apps\templates\checkpoints\reportes\report_today_copy.html:50
+msgid "Event:"
+msgstr ""
+
+#: .\apps\templates\checkpoints\reportes\report_today.html:87
+msgid "Export to Excel"
+msgstr ""
+
+#: .\apps\templates\checkpoints\reportes\report_today.html:90
+msgid "Export to CSV"
+msgstr ""
+
+#: .\apps\templates\checkpoints\reportes\report_today.html:103
+msgid "Show entries"
+msgstr ""
+
+#: .\apps\templates\checkpoints\reportes\report_today.html:117
+msgid "N°"
+msgstr ""
+
+#: .\apps\templates\checkpoints\reportes\report_today.html:118
+#: .\apps\templates\checkpoints\reportes\report_today_copy.html:84
+#: .\apps\templates\realtime\response_commands\main_response_commands.html:53
+#: .\apps\templates\realtime\vehicles\main_vehicles.html:80
+msgid "Plate"
+msgstr ""
+
+#: .\apps\templates\checkpoints\reportes\report_today.html:119
+#: .\apps\templates\checkpoints\reportes\report_today_copy.html:85
+msgid "Server date"
+msgstr ""
+
+#: .\apps\templates\checkpoints\reportes\report_today.html:120
+#: .\apps\templates\checkpoints\reportes\report_today_copy.html:86
+msgid "Event date"
+msgstr ""
+
+#: .\apps\templates\checkpoints\reportes\report_today.html:121
+#: .\apps\templates\checkpoints\reportes\report_today_copy.html:88
+msgid "Name of the event"
+msgstr ""
+
+#: .\apps\templates\checkpoints\reportes\report_today.html:122
+#: .\apps\templates\checkpoints\reportes\report_today_copy.html:90
+msgid "Location"
+msgstr ""
+
+#: .\apps\templates\checkpoints\reportes\report_today.html:123
+#: .\apps\templates\realtime\geozones\add_geozone.html:43
+#: .\apps\templates\realtime\geozones\update_geozone.html:47
+msgid "Speed"
+msgstr ""
+
+#: .\apps\templates\checkpoints\reportes\report_today.html:124
+msgid "Odometer"
+msgstr ""
+
+#: .\apps\templates\checkpoints\reportes\report_today.html:125
+#: .\apps\templates\realtime\geozones\main_geozone.html:93
+msgid "Latitude"
+msgstr ""
+
+#: .\apps\templates\checkpoints\reportes\report_today.html:126
+#: .\apps\templates\realtime\geozones\main_geozone.html:102
+msgid "Longitude"
+msgstr ""
+
+#: .\apps\templates\checkpoints\reportes\report_today.html:158
+msgid "No results found."
+msgstr ""
+
+#: .\apps\templates\checkpoints\reportes\report_today.html:223
+msgid "Download Progress"
+msgstr ""
+
+#: .\apps\templates\checkpoints\reportes\report_today.html:240
+#: .\apps\templates\checkpoints\reportes\report_today.html:242
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:366
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:368
+msgid "Loading..."
+msgstr ""
+
+#: .\apps\templates\checkpoints\reportes\report_today.html:291
+msgid "The start date cannot be greater than the end date."
+msgstr ""
+
+#: .\apps\templates\checkpoints\reportes\report_today_copy.html:6
+msgid "Report today"
+msgstr ""
+
+#: .\apps\templates\checkpoints\reportes\report_today_copy.html:18
+msgid "Generating..."
+msgstr ""
+
+#: .\apps\templates\checkpoints\reportes\report_today_copy.html:92
+msgid "Latitude "
+msgstr ""
+
+#: .\apps\templates\checkpoints\reportes\report_today_copy.html:93
+msgid " Longitude"
+msgstr ""
+
+#: .\apps\templates\checkpoints\score_configuration\main_score_configuration.html:15
+msgid "Driver Rating Settings"
+msgstr ""
+
+#: .\apps\templates\checkpoints\score_configuration\main_score_configuration.html:62
+#: .\apps\templates\checkpoints\score_configuration\update_score_configuration.html:42
+msgid "Maximum score"
+msgstr ""
+
+#: .\apps\templates\checkpoints\score_configuration\main_score_configuration.html:71
+#: .\apps\templates\checkpoints\score_configuration\update_score_configuration.html:31
+msgid "Minimum score"
+msgstr ""
+
+#: .\apps\templates\checkpoints\score_configuration\update_score_configuration.html:8
+msgid "Driver Qualification"
+msgstr ""
+
+#: .\apps\templates\checkpoints\score_configuration\update_score_configuration.html:15
+msgid ""
+"In the Minimum score and Maximum score fields, please indicate the score "
+"range with which you wish to rate your drivers. The maximum score is "
+"assigned to the best driver."
+msgstr ""
+
+#: .\apps\templates\checkpoints\score_configuration\update_score_configuration.html:53
+msgid "Cutoff date"
+msgstr ""
+
+#: .\apps\templates\checkpoints\score_configuration\update_score_configuration.html:64
+msgid ""
+"the items of greatest importance in the rating should have the highest "
+"percentages. Drivers with indicators close to the permitted limit will have "
+"the lowest scores."
+msgstr ""
+
+#: .\apps\templates\checkpoints\score_configuration\update_score_configuration.html:75
+msgid "Maximum infractions in the month"
+msgstr ""
+
+#: .\apps\templates\events\predefined_events\add_events.html:10
+#: .\apps\templates\events\predefined_events\update_events.html:10
+#: .\apps\templates\events\user_events\add_user_events.html:6
+#: .\apps\templates\events\user_events\main_user_events.html:39
+msgid "Add Event"
+msgstr ""
+
+#: .\apps\templates\events\predefined_events\add_events.html:19
+#: .\apps\templates\events\predefined_events\main_events.html:56
+#: .\apps\templates\events\predefined_events\update_events.html:19
+msgid "Event number"
+msgstr ""
+
+#: .\apps\templates\events\predefined_events\add_events.html:30
+#: .\apps\templates\events\predefined_events\update_events.html:30
+#: .\apps\templates\events\user_events\add_user_events.html:21
+#: .\apps\templates\events\user_events\update_user_events.html:21
+msgid "Event Predefined"
+msgstr ""
+
+#: .\apps\templates\events\predefined_events\delete_events.html:12
+msgid "¿Are you sure you want to delete the Event"
+msgstr ""
+
+#: .\apps\templates\events\predefined_events\main_events.html:5
+#: .\apps\templates\events\user_events\main_user_events.html:5
+#: .\apps\templates\layouts\navbar.html:179
+#: .\apps\templates\layouts\navbardashboard.html:179
+msgid "Events"
+msgstr ""
+
+#: .\apps\templates\events\predefined_events\main_events.html:16
+msgid "List Events"
+msgstr ""
+
+#: .\apps\templates\events\predefined_events\main_events.html:38
+msgid "Add event"
+msgstr ""
+
+#: .\apps\templates\events\predefined_events\main_events.html:65
+#: .\apps\templates\events\user_events\add_user_events.html:28
+#: .\apps\templates\events\user_events\main_user_events.html:62
+#: .\apps\templates\events\user_events\update_user_events.html:28
+msgid "Event name"
+msgstr ""
+
+#: .\apps\templates\events\predefined_events\main_events.html:160
+#: .\apps\templates\realtime\response_commands\main_response_commands.html:169
+#: .\apps\templates\realtime\sending_commands\add_sending_commands.html:65
+#: .\apps\templates\realtime\sending_commands\main_sending_commands.html:142
+#: .\apps\templates\realtime\sending_commands\main_sending_commands.html:217
+msgid "In progress"
+msgstr ""
+
+#: .\apps\templates\events\predefined_events\main_events.html:161
+#: .\apps\templates\realtime\response_commands\main_response_commands.html:170
+#: .\apps\templates\realtime\sending_commands\add_sending_commands.html:66
+#: .\apps\templates\realtime\sending_commands\main_sending_commands.html:144
+#: .\apps\templates\realtime\sending_commands\main_sending_commands.html:218
+msgid "Done"
+msgstr ""
+
+#: .\apps\templates\events\user_events\add_user_events.html:35
+#: .\apps\templates\events\user_events\update_user_events.html:35
+msgid "Alarm"
+msgstr ""
+
+#: .\apps\templates\events\user_events\add_user_events.html:41
+#: .\apps\templates\events\user_events\main_user_events.html:116
+#: .\apps\templates\events\user_events\update_user_events.html:41
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:133
+#: .\apps\templates\whitelabel\tickets\main_ticket.html:84
+msgid "Priority"
+msgstr ""
+
+#: .\apps\templates\events\user_events\add_user_events.html:47
+#: .\apps\templates\events\user_events\update_user_events.html:47
+msgid "Sound type"
+msgstr ""
+
+#: .\apps\templates\events\user_events\add_user_events.html:82
+#: .\apps\templates\events\user_events\update_user_events.html:82
+msgid "Central notification"
+msgstr ""
+
+#: .\apps\templates\events\user_events\add_user_events.html:89
+#: .\apps\templates\events\user_events\update_user_events.html:89
+msgid "User notification"
+msgstr ""
+
+#: .\apps\templates\events\user_events\add_user_events.html:97
+#: .\apps\templates\events\user_events\update_user_events.html:97
+msgid "Email notification"
+msgstr ""
+
+#: .\apps\templates\events\user_events\add_user_events.html:105
+#: .\apps\templates\events\user_events\main_user_events.html:143
+#: .\apps\templates\events\user_events\update_user_events.html:105
+msgid "Start time"
+msgstr ""
+
+#: .\apps\templates\events\user_events\add_user_events.html:112
+#: .\apps\templates\events\user_events\main_user_events.html:152
+#: .\apps\templates\events\user_events\update_user_events.html:112
+msgid "End time"
+msgstr ""
+
+#: .\apps\templates\events\user_events\delete_user_events.html:13
+msgid "¿Are you sure you want to delete this event"
+msgstr ""
+
+#: .\apps\templates\events\user_events\main_user_events.html:16
+msgid "Events Feature"
+msgstr ""
+
+#: .\apps\templates\events\user_events\main_user_events.html:43
+msgid "Lists event"
+msgstr ""
+
+#: .\apps\templates\events\user_events\main_user_events.html:80
+msgid "Central alarm"
+msgstr ""
+
+#: .\apps\templates\events\user_events\main_user_events.html:89
+#: .\apps\templates\events\user_events\main_user_events.html:125
+msgid "User alarm"
+msgstr ""
+
+#: .\apps\templates\events\user_events\main_user_events.html:98
+msgid "Email alarm"
+msgstr ""
+
+#: .\apps\templates\events\user_events\main_user_events.html:107
+msgid "Alarm sound"
+msgstr ""
+
+#: .\apps\templates\events\user_events\main_user_events.html:134
+msgid "Color"
+msgstr ""
+
+#: .\apps\templates\events\user_events\main_user_events.html:184
+#: .\apps\templates\events\user_events\main_user_events.html:189
+#: .\apps\templates\events\user_events\main_user_events.html:194
+#: .\apps\templates\events\user_events\main_user_events.html:199
+#: .\apps\templates\events\user_events\main_user_events.html:306
+#: .\apps\templates\whitelabel\companies\company_main.html:415
+msgid "Yes"
+msgstr ""
+
+#: .\apps\templates\events\user_events\main_user_events.html:184
+#: .\apps\templates\events\user_events\main_user_events.html:189
+#: .\apps\templates\events\user_events\main_user_events.html:194
+#: .\apps\templates\events\user_events\main_user_events.html:199
+#: .\apps\templates\events\user_events\main_user_events.html:307
+#: .\apps\templates\whitelabel\companies\company_main.html:416
+msgid "No"
+msgstr ""
+
+#: .\apps\templates\events\user_events\update_user_events.html:6
+msgid "Edit Event"
+msgstr ""
+
+#: .\apps\templates\layouts\navbar.html:93
+#: .\apps\templates\layouts\navbardashboard.html:93
+msgid "Configuration"
+msgstr ""
+
+#: .\apps\templates\layouts\navbar.html:97
+#: .\apps\templates\layouts\navbardashboard.html:97
+#: .\apps\templates\whitelabel\companies\company_main.html:3
+#: .\apps\templates\whitelabel\companies\company_main.html:14
+#: .\apps\templates\whitelabel\companies\company_main.html:213
+msgid "Companies"
+msgstr ""
+
+#: .\apps\templates\layouts\navbar.html:103
+#: .\apps\templates\layouts\navbardashboard.html:103
+msgid "Custom"
+msgstr ""
+
+#: .\apps\templates\layouts\navbar.html:115
+#: .\apps\templates\layouts\navbardashboard.html:115
+msgid "Plans"
+msgstr ""
+
+#: .\apps\templates\layouts\navbar.html:119
+#: .\apps\templates\layouts\navbardashboard.html:119
+#: .\apps\templates\whitelabel\module\main_module.html:5
+#: .\apps\templates\whitelabel\module\main_module.html:16
+msgid "Billing"
+msgstr ""
+
+#: .\apps\templates\layouts\navbar.html:122
+#: .\apps\templates\layouts\navbardashboard.html:122
+#: .\apps\templates\realtime\dataplan\main_dataplan.html:5
+#: .\apps\templates\realtime\dataplan\main_dataplan.html:16
+msgid "DataPlans"
+msgstr ""
+
+#: .\apps\templates\layouts\navbar.html:134
+#: .\apps\templates\layouts\navbardashboard.html:134
+msgid "Device Management"
+msgstr ""
+
+#: .\apps\templates\layouts\navbar.html:138
+#: .\apps\templates\layouts\navbardashboard.html:138
+#: .\apps\templates\realtime\simcards\main_simcard.html:5
+#: .\apps\templates\realtime\simcards\main_simcard.html:16
+msgid "Simcards"
+msgstr ""
+
+#: .\apps\templates\layouts\navbar.html:141
+#: .\apps\templates\layouts\navbardashboard.html:141
+#: .\apps\templates\realtime\devices\main_devices.html:5
+#: .\apps\templates\realtime\devices\main_devices.html:16
+msgid "Devices"
+msgstr ""
+
+#: .\apps\templates\layouts\navbar.html:144
+#: .\apps\templates\layouts\navbardashboard.html:144
+#: .\apps\templates\realtime\vehicles\main_vehicles.html:5
+#: .\apps\templates\realtime\vehicles\main_vehicles.html:16
+msgid "Assets"
+msgstr ""
+
+#: .\apps\templates\layouts\navbar.html:156
+#: .\apps\templates\layouts\navbardashboard.html:156
+#: .\apps\templates\realtime\custom_report\main_configuration_report.html:39
+#: .\apps\templates\realtime\custom_report\update_configuration_report.html:78
+msgid "Reports"
+msgstr ""
+
+#: .\apps\templates\layouts\navbar.html:160
+#: .\apps\templates\layouts\navbardashboard.html:160
+msgid "Customize Report"
+msgstr ""
+
+#: .\apps\templates\layouts\navbar.html:163
+#: .\apps\templates\layouts\navbardashboard.html:163
+msgid "Today's Report"
+msgstr ""
+
+#: .\apps\templates\layouts\navbar.html:175
+#: .\apps\templates\layouts\navbardashboard.html:175
+msgid "Features"
+msgstr ""
+
+#: .\apps\templates\layouts\navbar.html:182
+#: .\apps\templates\layouts\navbardashboard.html:182
+#: .\apps\templates\realtime\geozones\main_geozone.html:5
+#: .\apps\templates\realtime\geozones\main_geozone.html:15
+msgid "Geozones"
+msgstr ""
+
+#: .\apps\templates\layouts\navbar.html:185
+#: .\apps\templates\layouts\navbardashboard.html:185
+#: .\apps\templates\realtime\sending_commands\main_sending_commands.html:5
+msgid "Commands"
+msgstr ""
+
+#: .\apps\templates\layouts\navbar.html:201
+#: .\apps\templates\layouts\navbardashboard.html:201
+msgid "Informs"
+msgstr ""
+
+#: .\apps\templates\layouts\navbar.html:214
+#: .\apps\templates\layouts\navbardashboard.html:213
+msgid "Helpdesk"
+msgstr ""
+
+#: .\apps\templates\realtime\custom_report\main_configuration_report.html:4
+#: .\apps\templates\realtime\custom_report\main_configuration_report.html:13
+msgid "Report configuration"
+msgstr ""
+
+#: .\apps\templates\realtime\custom_report\main_configuration_report.html:29
+#: .\apps\templates\realtime\custom_report\update_configuration_report.html:46
+msgid "Widgets"
+msgstr ""
+
+#: .\apps\templates\realtime\custom_report\main_configuration_report.html:59
+msgid "Configuration updated successfully for "
+msgstr ""
+
+#: .\apps\templates\realtime\custom_report\main_configuration_report.html:92
+msgid "Please select a company."
+msgstr ""
+
+#: .\apps\templates\realtime\custom_report\update_configuration_report.html:4
+#: .\apps\templates\realtime\custom_report\update_configuration_report.html:33
+msgid "Edit Report Settings"
+msgstr ""
+
+#: .\apps\templates\realtime\custom_report\update_configuration_report.html:123
+msgid "Are you sure you want to save this configuration?"
+msgstr ""
+
+#: .\apps\templates\realtime\dataplan\add_dataplan.html:8
+#: .\apps\templates\realtime\dataplan\main_dataplan.html:39
+msgid "Add DataPlan"
+msgstr ""
+
+#: .\apps\templates\realtime\dataplan\add_dataplan.html:17
+msgid "Data Packet:"
+msgstr ""
+
+#: .\apps\templates\realtime\dataplan\add_dataplan.html:24
+#: .\apps\templates\realtime\dataplan\update_dataplan.html:24
+msgid "Operator: "
+msgstr ""
+
+#: .\apps\templates\realtime\dataplan\add_dataplan.html:33
+#: .\apps\templates\realtime\dataplan\update_dataplan.html:33
+msgid "Coin:"
+msgstr ""
+
+#: .\apps\templates\realtime\dataplan\add_dataplan.html:40
+#: .\apps\templates\realtime\dataplan\update_dataplan.html:40
+msgid "Price:"
+msgstr ""
+
+#: .\apps\templates\realtime\dataplan\delete_dataplan.html:12
+msgid "¿Are you sure you want to delete the Dataplan"
+msgstr ""
+
+#: .\apps\templates\realtime\dataplan\main_dataplan.html:68
+#: .\apps\templates\realtime\geozones\add_geozone.html:31
+#: .\apps\templates\realtime\geozones\update_geozone.html:33
+msgid "Name"
+msgstr ""
+
+#: .\apps\templates\realtime\dataplan\main_dataplan.html:77
+msgid "Operator"
+msgstr ""
+
+#: .\apps\templates\realtime\dataplan\main_dataplan.html:86
+#: .\apps\templates\whitelabel\module\main_module.html:63
+#: .\apps\whitelabel\forms.py:77 .\apps\whitelabel\forms.py:194
+msgid "Coin"
+msgstr ""
+
+#: .\apps\templates\realtime\dataplan\main_dataplan.html:95
+#: .\apps\templates\whitelabel\module\main_module.html:71
+msgid "Price"
+msgstr ""
+
+#: .\apps\templates\realtime\dataplan\update_dataplan.html:8
+msgid "Update DataPlan"
+msgstr ""
+
+#: .\apps\templates\realtime\devices\add_device.html:9
+#: .\apps\templates\realtime\devices\main_devices.html:39
+msgid "Add Device"
+msgstr ""
+
+#: .\apps\templates\realtime\devices\add_device.html:18
+#: .\apps\templates\realtime\devices\update_device.html:17
+msgid "Imei:"
+msgstr ""
+
+#: .\apps\templates\realtime\devices\add_device.html:36
+#: .\apps\templates\realtime\devices\update_device.html:38
+msgid "Simcard:"
+msgstr ""
+
+#: .\apps\templates\realtime\devices\add_device.html:47
+#: .\apps\templates\realtime\devices\update_device.html:50
+msgid "Manufacture:"
+msgstr ""
+
+#: .\apps\templates\realtime\devices\add_device.html:57
+#: .\apps\templates\realtime\devices\update_device.html:63
+#: .\apps\templates\realtime\vehicles\add_vehicle.html:115
+#: .\apps\templates\realtime\vehicles\update_vehicle.html:117
+msgid "Model:"
+msgstr ""
+
+#: .\apps\templates\realtime\devices\add_device.html:69
+#: .\apps\templates\realtime\devices\update_device.html:76
+msgid "Serial number:"
+msgstr ""
+
+#: .\apps\templates\realtime\devices\add_device.html:86
+#: .\apps\templates\realtime\devices\update_device.html:92
+msgid "Firmware:"
+msgstr ""
+
+#: .\apps\templates\realtime\devices\delete_devices.html:12
+msgid "¿ Are you sure you want to delete the device"
+msgstr ""
+
+#: .\apps\templates\realtime\devices\delete_devices.html:12
+#: .\apps\templates\realtime\simcards\delete_simcard.html:12
+msgid "assigned to"
+msgstr ""
+
+#: .\apps\templates\realtime\devices\main_devices.html:68
+msgid "IMEI"
+msgstr ""
+
+#: .\apps\templates\realtime\devices\main_devices.html:77
+msgid "Device Type"
+msgstr ""
+
+#: .\apps\templates\realtime\devices\main_devices.html:86
+msgid "Simcard"
+msgstr ""
+
+#: .\apps\templates\realtime\devices\main_devices.html:95
+msgid "IP"
+msgstr ""
+
+#: .\apps\templates\realtime\devices\main_devices.html:104
+msgid "Serial Number"
+msgstr ""
+
+#: .\apps\templates\realtime\devices\main_devices.html:113
+msgid "Create Date"
+msgstr ""
+
+#: .\apps\templates\realtime\devices\update_device.html:7
+msgid "Update Device"
+msgstr ""
+
+#: .\apps\templates\realtime\geozones\add_geozone.html:10
+#: .\apps\templates\realtime\geozones\main_geozone.html:37
+msgid "Add Geozone"
+msgstr ""
+
+#: .\apps\templates\realtime\geozones\add_geozone.html:23
+#: .\apps\templates\realtime\geozones\update_geozone.html:23
+msgid "Type Event"
+msgstr ""
+
+#: .\apps\templates\realtime\geozones\add_geozone.html:27
+#: .\apps\templates\realtime\geozones\update_geozone.html:28
+msgid "Set Events as Alarm"
+msgstr ""
+
+#: .\apps\templates\realtime\geozones\add_geozone.html:35
+#: .\apps\templates\realtime\geozones\update_geozone.html:38
+msgid "Description"
+msgstr ""
+
+#: .\apps\templates\realtime\geozones\add_geozone.html:56
+#: .\apps\templates\realtime\geozones\update_geozone.html:64
+msgid "Geozone color"
+msgstr ""
+
+#: .\apps\templates\realtime\geozones\add_geozone.html:60
+#: .\apps\templates\realtime\geozones\update_geozone.html:71
+msgid "Border color"
+msgstr ""
+
+#: .\apps\templates\realtime\geozones\delete_geozone.html:12
+msgid "¿Are you sure you want to delete the Geozone"
+msgstr ""
+
+#: .\apps\templates\realtime\geozones\main_geozone.html:66
+msgid "Name geozone"
+msgstr ""
+
+#: .\apps\templates\realtime\geozones\main_geozone.html:75
+msgid "Event"
+msgstr ""
+
+#: .\apps\templates\realtime\geozones\main_geozone.html:84
+msgid "Type the geozone"
+msgstr ""
+
+#: .\apps\templates\realtime\geozones\main_geozone.html:140
+#: .\apps\templates\realtime\geozones\main_geozone.html:227
+msgid "Marker"
+msgstr ""
+
+#: .\apps\templates\realtime\geozones\main_geozone.html:142
+#: .\apps\templates\realtime\geozones\main_geozone.html:228
+msgid "Circle"
+msgstr ""
+
+#: .\apps\templates\realtime\geozones\main_geozone.html:144
+#: .\apps\templates\realtime\geozones\main_geozone.html:229
+msgid "Polygon"
+msgstr ""
+
+#: .\apps\templates\realtime\geozones\update_geozone.html:9
+msgid "Update Geozone"
+msgstr ""
+
+#: .\apps\templates\realtime\group_vehicles\add_group_vehicles.html:6
+#: .\apps\templates\realtime\group_vehicles\main_group_vehicles.html:39
+msgid "Add Group"
+msgstr ""
+
+#: .\apps\templates\realtime\group_vehicles\add_group_vehicles.html:17
+#: .\apps\templates\realtime\group_vehicles\update_group_vehicles.html:17
+msgid "Name group"
+msgstr ""
+
+#: .\apps\templates\realtime\group_vehicles\add_group_vehicles.html:26
+#: .\apps\templates\realtime\group_vehicles\update_group_vehicles.html:26
+msgid "Assets:"
+msgstr ""
+
+#: .\apps\templates\realtime\group_vehicles\add_group_vehicles.html:33
+#: .\apps\templates\realtime\group_vehicles\update_group_vehicles.html:33
+msgid "Search"
+msgstr ""
+
+#: .\apps\templates\realtime\group_vehicles\delete_group_vehicles.html:12
+msgid "¿Are you sure you want to delete the Group"
+msgstr ""
+
+#: .\apps\templates\realtime\group_vehicles\main_group_vehicles.html:5
+#: .\apps\templates\realtime\group_vehicles\main_group_vehicles.html:16
+#: .\apps\templates\realtime\vehicles\main_vehicles.html:43
+msgid "Group Assets"
+msgstr ""
+
+#: .\apps\templates\realtime\group_vehicles\main_group_vehicles.html:59
+msgid "Name Group"
+msgstr ""
+
+#: .\apps\templates\realtime\group_vehicles\main_group_vehicles.html:68
+msgid "Content"
+msgstr ""
+
+#: .\apps\templates\realtime\group_vehicles\update_group_vehicles.html:6
+msgid "Update Gruop"
+msgstr ""
+
+#: .\apps\templates\realtime\response_commands\main_response_commands.html:5
+#: .\apps\templates\realtime\response_commands\main_response_commands.html:15
+msgid "Commands Response"
+msgstr ""
+
+#: .\apps\templates\realtime\response_commands\main_response_commands.html:80
+#: .\apps\templates\realtime\sending_commands\main_sending_commands.html:113
+msgid "answer_date"
+msgstr ""
+
+#: .\apps\templates\realtime\sending_commands\add_sending_commands.html:9
+#: .\apps\templates\realtime\sending_commands\main_sending_commands.html:15
+#: .\apps\templates\realtime\sending_commands\main_sending_commands.html:38
+msgid "Sending Commands"
+msgstr ""
+
+#: .\apps\templates\realtime\sending_commands\add_sending_commands.html:19
+#: .\apps\templates\realtime\vehicles\add_vehicle.html:15
+#: .\apps\templates\realtime\vehicles\update_vehicle.html:16
+msgid "Plate:"
+msgstr ""
+
+#: .\apps\templates\realtime\sending_commands\add_sending_commands.html:28
+msgid "Command:"
+msgstr ""
+
+#: .\apps\templates\realtime\sending_commands\add_sending_commands.html:32
+msgid "This field is required."
+msgstr ""
+
+#: .\apps\templates\realtime\sending_commands\add_sending_commands.html:56
+#: .\apps\templates\realtime\sending_commands\main_sending_commands.html:208
+msgid "Are you sure you want to send these command?"
+msgstr ""
+
+#: .\apps\templates\realtime\sending_commands\add_sending_commands.html:57
+#: .\apps\templates\realtime\sending_commands\main_sending_commands.html:209
+msgid "Please select a device."
+msgstr ""
+
+#: .\apps\templates\realtime\sending_commands\main_sending_commands.html:41
+msgid "Response Commands"
+msgstr ""
+
+#: .\apps\templates\realtime\sending_commands\main_sending_commands.html:68
+msgid "code"
+msgstr ""
+
+#: .\apps\templates\realtime\sending_commands\main_sending_commands.html:86
+msgid "plate"
+msgstr ""
+
+#: .\apps\templates\realtime\sending_commands\main_sending_commands.html:104
+msgid "shipping_date"
+msgstr ""
+
+#: .\apps\templates\realtime\simcards\add_simcard.html:6
+msgid "Add SimCard"
+msgstr ""
+
+#: .\apps\templates\realtime\simcards\add_simcard.html:15
+#: .\apps\templates\realtime\simcards\update_simcard.html:15
+msgid "ICCID or serial number:"
+msgstr ""
+
+#: .\apps\templates\realtime\simcards\add_simcard.html:30
+#: .\apps\templates\realtime\simcards\update_simcard.html:31
+msgid "Data plan:"
+msgstr ""
+
+#: .\apps\templates\realtime\simcards\add_simcard.html:37
+#: .\apps\templates\realtime\simcards\update_simcard.html:37
+#: .\apps\templates\whitelabel\companies\company_main.html:413
+msgid "Phone number:"
+msgstr ""
+
+#: .\apps\templates\realtime\simcards\add_simcard.html:53
+#: .\apps\templates\realtime\simcards\update_simcard.html:54
+msgid "AZ simcard:"
+msgstr ""
+
+#: .\apps\templates\realtime\simcards\add_simcard.html:60
+#: .\apps\templates\realtime\simcards\update_simcard.html:61
+msgid "Activate date:"
+msgstr ""
+
+#: .\apps\templates\realtime\simcards\delete_simcard.html:12
+msgid "¿ Are you sure you want to delete the Simcard"
+msgstr ""
+
+#: .\apps\templates\realtime\simcards\main_simcard.html:39
+msgid "Add Simcard"
+msgstr ""
+
+#: .\apps\templates\realtime\simcards\main_simcard.html:69
+msgid "Serial number"
+msgstr ""
+
+#: .\apps\templates\realtime\simcards\main_simcard.html:78
+msgid "Phone number"
+msgstr ""
+
+#: .\apps\templates\realtime\simcards\main_simcard.html:87
+msgid "Data plan"
+msgstr ""
+
+#: .\apps\templates\realtime\simcards\main_simcard.html:96
+msgid "Activate date"
+msgstr ""
+
+#: .\apps\templates\realtime\simcards\main_simcard.html:105
+msgid "Is active"
+msgstr ""
+
+#: .\apps\templates\realtime\simcards\update_simcard.html:6
+msgid "Update SimCard"
+msgstr ""
+
+#: .\apps\templates\realtime\vehicles\add_vehicle.html:6
+#: .\apps\templates\realtime\vehicles\main_vehicles.html:39
+msgid "Add Asset"
+msgstr ""
+
+#: .\apps\templates\realtime\vehicles\add_vehicle.html:21
+#: .\apps\templates\realtime\vehicles\update_vehicle.html:23
+msgid "Owner:"
+msgstr ""
+
+#: .\apps\templates\realtime\vehicles\add_vehicle.html:27
+#: .\apps\templates\realtime\vehicles\update_vehicle.html:29
+msgid "Insurance:"
+msgstr ""
+
+#: .\apps\templates\realtime\vehicles\add_vehicle.html:33
+#: .\apps\templates\realtime\vehicles\update_vehicle.html:35
+msgid "Asset type:"
+msgstr ""
+
+#: .\apps\templates\realtime\vehicles\add_vehicle.html:53
+#: .\apps\templates\realtime\vehicles\update_vehicle.html:55
+msgid "Device / Imei:"
+msgstr ""
+
+#: .\apps\templates\realtime\vehicles\add_vehicle.html:59
+#: .\apps\templates\realtime\vehicles\update_vehicle.html:61
+msgid "Fuel type:"
+msgstr ""
+
+#: .\apps\templates\realtime\vehicles\add_vehicle.html:65
+#: .\apps\templates\realtime\vehicles\update_vehicle.html:67
+msgid "N° internal:"
+msgstr ""
+
+#: .\apps\templates\realtime\vehicles\add_vehicle.html:73
+#: .\apps\templates\realtime\vehicles\update_vehicle.html:75
+msgid "Cylinder capacity:"
+msgstr ""
+
+#: .\apps\templates\realtime\vehicles\add_vehicle.html:79
+#: .\apps\templates\realtime\vehicles\update_vehicle.html:81
+msgid "Km per gallon:"
+msgstr ""
+
+#: .\apps\templates\realtime\vehicles\add_vehicle.html:85
+#: .\apps\templates\realtime\vehicles\update_vehicle.html:87
+msgid "Max speed allowed:"
+msgstr ""
+
+#: .\apps\templates\realtime\vehicles\add_vehicle.html:91
+#: .\apps\templates\realtime\vehicles\update_vehicle.html:93
+msgid "Fuel tank capacity in gallons:"
+msgstr ""
+
+#: .\apps\templates\realtime\vehicles\add_vehicle.html:99
+#: .\apps\templates\realtime\vehicles\update_vehicle.html:101
+msgid "Brand:"
+msgstr ""
+
+#: .\apps\templates\realtime\vehicles\add_vehicle.html:107
+#: .\apps\templates\realtime\vehicles\update_vehicle.html:109
+msgid "Line:"
+msgstr ""
+
+#: .\apps\templates\realtime\vehicles\add_vehicle.html:121
+#: .\apps\templates\realtime\vehicles\update_vehicle.html:123
+msgid "Color:"
+msgstr ""
+
+#: .\apps\templates\realtime\vehicles\add_vehicle.html:129
+#: .\apps\templates\realtime\vehicles\update_vehicle.html:131
+msgid "Engine serial:"
+msgstr ""
+
+#: .\apps\templates\realtime\vehicles\add_vehicle.html:135
+#: .\apps\templates\realtime\vehicles\update_vehicle.html:137
+msgid "Chassis:"
+msgstr ""
+
+#: .\apps\templates\realtime\vehicles\add_vehicle.html:141
+#: .\apps\templates\realtime\vehicles\update_vehicle.html:143
+msgid " Capacity Kg/PSJ:"
+msgstr ""
+
+#: .\apps\templates\realtime\vehicles\add_vehicle.html:147
+#: .\apps\templates\realtime\vehicles\update_vehicle.html:149
+msgid "Alias:"
+msgstr ""
+
+#: .\apps\templates\realtime\vehicles\add_vehicle.html:155
+#: .\apps\templates\realtime\vehicles\update_vehicle.html:157
+msgid "Installation date:"
+msgstr ""
+
+#: .\apps\templates\realtime\vehicles\add_vehicle.html:161
+#: .\apps\templates\realtime\vehicles\update_vehicle.html:169
+msgid "Remote shutdown:"
+msgstr ""
+
+#: .\apps\templates\realtime\vehicles\add_vehicle.html:167
+#: .\apps\templates\realtime\vehicles\update_vehicle.html:175
+msgid "Microphone:"
+msgstr ""
+
+#: .\apps\templates\realtime\vehicles\add_vehicle.html:173
+#: .\apps\templates\realtime\vehicles\update_vehicle.html:181
+msgid "Camera:"
+msgstr ""
+
+#: .\apps\templates\realtime\vehicles\add_vehicle.html:180
+#: .\apps\templates\realtime\vehicles\update_vehicle.html:188
+msgid "Icon:"
+msgstr ""
+
+#: .\apps\templates\realtime\vehicles\delete_vehicle.html:12
+msgid "¿Are you sure you want to delete the Asset"
+msgstr ""
+
+#: .\apps\templates\realtime\vehicles\main_vehicles.html:62
+msgid "Icon"
+msgstr ""
+
+#: .\apps\templates\realtime\vehicles\main_vehicles.html:89
+msgid "N° Interno"
+msgstr ""
+
+#: .\apps\templates\realtime\vehicles\main_vehicles.html:98
+msgid "Device/Imei"
+msgstr ""
+
+#: .\apps\templates\realtime\vehicles\main_vehicles.html:107
+msgid "Asset type"
+msgstr ""
+
+#: .\apps\templates\realtime\vehicles\main_vehicles.html:116
+msgid "installation date"
+msgstr ""
+
+#: .\apps\templates\realtime\vehicles\update_vehicle.html:6
+msgid "Update Asset"
+msgstr ""
+
+#: .\apps\templates\whitelabel\companies\add_company.html:7
+msgid "New Company"
+msgstr ""
+
+#: .\apps\templates\whitelabel\companies\company_delete.html:13
+msgid "¿Are you sure you want to delete the Company"
+msgstr ""
+
+#: .\apps\templates\whitelabel\companies\company_main.html:19
+#: .\apps\templates\whitelabel\companies\company_main.html:24
+#: .\apps\templates\whitelabel\companies\company_main.html:218
+#: .\apps\templates\whitelabel\companies\company_main.html:223
+#: .\apps\templates\whitelabel\companies\company_main.html:421
+msgid "Edit"
+msgstr ""
+
+#: .\apps\templates\whitelabel\companies\company_main.html:49
+msgid "Add Distributor"
+msgstr ""
+
+#: .\apps\templates\whitelabel\companies\company_main.html:51
+#: .\apps\templates\whitelabel\companies\company_main.html:248
+msgid "Add final customer"
+msgstr ""
+
+#: .\apps\templates\whitelabel\companies\company_main.html:52
+#: .\apps\templates\whitelabel\companies\company_main.html:250
+#: .\apps\templates\whitelabel\companies\company_main.html:423
+msgid "Lists Process"
+msgstr ""
+
+#: .\apps\templates\whitelabel\companies\company_main.html:72
+#: .\apps\templates\whitelabel\companies\company_main.html:270
+#: .\apps\whitelabel\forms.py:63 .\apps\whitelabel\forms.py:180
+msgid "Nit"
+msgstr ""
+
+#: .\apps\templates\whitelabel\companies\company_main.html:90
+#: .\apps\templates\whitelabel\companies\company_main.html:288
+#: .\apps\whitelabel\forms.py:65 .\apps\whitelabel\forms.py:182
+msgid "Legal Representative"
+msgstr ""
+
+#: .\apps\templates\whitelabel\companies\company_main.html:99
+msgid "Type"
+msgstr ""
+
+#: .\apps\templates\whitelabel\companies\company_main.html:146
+#: .\apps\templates\whitelabel\companies\company_main.html:459
+#: .\apps\templates\whitelabel\tickets\add_ticket.html:36
+#: .\apps\templates\whitelabel\tickets\list_tickets.html:46
+#: .\apps\templates\whitelabel\tickets\main_ticket.html:193
+#: .\apps\templates\whitelabel\tickets\view_ticket.html:41
+msgid "Distributor"
+msgstr ""
+
+#: .\apps\templates\whitelabel\companies\company_main.html:148
+#: .\apps\templates\whitelabel\companies\company_main.html:460
+msgid "Final client"
+msgstr ""
+
+#: .\apps\templates\whitelabel\companies\company_main.html:394
+msgid "Company information"
+msgstr ""
+
+#: .\apps\templates\whitelabel\companies\company_main.html:412
+msgid "City:"
+msgstr ""
+
+#: .\apps\templates\whitelabel\companies\company_main.html:414
+msgid "Signed contract:"
+msgstr ""
+
+#: .\apps\templates\whitelabel\companies\company_update.html:9
+msgid "Update:"
+msgstr ""
+
+#: .\apps\templates\whitelabel\companies\company_update_logo.html:7
+msgid "update company logo"
+msgstr ""
+
+#: .\apps\templates\whitelabel\companies\company_update_logo.html:17
+msgid "Select image"
+msgstr ""
+
+#: .\apps\templates\whitelabel\companies\company_update_logo.html:25
+msgid "The image should be in PNG, JPG format and weigh less than 2MB."
+msgstr ""
+
+#: .\apps\templates\whitelabel\companies\company_update_logo.html:26
+msgid "Recommended size: up to 1500x500 pixels."
+msgstr ""
+
+#: .\apps\templates\whitelabel\companies\company_update_logo.html:48
+msgid "The file cannot be larger than 2MB"
+msgstr ""
+
+#: .\apps\templates\whitelabel\companies\company_update_logo.html:60
+msgid "The image must be smaller than 1500x500 pixels"
+msgstr ""
+
+#: .\apps\templates\whitelabel\companies\keymap.html:7
+msgid "Key Maps: "
+msgstr ""
+
+#: .\apps\templates\whitelabel\companies\keymap.html:18
+msgid "Current key"
+msgstr ""
+
+#: .\apps\templates\whitelabel\companies\keymap.html:20
+msgid "New key"
+msgstr ""
+
+#: .\apps\templates\whitelabel\module\delete_module.html:18
+msgid "¿Are you sure you want to delete the billing"
+msgstr ""
+
+#: .\apps\templates\whitelabel\module\main_module.html:74
+msgid "Total Price"
+msgstr ""
+
+#: .\apps\templates\whitelabel\module\update_module.html:9
+msgid "Update Billing: "
+msgstr ""
+
+#: .\apps\templates\whitelabel\module\update_module.html:12
+msgid "Coin: "
+msgstr ""
+
+#: .\apps\templates\whitelabel\process\delete_process.html:12
+msgid "¿Are you sure you want to delete the Process"
+msgstr ""
+
+#: .\apps\templates\whitelabel\process\main_process.html:9
+msgid "Add Process"
+msgstr ""
+
+#: .\apps\templates\whitelabel\process\main_process.html:25
+#: .\apps\templates\whitelabel\process\main_process.html:62
+#: .\apps\templates\whitelabel\process\update_process.html:24
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:142
+#: .\apps\templates\whitelabel\tickets\main_ticket.html:93
+msgid "Process"
+msgstr ""
+
+#: .\apps\templates\whitelabel\process\main_process.html:38
+msgid "List Process"
+msgstr ""
+
+#: .\apps\templates\whitelabel\process\update_process.html:6
+msgid "Update process"
+msgstr ""
+
+#: .\apps\templates\whitelabel\theme\theme.html:5
+#: .\apps\templates\whitelabel\theme\theme.html:15
+msgid "Theme"
+msgstr ""
+
+#: .\apps\templates\whitelabel\theme\theme.html:22
+msgid "Revise los espacios en rojo"
+msgstr ""
+
+#: .\apps\templates\whitelabel\theme\theme.html:32
+msgid "Button Color:"
+msgstr ""
+
+#: .\apps\templates\whitelabel\theme\theme.html:39
+msgid "Sidebar Color:"
+msgstr ""
+
+#: .\apps\templates\whitelabel\theme\theme.html:47
+msgid "Sidebar Color Preview:"
+msgstr ""
+
+#: .\apps\templates\whitelabel\theme\theme.html:70
+msgid "Crop Image"
+msgstr ""
+
+#: .\apps\templates\whitelabel\theme\theme.html:72
+#: .\apps\templates\whitelabel\theme\theme.html:78
+msgid "The image must be in PNG, JPG, or JPEG format and weigh less than 4 MB."
+msgstr ""
+
+#: .\apps\templates\whitelabel\theme\theme.html:73
+msgid "Recommended size: 250 pixels wide x 750 pixels high aspect ratio 1:3"
+msgstr ""
+
+#: .\apps\templates\whitelabel\theme\theme.html:79
+msgid ""
+"Recommended size: 2560  pixels wide x 1400 pixels high aspect ratio 16:9"
+msgstr ""
+
+#: .\apps\templates\whitelabel\theme\theme.html:112
+msgid "Format not allowed. The allowed formats are: PNG, JPG, JPEG."
+msgstr ""
+
+#: .\apps\templates\whitelabel\theme\theme.html:113
+msgid "The image is too large. It must be smaller than 4 MB."
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\add_ticket.html:7
+msgid "Add Ticket"
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\add_ticket.html:15
+#: .\apps\templates\whitelabel\tickets\view_ticket.html:20
+msgid "Subject:"
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\add_ticket.html:22
+msgid "Priority:"
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\add_ticket.html:30
+msgid "Process:"
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\add_ticket.html:43
+msgid "Interns"
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\add_ticket.html:54
+msgid "Message:"
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\add_ticket.html:59
+#: .\apps\templates\whitelabel\tickets\view_ticket.html:148
+msgid "Attachments cannot exceed 7 MB : "
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\add_ticket.html:129
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:427
+#: .\apps\templates\whitelabel\tickets\main_ticket.html:277
+#: .\apps\templates\whitelabel\tickets\view_ticket.html:229
+msgid "The archive "
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\add_ticket.html:130
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:428
+#: .\apps\templates\whitelabel\tickets\main_ticket.html:278
+#: .\apps\templates\whitelabel\tickets\view_ticket.html:230
+msgid " is not allowed. Allowed formats are: "
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\add_ticket.html:131
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:429
+#: .\apps\templates\whitelabel\tickets\main_ticket.html:279
+#: .\apps\templates\whitelabel\tickets\view_ticket.html:231
+msgid ""
+"The total size of the selected files exceeds the maximum allowed size of "
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\add_ticket.html:132
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:430
+#: .\apps\templates\whitelabel\tickets\main_ticket.html:280
+#: .\apps\templates\whitelabel\tickets\view_ticket.html:232
+msgid " exceeds the maximum allowed size of "
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:5
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:15
+msgid "Historic Tickets"
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:55
+msgid "Status:"
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:63
+msgid "Assignment:"
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:66
+msgid "Assigned"
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:71
+msgid "Start Date:"
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:75
+msgid "Ending Date:"
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:79
+msgid "Filter"
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:106
+#: .\apps\templates\whitelabel\tickets\main_ticket.html:57
+msgid "Ticket"
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:115
+msgid "Created by"
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:124
+#: .\apps\templates\whitelabel\tickets\main_ticket.html:75
+msgid "Subject"
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:151
+msgid "Assigned To"
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:169
+#: .\apps\templates\whitelabel\tickets\main_ticket.html:129
+msgid "Created At"
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:178
+#: .\apps\templates\whitelabel\tickets\main_ticket.html:138
+msgid "Last Comment"
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:187
+msgid "Duration"
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:214
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:407
+msgid "Qualify"
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:263
+msgid "Days"
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:279
+msgid "No results found for the selected company."
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:281
+msgid "No results found for the selected Assignment Status."
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:283
+msgid "No results found for the selected date."
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:285
+msgid "No results found. Please adjust the filters and try again."
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:342
+msgid "Qualification "
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:356
+msgid "Submit Rating"
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:412
+#: .\apps\templates\whitelabel\tickets\view_ticket.html:214
+msgid "Please select at least one filter before applying."
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:413
+#: .\apps\templates\whitelabel\tickets\view_ticket.html:215
+msgid "Ending Date cannot be earlier than Start Date."
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:414
+#: .\apps\templates\whitelabel\tickets\view_ticket.html:216
+msgid "Please select both Start and End date."
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\closed_tickets.html:425
+#: .\apps\templates\whitelabel\tickets\main_ticket.html:275
+#: .\apps\templates\whitelabel\tickets\view_ticket.html:227
+msgid "No results found"
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\comment_ticket.html:5
+msgid "Add comment"
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\comment_ticket.html:10
+msgid "Comment"
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\comment_ticket.html:28
+msgid "Save comment"
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\main_ticket.html:5
+msgid "Help Desk"
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\main_ticket.html:15
+msgid "Case Management"
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\main_ticket.html:37
+msgid "Create Ticket"
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\main_ticket.html:39
+msgid "Historic"
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\main_ticket.html:66
+msgid "Created by User"
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\main_ticket.html:102
+msgid "Assigned To User"
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\main_ticket.html:120
+msgid "Assigned To Company"
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\view_ticket.html:9
+msgid "View Ticket"
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\view_ticket.html:19
+msgid "# Ticket: "
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\view_ticket.html:21
+msgid "Priority: "
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\view_ticket.html:24
+msgid "Scale:"
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\view_ticket.html:47
+msgid "Assigned To:"
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\view_ticket.html:66
+msgid "Status: "
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\view_ticket.html:73
+msgid "Created at:"
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\view_ticket.html:74
+msgid "Created by:"
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\view_ticket.html:77
+msgid "Scale Process:"
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\view_ticket.html:91
+msgid "MESSAGE"
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\view_ticket.html:134
+msgid "Reopen"
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\view_ticket.html:141
+msgid "Add Comment"
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\view_ticket.html:159
+msgid "Send"
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\view_ticket.html:165
+msgid "Close Ticket"
+msgstr ""
+
+#: .\apps\templates\whitelabel\tickets\view_ticket.html:206
+msgid "Are you sure you want to reopen the Ticket "
+msgstr ""
+
+#: .\apps\whitelabel\forms.py:38 .\apps\whitelabel\forms.py:73
+#: .\apps\whitelabel\forms.py:157 .\apps\whitelabel\forms.py:190
+msgid "Type Map"
+msgstr ""
+
+#: .\apps\whitelabel\forms.py:41 .\apps\whitelabel\forms.py:76
+#: .\apps\whitelabel\forms.py:160 .\apps\whitelabel\forms.py:193
+msgid "Key Map"
+msgstr ""
+
+#: .\apps\whitelabel\forms.py:64 .\apps\whitelabel\forms.py:181
+msgid "Company Name"
+msgstr ""
+
+#: .\apps\whitelabel\forms.py:67 .\apps\whitelabel\forms.py:184
+msgid "Country"
+msgstr ""
+
+#: .\apps\whitelabel\forms.py:68 .\apps\whitelabel\forms.py:185
+msgid "City"
+msgstr ""
+
+#: .\apps\whitelabel\forms.py:69 .\apps\whitelabel\forms.py:186
+msgid "Phone Number"
+msgstr ""
+
+#: .\apps\whitelabel\forms.py:70 .\apps\whitelabel\forms.py:187
+msgid "Signed Contract"
+msgstr ""
+
+#: .\apps\whitelabel\forms.py:71 .\apps\whitelabel\forms.py:188
+msgid "Consultant"
+msgstr ""
+
+#: .\apps\whitelabel\forms.py:72 .\apps\whitelabel\forms.py:189
+msgid "Seller"
+msgstr ""
+
+#: .\apps\whitelabel\forms.py:75 .\apps\whitelabel\forms.py:192
+msgid "Actived"
+msgstr ""
+
+#: .\apps\whitelabel\forms.py:131 .\apps\whitelabel\forms.py:139
+#: .\apps\whitelabel\forms.py:271
+msgid "A company with this NIT already exists."
+msgstr ""
+
+#: .\apps\whitelabel\forms.py:354
+msgid "Button Color"
+msgstr ""
+
+#: .\apps\whitelabel\forms.py:355
+msgid "Sidebar Color"
+msgstr ""
+
+#: .\apps\whitelabel\forms.py:356
+msgid "Opacity"
+msgstr ""
+
+#: .\apps\whitelabel\forms.py:357
+msgid "Sidebar Image"
+msgstr ""
+
+#: .\apps\whitelabel\forms.py:358
+msgid "Lock Screen Image"
+msgstr ""
+
+#: .\apps\whitelabel\models.py:38
+msgid "button color"
+msgstr ""
+
+#: .\apps\whitelabel\models.py:46
+msgid "lock screen image"
+msgstr ""
+
+#: .\apps\whitelabel\models.py:54
+msgid "sidebar image"
+msgstr ""
+
+#: .\apps\whitelabel\models.py:60
+msgid "sidebar color"
+msgstr ""
+
+#: .\apps\whitelabel\models.py:64
+msgid "opacity"
+msgstr ""
+
+#: .\apps\whitelabel\models.py:80
+msgid "themes"
+msgstr ""
+
+#: .\apps\whitelabel\models.py:95 .\apps\whitelabel\models.py:297
+msgid "modules"
+msgstr ""
+
+#: .\apps\whitelabel\models.py:109
+msgid "map types"
+msgstr ""
+
+#: .\apps\whitelabel\models.py:124
+msgid "Map type"
+msgstr ""
+
+#: .\apps\whitelabel\models.py:126
+msgid "key map"
+msgstr ""
+
+#: .\apps\whitelabel\models.py:129
+msgid "company type maps"
+msgstr ""
+
+#: .\apps\whitelabel\models.py:145
+msgid "key map cannot be only spaces"
+msgstr ""
+
+#: .\apps\whitelabel\models.py:238
+msgid "nit"
+msgstr ""
+
+#: .\apps\whitelabel\models.py:241
+msgid "Company name"
+msgstr ""
+
+#: .\apps\whitelabel\models.py:244
+msgid "legal representative"
+msgstr ""
+
+#: .\apps\whitelabel\models.py:250
+msgid "country"
+msgstr ""
+
+#: .\apps\whitelabel\models.py:254
+msgid "city"
+msgstr ""
+
+#: .\apps\whitelabel\models.py:265
+msgid "signed contract"
+msgstr ""
+
+#: .\apps\whitelabel\models.py:274
+msgid "provider"
+msgstr ""
+
+#: .\apps\whitelabel\models.py:277
+msgid "consultant"
+msgstr ""
+
+#: .\apps\whitelabel\models.py:279
+msgid "seller"
+msgstr ""
+
+#: .\apps\whitelabel\models.py:283
+msgid "type map"
+msgstr ""
+
+#: .\apps\whitelabel\models.py:290
+msgid "company logo"
+msgstr ""
+
+#: .\apps\whitelabel\models.py:299
+msgid "actived"
+msgstr ""
+
+#: .\apps\whitelabel\models.py:436
+msgid "Provider Company"
+msgstr ""
+
+#: .\apps\whitelabel\models.py:444
+msgid "Customer Company"
+msgstr ""
+
+#: .\config\settings.py:200
+msgid "English"
+msgstr ""
+
+#: .\config\settings.py:201
+msgid "Spanish"
+msgstr ""
+
+#: .\config\settings.py:202
+msgid "Italian"
+msgstr ""
