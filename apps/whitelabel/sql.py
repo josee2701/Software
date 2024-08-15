@@ -13,24 +13,6 @@ def fetch_all_process(company):
         columns = [col[0] for col in cursor.description]
         return [dict(zip(columns, row)) for row in rows]
 
-
-def fetch_all_company(company, user, search_query=None):
-    with connection.cursor() as cursor:
-        # Asegurarse de que 'company' es del tipo correcto, por ejemplo, un entero
-        company_id = int(company.id)  # Convertir a entero si es necesario
-        user_id = int(user.id)
-
-        # Llamada al procedimiento almacenado con el parámetro correctamente formateado
-        cursor.execute(
-            "EXEC [dbo].[ListCompanyByUser] @CompanyId=%s , @UserId=%s, @SearchQuery=%s",
-            [company_id, user_id, search_query],
-        )
-
-        rows = cursor.fetchall()
-        columns = [col[0] for col in cursor.description]
-        return [dict(zip(columns, row)) for row in rows]
-
-
 def get_ticket_by_user(user_id, search_query=None):
     try:
         with connection.cursor() as cursor:
