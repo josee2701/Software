@@ -1,20 +1,47 @@
-{% load i18n static %} {% block content %}
+{% load i18n static %}
 
+{% block content %}
 <!-- Un formulario que pregunta al usuario si está seguro de querer eliminar la empresa. -->
 <div class="modal-content">
   <div class="row">
     <div class="modal-body-md-1">
-      <div class="col" >
+      <div class="col">
         <div class="card align-items-center">
           <div class="card-body">
             <form hx-post="{{ request.path }}" hx-target="#modal-content">
               {% csrf_token %}
-              <p>{% trans '¿Are you sure you want to delete the Process' %} "{{ object }}" ?</p>
+              <p>
+                {% trans "Are you sure you want to delete the Process" %} "{{ object }}"?
+              </p>
+              {% if related_objects %}
+              
+              <p>
+                {% trans "This company is related to the following objects:" %}
+              </p>
+              {% endif %}
+
+              <ul>
+                {% for model_name, related_list in related_objects.items %}
+                  <li>
+                    <strong>{{ model_name|capfirst }}:</strong>
+                    <ul>
+                      {% for related in related_list %}
+                        <li>{{ related }}</li>
+                      {% endfor %}
+                    </ul>
+                  </li>
+                {% endfor %}
+              </ul>
+
               <div class="d-grid col-4 mx-auto">
-                <button type="submit" class="btn btn-primary">{% trans "Confirm" %}</button>
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">{% trans 'Cancel' %}</button>
+                <button type="submit" class="btn btn-primary">
+                  {% trans "Confirm" %}
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                  {% trans "Cancel" %}
+                </button>
               </div>
-              </form>
+            </form>
           </div>
         </div>
       </div>

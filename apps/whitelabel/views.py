@@ -13,13 +13,11 @@ from django.contrib.auth.mixins import (LoginRequiredMixin,
                                         PermissionRequiredMixin)
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
-from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db import DEFAULT_DB_ALIAS, transaction
 from django.db.models import F, OuterRef, Q, Subquery, Sum
 from django.forms.models import model_to_dict
-from django.http import (Http404, HttpResponse, HttpResponseNotAllowed,
-                         HttpResponseRedirect, JsonResponse, QueryDict)
+from django.http import Http404, HttpResponse, JsonResponse, QueryDict
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
@@ -29,37 +27,29 @@ from django.utils.translation import gettext_lazy as _
 from django.views import generic
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.views.generic import ListView
-from django.views.generic.list import MultipleObjectMixin
-from rest_framework import generics
 
 from apps.authentication.models import User
-from apps.log.mixins import (AuditLogSyncMixin, CreateAuditLogAsyncMixin,
-                             CreateAuditLogSyncMixin, DeleteAuditLogAsyncMixin,
-                             UpdateAuditLogAsyncMixin, UpdateAuditLogSyncMixin,
-                             obtener_ip_publica)
+from apps.log.mixins import (CreateAuditLogAsyncMixin, CreateAuditLogSyncMixin,
+                             DeleteAuditLogAsyncMixin,
+                             UpdateAuditLogAsyncMixin, obtener_ip_publica)
 from apps.log.utils import log_action
-from apps.realtime.apis import (extract_number, extract_number_tp,
-                                get_user_companies)
+from apps.realtime.apis import extract_number, get_user_companies
 from apps.whitelabel.forms import (AttachmentForm, CommentForm,
-                                   CompanyCustomerForm, CompanyDeleteForm,
-                                   CompanyLogoForm, DistributionCompanyForm,
-                                   KeyMapForm, MessageForm, Moduleform,
-                                   ProcessForm, ThemeForm, TicketForm)
+                                   CompanyCustomerForm, CompanyLogoForm,
+                                   DistributionCompanyForm, KeyMapForm,
+                                   MessageForm, Moduleform, ProcessForm,
+                                   ThemeForm, TicketForm)
 from apps.whitelabel.models import (Attachment, Company, CompanyTypeMap,
                                     MapType, Module, Process, Theme, Ticket)
 from config.filtro import General_Filters
-from config.pagination import get_paginate_by
 
 from .forms import (AttachmentForm, CommentForm, CompanyCustomerForm,
-                    CompanyDeleteForm, CompanyLogoForm,
-                    DistributionCompanyForm, KeyMapForm, MessageForm,
-                    Moduleform, ProcessForm, ThemeForm, TicketCrearte,
-                    TicketForm)
+                    CompanyLogoForm, DistributionCompanyForm, KeyMapForm,
+                    MessageForm, Moduleform, ProcessForm, ThemeForm,
+                    TicketCrearte, TicketForm)
 from .models import (Attachment, Company, CompanyTypeMap, MapType, Message,
                      Module, Process, Theme, Ticket)
-from .serializer import ClienteSerializer
-from .sql import (fetch_all_company, get_modules_by_user, get_ticket_by_user,
-                  get_ticket_closed)
+from .sql import get_modules_by_user, get_ticket_by_user, get_ticket_closed
 
 
 class CompaniesView(PermissionRequiredMixin,LoginRequiredMixin, ListView):
@@ -877,6 +867,290 @@ class UpdateCompanyLogoView(
         """
         return render(self.request, self.template_name, {"form": form})
 
+class ListProcessAddView(
+    PermissionRequiredMixin,
+    LoginRequiredMixin,
+    CreateAuditLogAsyncMixin,
+    generic.CreateView,
+    generic.ListView,
+):
+    """
+    Vista que permite listar y crear procesos en una misma página.
+    Requiere autenticación y permisos para añadir procesos.
+    """
+    template_name = "whitelabel/process/main_process.html"
+    permission_required = "whitelabel.add_company"
+    form_class = ProcessForm
+    model = Process
+    paginate_by = 10  # Valor por defecto para la paginación
+
+    def get_success_url(self):
+        """
+        Redirige a la página de listado de procesos tras una creación exitosa.
+
+        Returns:
+            str: URL a la que redirigir después de crear el proceso.
+        """
+        return reverse("companies:process")
+
+    def get_paginate_by(self, queryset):
+        """
+        Permite que el valor de paginación sea dinámico, basado en el parámetro GET.
+
+        Args:
+            queryset (QuerySet): Consulta de procesos.
+
+        Returns:
+            int: Número de objetos por página.
+        """
+        paginate_by = self.request.GET.get("paginate_by", self.paginate_by)
+        try:
+            return int(paginate_by)
+        except (ValueError, TypeError):
+            return self.paginate_by
+
+    def get_queryset(self):
+        """
+        Obtiene los procesos filtrados para la compañía del usuario.
+
+        Returns:
+            QuerySet: Procesos visibles de la compañía ordenados por tipo de proceso.
+        """
+        user = self.request.user
+        return Process.objects.filter(company=user.company, visible=True).order_by("process_type")
+
+    def get_context_data(self, **kwargs):
+        """
+        Añade datos adicionales al contexto, como la paginación, el primer proceso y el color del tema.
+
+        Args:
+            kwargs: Argumentos adicionales para el contexto.
+
+        Returns:
+            dict: Contexto actualizado para la plantilla.
+        """
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        first_process = Process.objects.filter(company=user.company, visible=True).order_by("id").first()
+        companies = get_user_companies(user)
+
+        # Modificar el campo 'company' en el formulario según el rol del usuario
+        if user.company_id == 1:
+            context["form"].fields["company"].choices = companies
+        else:
+            context["form"].fields["company"].queryset = companies
+
+        # Configurar la paginación
+        queryset = self.get_queryset()
+        paginator = Paginator(queryset, self.get_paginate_by(queryset))
+        page = self.request.GET.get("page")
+        context["page_obj"] = paginator.get_page(page)
+        context["object_list"] = context["page_obj"].object_list
+
+        # Calcular el número de inicio de los objetos en la página actual
+        page_number = context["page_obj"].number if context["page_obj"] else 1
+        context["start_number"] = (page_number - 1) * self.get_paginate_by(queryset)
+
+        # Añadir el color del botón basado en el tema de la compañía
+        theme = user.company.theme_set.first()
+        context["button_color"] = theme.button_color if theme else "#000000"
+
+        # Añadir el ID del primer proceso si existe
+        if first_process:
+            context["process_admin"] = first_process.id
+
+        return context
+
+    def form_valid(self, form):
+        """
+        Llamado cuando el formulario de creación es válido.
+        Asigna al usuario actual como creador y modificador del proceso.
+
+        Args:
+            form (ProcessForm): Formulario válido con los datos del proceso.
+
+        Returns:
+            HttpResponse: Redirección después de la creación exitosa del proceso.
+        """
+        form.instance.modified_by = self.request.user
+        form.instance.created_by = self.request.user
+        form.save()
+        return redirect(self.get_success_url())
+
+
+class UpdateProcessView(
+    PermissionRequiredMixin,
+    LoginRequiredMixin,
+    UpdateAuditLogAsyncMixin,
+    generic.UpdateView,
+):
+    """
+    Vista de actualización de proceso.
+
+    Esta vista permite actualizar un proceso existente en el sistema.
+    Requiere permisos de cambio de proceso y autenticación de inicio de sesión.
+    Utiliza el formulario ProcessForm para validar y guardar los datos del proceso.
+    Después de una actualización exitosa, redirige a la lista de procesos.
+    """
+
+    template_name = "whitelabel/process/update_process.html"
+    permission_required = "whitelabel.change_company"
+    form_class = ProcessForm
+    model = Process
+
+    def get_success_url(self):
+        """
+        Define la URL de redirección después de la actualización exitosa.
+
+        Returns:
+            str: URL de redirección a la lista de procesos.
+        """
+        return reverse("companies:process")
+
+    def get_context_data(self, **kwargs):
+        """
+        Retorna el contexto de datos para renderizar la vista.
+
+        Args:
+            **kwargs: Argumentos clave adicionales.
+
+        Returns:
+            dict: Contexto de datos para renderizar la vista.
+        """
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        companies = get_user_companies(user)
+
+        # Modificar el campo de empresa en el formulario según la compañía del usuario
+        if user.company_id == 1:
+            context["form"].fields["company"].choices = companies
+        else:
+            context["form"].fields["company"].queryset = companies
+
+        # Añadir el color del botón al contexto si existe
+        theme = user.company.theme_set.first()
+        context["button_color"] = theme.button_color if theme else "#000000"
+        
+        return context
+
+    def form_valid(self, form):
+        """
+        Guarda los datos del formulario y retorna una respuesta HTTP.
+
+        Args:
+            form (Form): Formulario con los datos del proceso.
+
+        Returns:
+            HttpResponse: Redirige a la URL de éxito tras guardar los datos correctamente.
+        """
+        # Solo actualizamos `modified_by` cuando se modifica
+        form.instance.modified_by = self.request.user
+        
+        # Guardar el formulario y redirigir
+        response = super().form_valid(form)
+        return redirect(self.get_success_url())
+
+    def form_invalid(self, form):
+        """
+        Maneja los casos en que el formulario es inválido.
+
+        Args:
+            form (Form): Formulario inválido con errores de validación.
+
+        Returns:
+            HttpResponse: Respuesta HTTP renderizando el formulario nuevamente con errores.
+        """
+        return self.render_to_response(self.get_context_data(form=form))
+
+
+
+
+class DeleteProcessView(
+    PermissionRequiredMixin,
+    LoginRequiredMixin,
+    DeleteAuditLogAsyncMixin,
+    generic.DeleteView,
+):
+    """
+    Vista de clase para eliminar un proceso.
+
+    Esta vista se utiliza para eliminar un proceso existente en la aplicación.
+    Requiere permisos de eliminación y autenticación del usuario.
+
+    Atributos:
+        model (Model): El modelo de datos asociado a la vista.
+        template_name (str): El nombre de la plantilla HTML utilizada para renderizar la vista.
+        permission_required (str): El permiso requerido para acceder a la vista.
+        fields (list): La lista de campos del modelo que se mostrarán en el formulario.
+
+    Métodos:
+        form_valid(form): Método que se ejecuta cuando el formulario es válido.
+            Actualiza el campo 'visible' del proceso a False y guarda los cambios.
+            Retorna una respuesta HTTP con el código de estado 204 y el encabezado "HX-Trigger: ListprocessChanged".
+    """
+
+    model = Process
+    template_name = "whitelabel/process/delete_process.html"
+    permission_required = "whitelabel.delete_company"
+
+    def get_success_url(self):
+        """
+        Define la URL de redirección después de la actualización exitosa.
+
+        Returns:
+            str: URL de redirección a la lista de procesos.
+        """
+        return reverse("companies:process")
+
+    def form_valid(self, form):
+        """
+        Marca la respuesta como 204 (sin contenido) y agrega un encabezado HX-Redirect
+        para redirigir tras la eliminación.
+
+        Args:
+            form (Form): El formulario de confirmación de eliminación.
+
+        Returns:
+            HttpResponse: La respuesta HTTP con el código 204 y encabezado HX-Redirect.
+        """
+        response = super().form_valid(form)
+        return redirect(self.get_success_url())
+
+    def get_context_data(self, **kwargs):
+        """
+        Agrega al contexto los objetos relacionados que serán eliminados junto con la compañía.
+
+        Args:
+            **kwargs: Argumentos adicionales para el contexto.
+
+        Returns:
+            dict: Contexto actualizado con los objetos relacionados a la compañía.
+        """
+        context = super().get_context_data(**kwargs)
+        company = self.get_object()  # Obtiene la compañía que se eliminará
+
+        try:
+            # Inicializa un recolector de objetos relacionados a eliminar
+            collector = NestedObjects(using=DEFAULT_DB_ALIAS)
+            collector.collect([company])  # Recolecta todos los objetos relacionados
+
+            # Creamos un diccionario donde se almacenarán los objetos relacionados por modelo
+            related_objects = {}
+
+            # Recorremos los modelos y sus objetos relacionados
+            for model, objects in collector.model_objs.items():
+                model_name = model._meta.verbose_name_plural  # Nombre plural del modelo
+                related_objects[model_name] = objects  # Asigna los objetos relacionados al diccionario
+
+            # Agregamos los objetos relacionados al contexto para mostrarlos en la plantilla
+            context['related_objects'] = related_objects
+
+        except Exception as e:
+            # En caso de error, mostrar el mensaje en la consola para depuración
+            print(f"Error al obtener objetos relacionados: {e}")
+
+        return context
+
 
 class ThemeView(PermissionRequiredMixin, LoginRequiredMixin, UpdateAuditLogAsyncMixin, generic.UpdateView):
     """
@@ -1267,195 +1541,6 @@ class UpdateModuleView(PermissionRequiredMixin, LoginRequiredMixin, generic.Upda
             print("log_action no está definido en la clase.")
         return super().form_valid(form)
 
-
-class ListProcessAddView(
-    PermissionRequiredMixin,
-    LoginRequiredMixin,
-    CreateAuditLogAsyncMixin,
-    generic.CreateView,
-    generic.ListView,
-):
-    template_name = "whitelabel/process/main_process.html"
-    permission_required = "whitelabel.add_company"
-    form_class = ProcessForm
-    model = Process
-    paginate_by = 10  # Establece un valor por defecto para la paginación
-
-    def get_success_url(self):
-        return reverse("companies:process")
-
-    def get_paginate_by(self, queryset):
-        paginate_by = self.request.GET.get("paginate_by", self.paginate_by)
-        try:
-            return int(paginate_by)
-        except (ValueError, TypeError):
-            return self.paginate_by
-
-    def get_queryset(self):
-        user = self.request.user
-        return Process.objects.filter(company=user.company, visible=True).order_by(
-            "process_type"
-        )
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        user = self.request.user
-        first_process = (
-            Process.objects.filter(company=user.company, visible=True)
-            .order_by("id")
-            .first()
-        )
-        companies = get_user_companies(user)
-        if user.company_id == 1:
-            context["form"].fields["company"].choices = companies
-        else:
-            context["form"].fields["company"].queryset = companies
-
-        paginator = Paginator(self.get_queryset(), self.get_paginate_by(None))
-        page = self.request.GET.get("page")
-        context["page_obj"] = paginator.get_page(page)
-        context["object_list"] = context["page_obj"].object_list
-
-        page_number = context["page_obj"].number if context["page_obj"] else 1
-        context["start_number"] = (page_number - 1) * self.get_paginate_by(None)
-        button_color = self.request.user.company.theme_set.all().first().button_color
-        context["button_color"] = button_color
-        
-        context["process_admin"] = first_process.id
-        return context
-
-    def form_valid(self, form):
-        form.instance.modified_by = self.request.user
-        form.instance.created_by = self.request.user
-        form.save()
-        return redirect(self.get_success_url())
-
-
-class UpdateProcessView(
-    PermissionRequiredMixin,
-    LoginRequiredMixin,
-    UpdateAuditLogAsyncMixin,
-    generic.UpdateView,
-):
-    """
-    Vista de actualización de proceso.
-
-    Esta vista permite actualizar un proceso existente en el sistema.
-    Requiere permisos de cambio de proceso y autenticación de inicio de sesión.
-    Utiliza el formulario ProcessForm para validar y guardar los datos del proceso.
-    Después de una actualización exitosa, redirige a la lista de procesos.
-
-    Atributos:
-        template_name (str): Nombre de la plantilla HTML para renderizar la vista.
-        permission_required (str): Permiso requerido para acceder a la vista.
-        form_class (Form): Clase del formulario utilizado para validar los datos del proceso.
-        model (Model): Modelo del proceso que se va a actualizar.
-        success_url (str): URL a la que se redirige después de una actualización exitosa.
-
-    Métodos:
-        get_context_data(**kwargs): Retorna el contexto de datos para renderizar la vista.
-        form_valid(form): Guarda los datos del formulario y retorna una respuesta HTTP.
-
-    """
-
-    template_name = "whitelabel/process/update_process.html"
-    permission_required = "whitelabel.change_company"
-    form_class = ProcessForm
-    model = Process
-
-    def get_success_url(self):
-        return reverse("companies:process")
-
-    def get_context_data(self, **kwargs):
-        """
-        Retorna el contexto de datos para renderizar la vista.
-
-        Args:
-            **kwargs: Argumentos clave adicionales.
-
-        Returns:
-            dict: Contexto de datos para renderizar la vista.
-
-        """
-        context = super().get_context_data(**kwargs)
-        companies = get_user_companies(self.request.user)
-        if self.request.user.company_id == 1:
-            context["form"].fields["company"].choices = companies
-        else:
-            context["form"].fields["company"].queryset = companies
-        button_color = self.request.user.company.theme_set.all().first().button_color
-        context["button_color"] = button_color
-        return context
-
-    def form_valid(self, form):
-        """
-        Guarda los datos del formulario y retorna una respuesta HTTP.
-
-        Args:
-            form (Form): Formulario con los datos del proceso.
-
-        Returns:
-            HttpResponse: Respuesta HTTP con estado 204 (Sin contenido) y encabezados adicionales.
-
-        """
-
-        form.instance.modified_by = self.request.user
-        form.instance.created_by = self.request.user
-        response = super().form_valid(form)
-        return redirect(self.get_success_url())
-
-
-class DeleteProcessView(
-    PermissionRequiredMixin,
-    LoginRequiredMixin,
-    DeleteAuditLogAsyncMixin,
-    generic.UpdateView,
-):
-    """
-    Vista de clase para eliminar un proceso.
-
-    Esta vista se utiliza para eliminar un proceso existente en la aplicación.
-    Requiere permisos de eliminación y autenticación del usuario.
-
-    Atributos:
-        model (Model): El modelo de datos asociado a la vista.
-        template_name (str): El nombre de la plantilla HTML utilizada para renderizar la vista.
-        permission_required (str): El permiso requerido para acceder a la vista.
-        fields (list): La lista de campos del modelo que se mostrarán en el formulario.
-
-    Métodos:
-        form_valid(form): Método que se ejecuta cuando el formulario es válido.
-            Actualiza el campo 'visible' del proceso a False y guarda los cambios.
-            Retorna una respuesta HTTP con el código de estado 204 y el encabezado "HX-Trigger: ListprocessChanged".
-    """
-
-    model = Process
-    template_name = "whitelabel/process/delete_process.html"
-    permission_required = "whitelabel.delete_company"
-    fields = ["visible"]
-
-    def get_success_url(self):
-        return reverse("companies:process")
-
-    def form_valid(self, form):
-        """
-        Método que se ejecuta cuando el formulario es válido.
-
-        Actualiza el campo 'visible' del proceso a False y guarda los cambios.
-        Retorna una respuesta HTTP con el código de estado 204 y el encabezado "HX-Trigger:
-        ListprocessChanged".
-
-        Parámetros:
-            form (Form): El formulario válido.
-
-        Retorna:
-            HttpResponse: La respuesta HTTP con el código de estado 204 y el encabezado "HX-Trigger
-            : ListprocessChanged".
-        """
-        form.instance.visible = False
-        # Llama al método form_valid de la clase padre para registrar la acción en el log de auditoría
-        response = super().form_valid(form)
-        return redirect(self.get_success_url())
 
 
 class ListTicketTemplate(LoginRequiredMixin, PermissionRequiredMixin, ListView):
