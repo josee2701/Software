@@ -2,8 +2,6 @@
 __pycache__/
 *.py[cod]
 
-# migrations
-[0-9]*.py
 
 # tests and coverage
 *.pytest_cache
