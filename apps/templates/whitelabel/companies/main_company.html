@@ -49,11 +49,6 @@
                   <a hx-get="{% url 'companies:createCustomerCompany' %}" class="btn btn-primary mx-0.5" hx-target="#modal .modal-content">{% trans "Add final customer" %}</a>
                   <a hx-get="{% url 'companies:process' %}" class="btn btn-primary mx-2" hx-target="#modal .modal-content">{% trans "Lists Process" %}</a>
                 {% endif %}
-                {% if company_info %}
-                  <a class="btn btn-primary" id="exportExcelBtn" type="button">
-                    <i class="fa-solid fa-file-excel mx-2"></i> {% trans "Export to Excel" %}
-                  </a>
-                {% endif %}
               </div>
             </div>
           </div>
@@ -227,21 +222,6 @@
               </nav>
             </div>
           </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-<div class="modal fade" id="downloadModal" tabindex="-1" aria-labelledby="downloadModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-start modal-dialog-scrollable">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="downloadModalLabel">{% trans "Download Progress" %}</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <div class="progress">
-          <div id="downloadProgressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar">0%</div>
         </div>
       </div>
     </div>

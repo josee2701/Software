@@ -63,7 +63,7 @@ class CompaniesView(PermissionRequiredMixin,LoginRequiredMixin, ListView):
         model: Modelo asociado a la vista.
         paginate_by: Número de elementos por página por defecto.
     """
-    template_name = "whitelabel/companies/company_main.html"
+    template_name = "whitelabel/companies/main_company.html"
     permission_required= "whitelabel.view_company"
     login_url = "login"
     context_object_name = "company_info"
@@ -427,7 +427,7 @@ class UpdateDistributionCompanyView(
     """
 
     model = Company
-    template_name = "whitelabel/companies/company_update.html"
+    template_name = "whitelabel/companies/update_company.html"
     permission_required = "whitelabel.change_company"
     login_url = "login"
     form_class = DistributionCompanyForm
@@ -531,7 +531,7 @@ class UpdateCustomerCompanyView(
     """
 
     model = Company
-    template_name = "whitelabel/companies/company_update.html"
+    template_name = "whitelabel/companies/update_company.html"
     permission_required = "whitelabel.change_company"
     form_class = CompanyCustomerForm
     success_url = reverse_lazy("companies:companies")
@@ -647,7 +647,7 @@ class DeleteCompanyView(
         success_url (str): URL de redirección tras la eliminación exitosa.
     """
     model = Company
-    template_name = "whitelabel/companies/company_delete.html"
+    template_name = "whitelabel/companies/delete_company.html"
     permission_required = "whitelabel.delete_company"
     success_url = reverse_lazy("companies:companies")
 
@@ -717,7 +717,7 @@ class KeyMapView(LoginRequiredMixin, UpdateAuditLogAsyncMixin, generic.TemplateV
     Vista para actualizar las claves de los mapas de una compañía. 
     Requiere autenticación.
     """
-    template_name = "whitelabel/companies/keymap.html"
+    template_name = "whitelabel/companies/Key_maps_company.html"
 
     def get_success_url(self):
         """
@@ -819,7 +819,7 @@ class UpdateCompanyLogoView(
     Permite a los usuarios autenticados actualizar el logotipo de la empresa a la que tienen acceso.
     """
     model = Company
-    template_name = "whitelabel/companies/company_update_logo.html"
+    template_name = "whitelabel/companies/logo_company.html"
     form_class = CompanyLogoForm
 
     def get_success_url(self):
