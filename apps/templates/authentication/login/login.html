@@ -1,0 +1,77 @@
+{% extends 'authentication/base.html' %}
+{% load i18n static %}
+
+{% block title %}{% trans "Login" %}{% endblock title %}
+
+{% block content %}
+<main class="main-content mt-0">
+  <div class="page-header align-items-center min-vh-100 d-flex" style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);">
+    <div class="container">
+      <div class="row justify-content-center">
+        <div class="col-lg-4 col-md-8 col-12">
+          <div class="card border-0 shadow-lg p-4">
+            <div class="text-center mb-4">
+              <h2 class="text-dark font-weight-bold">{% trans "Welcome Back" %}</h2>
+              <p class="text-muted">{% trans "Please login to your account" %}</p>
+            </div>
+
+            <form role="form" class="needs-validation" method="post" novalidate>
+              {% csrf_token %}
+              
+              <!-- Input email/username field -->
+              <div class="form-group mb-3">
+                <label for="email" class="form-label">{% trans "Email" %}</label>
+                {{ form.email }}
+                {{form.error.email}}
+                <div class="invalid-feedback">
+                  {% trans "Please enter a valid email." %}
+                </div>
+              </div>
+              
+              <!-- Input password field -->
+              <div class="form-group mb-3">
+                <label for="password" class="form-label">{% trans "Password" %}</label>
+                {{ form.password }}
+                {{form.error.password}}
+                <div class="invalid-feedback">
+                  {% trans "Please enter your password." %}
+                </div>
+              </div>
+              
+              {% comment %} <!-- Remember me checkbox -->
+              <div class="form-check mb-4">
+                <input class="form-check-input" type="checkbox" id="rememberMe" name="rememberMe">
+                <label class="form-check-label" for="rememberMe">
+                  {% trans "Remember me" %}
+                </label>
+              </div>
+             {% endcomment %}
+              <!-- Submit button -->
+              <div class="d-grid">
+                <button type="submit" class="btn btn-primary btn-lg">{% trans "Log in" %}</button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Optional Sign-up link -->
+          <div class="text-center mt-4">
+            <p class="text-muted">{% trans "Don't have an account?" %}
+              <a href=# class="text-primary">{% trans "Sign up" %}</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+{% endblock content %}
+
+<script>
+  // DOMContentLoaded event to ensure the page is fully loaded
+  document.addEventListener('DOMContentLoaded', function () {
+      var errors = document.getElementById('form-errors');
+      if (errors && errors.textContent.includes('CSRF')) {
+          window.location.reload(true);
+      }
+  });
+</script>

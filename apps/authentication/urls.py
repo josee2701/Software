@@ -10,25 +10,20 @@ https://docs.djangoproject.com/en/4.1/topics/auth/default/
 
 from django.urls import include, path
 
-from .apis import SearchUser, list_proces_by_company, ExportDataUsers
-from .views import (AddUserView, ClearEmailView, DeleteUser, IndexView_,
-                    LoginView_, Main_, PasswordChangeDoneView_,
-                    PasswordChangeView_, PasswordResetCompleteView_,
-                    PasswordResetConfirmView_, PasswordResetDoneView_,
-                    PasswordResetView_, PasswordUserView, PermissionUserView,
-                    ProfileUserView, UpdatePermissionUser, UpdateUserView,
-                    UserLisTemplate)
+from .apis import ExportDataUsers, SearchUser, list_proces_by_company
+from .views import (AddUserView, DeleteUser, LoginView_, Main_,
+                    PasswordChangeDoneView_, PasswordChangeView_,
+                    PasswordResetCompleteView_, PasswordResetConfirmView_,
+                    PasswordResetDoneView_, PasswordResetView_,
+                    PasswordUserView, PermissionUserView, ProfileUserView,
+                    UpdatePermissionUser, UpdateUserView, UserLisTemplate)
 
 urlpatterns = [
     # Vista de inicio o bienvenida.
-    path("clear_email/", ClearEmailView.as_view(), name="clear_email"),
-    path("", IndexView_.as_view(), name="index"),
+    path("", LoginView_.as_view(), name="index"),
     # Vista principal a la cual se redirigen los usuarios autenticados.
-    # path("main/", RedirectView.as_view(url=reverse_lazy("admin:index")), name="main"),
     path("main/", Main_.as_view(), name="main"),
     # Vista de autenticación. Reescribe la vista predeterminada de Django.
-    path("login/", LoginView_.as_view(), name="login"),
-    # Vista de cambio de contraseña. Reescribe la vista predeterminada...
     path("password_change/", PasswordChangeView_.as_view(), name="password_change"),
     # Vista de confirmación de cambio de contraseña. Reescribe la vista predeterminada...
     path(

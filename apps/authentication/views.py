@@ -14,11 +14,8 @@ https://docs.djangoproject.com/en/4.0/topics/auth/customizing/
 """
 import asyncio
 import json
-import os
-from django.core.files.base import ContentFile
-from django.core.files.storage import default_storage
-from django.contrib.auth import (authenticate, get_user_model, login,
-                                 update_session_auth_hash)
+
+from django.contrib.auth import authenticate, login, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import (LoginRequiredMixin,
                                         PermissionRequiredMixin)
@@ -30,222 +27,153 @@ from django.contrib.auth.views import (PasswordChangeDoneView,
                                        PasswordResetConfirmView,
                                        PasswordResetDoneView,
                                        PasswordResetView)
+from django.core.paginator import Paginator
 from django.db.models import Q
 from django.http import HttpResponse, HttpResponseRedirect
-from django.core.paginator import Paginator
 from django.shortcuts import redirect, render
 from django.urls import reverse, reverse_lazy
 from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_protect
-from django.views.generic import ListView
 from django.utils.translation import gettext_lazy as _
-from django.views import View, generic
+from django.views import generic
 from django.views.decorators import cache, csrf
 from django.views.decorators.cache import never_cache
-from django.views.generic import TemplateView
+from django.views.decorators.csrf import csrf_protect
+from django.views.generic import ListView, TemplateView
 from django.views.generic.edit import FormView
 
 from apps.log.mixins import (CreateAuditLogAsyncMixin, CreateAuditLogSyncMixin,
                              DeleteAuditLogSyncMixin, UpdateAuditLogSyncMixin,
                              obtener_ip_publica)
 from apps.log.utils import log_action
-from apps.realtime.apis import extract_number, sort_key
+from apps.realtime.apis import sort_key
 from apps.realtime.models import Vehicle, VehicleGroup
-from apps.whitelabel.models import Company, Module, Process, Theme
+from apps.whitelabel.models import Company, Module, Process
 
-from .forms import (IndexForm_, LoginForm_, PasswordChangeForm_,
-                    PasswordResetForm_, PermissionForm, SetPasswordForm_,
-                    UserChangeForm_, UserCreationForm_, UserProfileForm)
+from .forms import (LoginForm_, PasswordChangeForm_, PasswordResetForm_,
+                    PermissionForm, SetPasswordForm_, UserChangeForm_,
+                    UserCreationForm_, UserProfileForm)
+from .models import User
 from .sql import fetch_all_user
-
-User = get_user_model()
-
-
-class ClearEmailView(View):
-    """
-    Vista para limpiar el correo electrónico de la sesión y redirigir al usuario para que ingrese un nuevo correo.
-    """
-
-    def get(self, request, *args, **kwargs):
-        if "email" in request.session:
-            del request.session["email"]
-        request.session.flush()
-        return redirect("index")
-
-
-class IndexView_(FormView):
-    """
-    Vista de inicio: valida que el único campo del formulario (email) exista en la aplicación.
-    """
-
-    template_name = "authentication/index.html"
-    form_class = IndexForm_
-    success_url = reverse_lazy("login")
-    redirect_authenticated_user = True
-
-    @method_decorator(csrf.csrf_protect)
-    @method_decorator(never_cache)
-    def dispatch(self, request, *args, **kwargs):
-        """
-        Si el usuario está autentificado, redirígelo a la página principal `main`.
-
-        :param request: El objeto de solicitud actual.
-        :return: Se devuelve el método super().dispatch().
-        """
-        if self.redirect_authenticated_user and request.user.is_authenticated:
-            return redirect("main")
-        if request.session.get("email"):
-            return redirect(self.success_url)
-        return super().dispatch(request, *args, **kwargs)
-
-    def form_valid(self, form):
-        """
-        Método que se llama cuando el formulario es válido.
-
-        :param form: El formulario que se envió
-        :return: Se devuelve super().form_valid(formulario).
-        """
-        email = form.cleaned_data["email"]
-        self.request.session["email"] = email
-        return super().form_valid(form)
-
-
-def has_group_by_id(self, group_id):
-    return self.groups.filter(id=group_id).exists()
-
-
-User.add_to_class("has_group_by_id", has_group_by_id)
 
 
 class LoginView_(FormView):
     """
-    Vista que autentica a un usuario en la aplicación.
+    Vista para el inicio de sesión de usuarios.
+
+    Esta vista maneja el proceso de autenticación de usuarios basándose en un formulario.
+    Si el usuario ya está autenticado, se le redirige automáticamente a la página principal.
+    Los usuarios son redirigidos a diferentes URLs dependiendo del grupo al que pertenecen.
     """
 
-    template_name = "authentication/login.html"
-    form_class = LoginForm_
-    success_url = reverse_lazy("main")
-    redirect_authenticated_user = True
+    template_name = "authentication/login/login.html"  # Plantilla que se utilizará para renderizar el formulario de login
+    form_class = LoginForm_  # El formulario que se utiliza para el inicio de sesión
+    success_url = reverse_lazy("main")  # URL de redirección en caso de éxito
+    redirect_authenticated_user = True  # Bandera para redirigir a usuarios ya autenticados
+
+    # Diccionario para redirigir a los usuarios según el grupo al que pertenecen
+    group_redirects = {
+        18: "main",  # Grupo 18 es redirigido a 'main'
+        14: "companies:main_ticket",  # Grupo 14 es redirigido a 'companies:main_ticket'
+        1: "events:list_user_events",  # Grupo 1 es redirigido a 'events:list_user_events'
+        2: "companies:companies",  # Grupo 2 es redirigido a 'companies:companies'
+        # Se pueden agregar más grupos y redirecciones según sea necesario
+    }
 
     @method_decorator(csrf.csrf_protect)
     @method_decorator(cache.never_cache)
     def dispatch(self, request, *args, **kwargs):
+        """
+        Maneja la solicitud HTTP y redirige a usuarios ya autenticados.
+
+        Si el usuario está autenticado y `redirect_authenticated_user` es True, 
+        se le redirige automáticamente a la página principal definida en 'main'.
+        """
         if self.redirect_authenticated_user and request.user.is_authenticated:
             return redirect("main")
-        if not request.session.get("email"):
-            return redirect("index")
         return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
+        """
+        Añade información adicional al contexto de la plantilla.
+
+        Si hay un email en la sesión, intenta autenticar al usuario por dicho email.
+        Si se encuentra un usuario válido, lo redirige según su grupo.
+        """
         context = super().get_context_data(**kwargs)
         email = self.request.session.get("email")
+        
         if email:
-            user = User.objects.filter(email=email).first()
+            user = self.authenticate_user_by_email(email)  # Autenticar por correo sin contraseña
             if user:
-                company_theme = Theme.objects.filter(company_id=user.company_id).first()
-                company_user = Company.objects.filter(id=user.company_id).first()
-                provider_theme = Theme.objects.filter(company_id=user.company.provider_id).first() if user.company.provider_id else None
-                
-                if provider_theme and not company_theme:
-                    # Crear el tema de la compañía copiando el del proveedor
-                    company_theme = Theme(
-                        company_id=user.company_id,
-                        button_color=provider_theme.button_color,
-                        sidebar_color=provider_theme.sidebar_color,
-                        opacity=provider_theme.opacity,
-                    )
-
-                    # Copiar imágenes del proveedor
-                    for field in ['lock_screen_image', 'sidebar_image']:
-                        provider_image = getattr(provider_theme, field)
-                        if provider_image and provider_image.name:
-                            # Generar un nombre de archivo único para la nueva copia
-                            ext = provider_image.name.split('.')[-1]
-                            new_file_name = f"{field}_{user.company_id}.{ext}"
-                            new_file_path = os.path.normpath(os.path.join('uploads', new_file_name)).replace('\\', '/')
-
-                            # Copiar el archivo en el almacenamiento
-                            with default_storage.open(provider_image.name, 'rb') as f:
-                                file_content = f.read()
-                                default_storage.save(new_file_path, ContentFile(file_content))
-
-                            # Asignar la nueva ruta de archivo al campo correspondiente del tema
-                            setattr(company_theme, field, new_file_path)
-
-                    company_theme.save()
-
-                if company_user and not company_user.company_logo:
-                    company_provider = Company.objects.filter(id=user.company.provider_id).first()
-                    if company_provider:
-                        company_user.company_logo = company_provider.company_logo
-                        company_user.save()
-
-                context.update({
-                    "company_logo": company_user.company_logo if company_user else None,
-                    "username": user.username,
-                    "first_name": user.first_name,
-                    "last_name": user.last_name,
-                    "email": user.email,
-                    "theme": company_theme.lock_screen_image if company_theme else provider_theme.lock_screen_image,
-                    "profile_picture": user.profile_picture.url if user.profile_picture else "/static/Perfil/Perfil.png",
-                    "color_theme": company_theme.button_color if company_theme else provider_theme.button_color,
-                })
-                self.request.session["username"] = user.username
-
+                return self.redirect_user_by_group(user)  # Redirige según el grupo del usuario
         return context
 
     def form_valid(self, form):
         """
-        Si el usuario está autenticado, inicie sesión y rediríjalo a la URL correcta. De lo
-        contrario, agregue un error al formulario y vuelva a procesarlo.
+        Maneja el caso en que el formulario sea válido.
 
-        :param form: El formulario que se diligenció.
-        :return: El formulario validado.
+        Intenta autenticar al usuario usando el email y la contraseña proporcionados.
+        Si la autenticación tiene éxito, redirige al usuario según su grupo.
+        En caso contrario, muestra un error en el formulario.
         """
-        username = self.request.session["username"]
-        password = form.cleaned_data["password"]
-        user = authenticate(username=username, password=password)
+        email = form.cleaned_data["email"]  # Obtiene el email ingresado
+        password = form.cleaned_data["password"]  # Obtiene la contraseña ingresada
+        user = self.authenticate_user_by_email(email, password)  # Autenticación por email y contraseña
 
         if user:
-            login(self.request, user)
-            self.request.session.set_expiry(0)
-            group_redirects = {
-                18: "main",
-                14: "companies:main_ticket",
-                1: "events:list_user_events",
-                2: "companies:companies",
-                3: "users",
-                4: "companies:module",
-                5: "realtime:simcards",
-                6: "realtime:devices",
-                7: "realtime:commands",
-                8: "realtime:vehicles",
-                9: "realtime:group_vehicles",
-                10: "realtime:geozones",
-                11: "checkpoints:list_drivers",
-                12: "checkpoints:list_score_configuration",
-                13: "checkpoints:report_today",
-                15: "realtime:dataplan",
-                17: "realtime:add_configuration_report",
-                # Agrega más grupos y URLs aquí según sea necesario
-            }
-
-            for group_id, redirect_url in group_redirects.items():
-                if user.has_group_by_id(group_id):
-                    return redirect(redirect_url)
-            return redirect(self.success_url)
+            return self.redirect_user_by_group(user)  # Redirige según el grupo del usuario
         else:
             form.add_error("password", _("The password is incorrect. Please try again."))
-            return self.form_invalid(form)
+            return self.form_invalid(form)  # Muestra el formulario con el error
 
-    def form_invalid(self, form):
+    def authenticate_user_by_email(self, email, password=None):
         """
-        Si el formulario no es válido, vuelva a presentar el formulario con los errores.
+        Autentica al usuario por correo y opcionalmente por contraseña.
 
-        :param form: El formulario que se envió.
-        :return: El formulario que está siendo devuelto.
+        Si no se proporciona una contraseña, autentica únicamente por correo y devuelve el usuario.
+        Si se proporciona una contraseña, se verifica y se autentica al usuario por ambos campos.
+
+        Args:
+            email (str): El correo electrónico del usuario.
+            password (str, opcional): La contraseña del usuario.
+
+        Returns:
+            User: El usuario autenticado, o None si la autenticación falla.
         """
-        return self.render_to_response(self.get_context_data(form=form))
+        user = User.objects.filter(email=email).first()  # Busca el usuario por email
+
+        if user and password:
+            # Autenticar por username y contraseña
+            authenticated_user = authenticate(username=user.username, password=password)
+            if authenticated_user:
+                login(self.request, authenticated_user)  # Inicia sesión para el usuario autenticado
+                self.request.session.set_expiry(0)  # La sesión se cerrará cuando se cierre el navegador
+                return authenticated_user
+        elif user:
+            # Autenticar solo por email si no se proporciona contraseña
+            login(self.request, user)  # Inicia sesión sin contraseña
+            self.request.session.set_expiry(0)
+            return user
+
+        return None
+
+    def redirect_user_by_group(self, user):
+        """
+        Redirige al usuario a la URL correspondiente según el grupo al que pertenece.
+
+        Si el usuario pertenece a varios grupos, se le redirige según el primer grupo que coincida
+        en el diccionario `group_redirects`.
+
+        Args:
+            user (User): El usuario autenticado.
+
+        Returns:
+            HttpResponseRedirect: Redirige a la URL correspondiente según el grupo del usuario.
+        """
+        for group_id, redirect_url in self.group_redirects.items():
+            if user.groups.filter(id=group_id).exists():  # Verifica si el usuario pertenece al grupo
+                return redirect(redirect_url)
+        return redirect(self.success_url)  # Redirige a la URL de éxito por defecto
 
 
 class PasswordChangeView_(LoginRequiredMixin, PasswordChangeView):
