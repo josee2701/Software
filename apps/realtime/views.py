@@ -1851,6 +1851,11 @@ class ListGeozonesTemplate(
         context = self.get_context_data(object_list=page_obj.object_list, page_obj=page_obj)
         return self.render_to_response(context)
 
+import os
+
+import environ
+
+
 class AddGeozonesView(PermissionRequiredMixin, LoginRequiredMixin, CreateAuditLogAsyncMixin, generic.CreateView):
     """ """
 
@@ -1871,6 +1876,7 @@ class AddGeozonesView(PermissionRequiredMixin, LoginRequiredMixin, CreateAuditLo
 
         button_color = self.request.user.company.theme_set.all().first().button_color
         context["button_color"] = button_color
+        context["key"] = os.environ.get('GOOGLE_MAPS_API_KEY')
         return context
 
     def get_success_url(self):
