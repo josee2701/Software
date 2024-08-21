@@ -12,7 +12,7 @@
           </div>
           <form hx-post="{{ request.path }}" hx-target="#modal-content">
             {% csrf_token %}
-            <div class="card-body scrollable-content" id="dynamic-scrollable-content1" style="overflow-y: auto">
+            <div class="card-body ">
               <div class="row">
                 <div class="col-md-6">
                   <div class="input-group input-group-static mb-2">
@@ -79,10 +79,10 @@
 
     <script src="{% static 'assets/scripts/geozone/geozona_add.js' %}"></script>
     <script
-      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDWl_qWDK0V0voAAsKQYZqcaulqHH9UfLE&libraries=places,drawing&callback=initMap"
-      loading="async"
-      defer
-    ></script>
+    src="https://maps.googleapis.com/maps/api/js?key={{ key }}&libraries=places,drawing&callback=initMap"
+    loading="async"
+    defer
+></script>
     <!-- Incluir jQuery primero -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <!-- Incluir Select2 después de jQuery -->

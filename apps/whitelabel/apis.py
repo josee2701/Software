@@ -1,19 +1,20 @@
+
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
-from django.db.models import F, OuterRef, Q, Subquery, Sum
+from django.db.models import F, OuterRef, Subquery, Sum
 from django.http import JsonResponse
 from django.utils.decorators import method_decorator
+from django.utils.translation import gettext as _
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from django.utils.translation import gettext as _
-from apps.realtime.apis import extract_number
-from decimal import Decimal
 
-from .models import Company, CompanyTypeMap, Module, Process
+from apps.realtime.apis import extract_number
+
+from .models import Company, Module, Process
 from .serializer import CompanySerializer
-from .sql import fetch_all_company, get_modules_by_user, get_ticket_by_user, get_ticket_closed
+from .sql import get_modules_by_user, get_ticket_by_user, get_ticket_closed
 from .views import ClosedTicketsView
 
 
@@ -212,132 +213,6 @@ class SearchTicketsViewOpen(View):
 
         return JsonResponse(response_data, safe=False)
 
-
-@method_decorator(csrf_exempt, name="dispatch")
-class SearchCompany(View):
-    def get(self, request):
-        company = request.user.company_id
-        user_id = request.user.id
-        session_filters = request.session.get(f'filters_sorted_company_{user_id}', {})
-        search_query = request.GET.get("query", None)
-        page_number = request.GET.get('page', session_filters.get('page', [1]))[0]
-
-        if not company or not user_id:
-            return JsonResponse({"error": "Faltan parámetros"}, status=400)
-        paginate_by = request.POST.get(
-            "paginate_by", None
-        )  # Obtener paginate_by de los parámetros GET
-        if paginate_by is None:
-            paginate_by = session_filters.get("paginate_by", 15)
-        # Convertir a entero si es una lista
-        try:
-            paginate_by = int(
-                paginate_by[0]
-            )  # Convertir el primer elemento de la lista a entero
-        except (TypeError, ValueError):
-            paginate_by = int(paginate_by) if paginate_by else 15
-        companies = fetch_all_company(request.user.company, request.user, search_query)
-        order_by = session_filters.get('order_by', [None])[0]
-        direction = session_filters.get('direction', [None])[0]
-        def sort_key(x):
-            value = x.get(order_by)
-            if order_by == "provider_id":
-                if value is None:
-                    return (0, "")  # Prioridad 0 para valores nulos
-                if value == "":
-                    return (4, "")  # Prioridad 4 para valores vacíos
-                if isinstance(value, str):
-                    # Verificar si comienza con números, letras o caracteres especiales
-                    if value[0].isdigit():
-                        return (1, extract_number(value))  # Prioridad 1 para números
-                    elif value[0].isalpha():
-                        return (2, value.lower())  # Prioridad 2 para letras
-                    else:
-                        return (
-                            3,
-                            value.lower(),
-                        )  # Prioridad 3 para caracteres especiales
-            else:
-                if value is None or value == "":
-                    return (4, "")  # Prioridad 4 para valores nulos o vacíos
-                if isinstance(value, str):
-                    # Verificar si comienza con números, letras o caracteres especiales
-                    if value[0].isdigit():
-                        return (1, extract_number(value))  # Prioridad 1 para números
-                    elif value[0].isalpha():
-                        return (2, value.lower())  # Prioridad 2 para letras
-                    else:
-                        return (
-                            3,
-                            value.lower(),
-                        )  # Prioridad 3 para caracteres especiales
-            return (5, value)  # Asegurar que todos los retornos sean tuplas
-
-        # Determinar si es orden descendente
-        reverse = direction == "desc"
-
-        try:
-            companies = sorted(companies, key=sort_key, reverse=reverse)
-        except KeyError:
-            # Ordenamiento por defecto si la clave no existe
-            companies = sorted(
-                companies, key=lambda x: x["company_name"].lower(), reverse=reverse
-            )
-        # Optimización del cálculo para mostrar el botón de mapa.
-        for company in companies:
-            company_id = company["id"]
-            provider_id = company.get(
-                "provider_id"
-            )  # Asegúrate de que el campo exista en el diccionario
-            # Filtrar los mapas de la compañía.
-            company_maps = CompanyTypeMap.objects.filter(company_id=company_id)
-            total_maps = company_maps.count()
-            # Determinar si se debe mostrar el botón del mapa.
-            has_only_map1 = (
-                total_maps == 1 and company_maps.filter(map_type__id=1).exists()
-            )
-            company["show_map_button"] = not has_only_map1
-
-        page_size = paginate_by  # Número de elementos por página.
-        paginator = Paginator(companies, page_size)
-        try:
-            page = paginator.page(page_number)
-        except PageNotAnInteger:
-            page = paginator.page(1)
-        except EmptyPage:
-            page = paginator.page(paginator.num_pages)
-
-        formatted_results = []
-        for company in page.object_list:
-            formatted_results.append(
-                {
-                    "id": company["id"],
-                    "company_name": company["company_name"] or "",
-                    "nit": company["nit"] or "",
-                    "legal_representative": company["legal_representative"] or "",
-                    "provider_id": company["provider_id"] or "",
-                    "actived": company["actived"] or False,
-                    "show_map_button": company["show_map_button"],
-                }
-            )
-
-        response_data = {
-            "results": formatted_results,
-            "page": {
-                "has_next": page.has_next(),
-                "has_previous": page.has_previous(),
-                "number": page.number,
-                "num_pages": paginator.num_pages,
-                "start_index": page.start_index(),
-                "end_index": page.end_index(),
-                "total_items": paginator.count,
-            },
-            "query_string": request.GET.urlencode(),
-        }
-
-        return JsonResponse(response_data, safe=False)
-
-
 class CustomPagination(PageNumberPagination):
     page_size = "paginate_by"
 
@@ -450,33 +325,6 @@ class SearchModule(APIView):
 
         return paginator.get_paginated_response(formatted_results)
     
-@method_decorator(csrf_exempt, name='dispatch')
-class ExportDataCompany(View):
-    def get(self, request):
-        search_query = request.GET.get('query', None)
-        companies = fetch_all_company(request.user.company, request.user, search_query)
-        formatted_results = []
-        # Encabezados traducidos
-        headers = [
-            _("Nit"),
-            _("Company"),
-            _("Legal Representative"),
-            _("Status")
-        ]
-
-        for company in companies:
-            formatted_results.append({
-                "company_name": company["company_name"] or "",
-                "nit": company["nit"] or "",
-                "legal_representative": company["legal_representative"] or "",
-                "actived": company["actived"] or False,
-            })
-        response_data = {
-            'headers': headers,
-            'data': formatted_results
-        }
-
-        return JsonResponse(response_data, safe=False)
     
 @method_decorator(csrf_exempt, name='dispatch')
 class ExportDataTicketsOpen(View):

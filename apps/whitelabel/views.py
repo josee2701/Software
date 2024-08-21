@@ -8,245 +8,180 @@ from decimal import Decimal, InvalidOperation
 
 from asgiref.sync import async_to_sync
 from django.contrib import messages
+from django.contrib.admin.utils import NestedObjects
 from django.contrib.auth.mixins import (LoginRequiredMixin,
                                         PermissionRequiredMixin)
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
-from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
-from django.db import transaction
+from django.db import DEFAULT_DB_ALIAS, transaction
 from django.db.models import F, OuterRef, Q, Subquery, Sum
 from django.forms.models import model_to_dict
-from django.http import HttpResponse, JsonResponse, QueryDict
+from django.http import Http404, HttpResponse, JsonResponse, QueryDict
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_protect, csrf_exempt
-from django.views.generic import ListView
+from django.utils.translation import gettext_lazy as _
 from django.views import generic
-from django.views.generic.list import MultipleObjectMixin
-from rest_framework import generics
+from django.views.decorators.csrf import csrf_exempt, csrf_protect
+from django.views.generic import ListView
 
 from apps.authentication.models import User
 from apps.log.mixins import (CreateAuditLogAsyncMixin, CreateAuditLogSyncMixin,
                              DeleteAuditLogAsyncMixin,
-                             UpdateAuditLogAsyncMixin, UpdateAuditLogSyncMixin, AuditLogSyncMixin,
-                             obtener_ip_publica)
+                             UpdateAuditLogAsyncMixin, obtener_ip_publica)
 from apps.log.utils import log_action
-from apps.realtime.apis import (extract_number, extract_number_tp,
-                                get_user_companies)
+from apps.realtime.apis import extract_number, get_user_companies
 from apps.whitelabel.forms import (AttachmentForm, CommentForm,
-                                   CompanyCustomerForm, CompanyDeleteForm,
-                                   CompanyLogoForm, DistributionCompanyForm,
-                                   KeyMapForm, MessageForm, Moduleform,
-                                   ProcessForm, ThemeForm, TicketForm)
+                                   CompanyCustomerForm, CompanyLogoForm,
+                                   DistributionCompanyForm, KeyMapForm,
+                                   MessageForm, Moduleform, ProcessForm,
+                                   ThemeForm, TicketForm)
 from apps.whitelabel.models import (Attachment, Company, CompanyTypeMap,
                                     MapType, Module, Process, Theme, Ticket)
-from config.pagination import get_paginate_by
+from config.filtro import General_Filters
 
 from .forms import (AttachmentForm, CommentForm, CompanyCustomerForm,
-                    CompanyDeleteForm, CompanyLogoForm,
-                    DistributionCompanyForm, KeyMapForm, MessageForm,
-                    Moduleform, ProcessForm, ThemeForm, TicketCrearte,
-                    TicketForm)
+                    CompanyLogoForm, DistributionCompanyForm, KeyMapForm,
+                    MessageForm, Moduleform, ProcessForm, ThemeForm,
+                    TicketCrearte, TicketForm)
 from .models import (Attachment, Company, CompanyTypeMap, MapType, Message,
                      Module, Process, Theme, Ticket)
-from .serializer import ClienteSerializer
-from .sql import (fetch_all_company, get_modules_by_user, get_ticket_by_user,
-                  get_ticket_closed)
+from .sql import get_modules_by_user, get_ticket_by_user, get_ticket_closed
 
 
-class CompaniesView(PermissionRequiredMixin, LoginRequiredMixin, ListView):
+class CompaniesView(PermissionRequiredMixin,LoginRequiredMixin, ListView):
     """
-    Esta clase es una vista de lista del modelo de empresas y representará la plantilla
-    company_main.html.
+    Vista para listar las compañías con paginación, ordenamiento y búsqueda.
 
     Atributos:
-        template_name (str): El nombre de la plantilla HTML que se utilizará para renderizar la vista.
-        permission_required (str): El permiso requerido para acceder a esta vista.
-        login_url (str): La URL a la que se redirigirá si el usuario no está autenticado.
-        context_object_name (str): El nombre del objeto de contexto que se utilizará en la plantilla.
-        model (Model): El modelo de la empresa que se utilizará para obtener los datos.
-
-    Métodos:
-        get_paginate_by(queryset): Obtiene el número de elementos a mostrar por página.
-        get_queryset(): Obtiene el conjunto de datos de los comandos de envío filtrados y ordenados.
-        get_context_data(**kwargs): Obtiene el contexto de datos adicionales para la plantilla.
+        template_name: Plantilla utilizada para renderizar la vista.
+        login_url: URL de redirección para usuarios no autenticados.
+        context_object_name: Nombre del contexto para la lista de objetos.
+        model: Modelo asociado a la vista.
+        paginate_by: Número de elementos por página por defecto.
     """
-
-    template_name = "whitelabel/companies/company_main.html"
-    permission_required = "whitelabel.view_company"
+    template_name = "whitelabel/companies/main_company.html"
+    permission_required= "whitelabel.view_company"
     login_url = "login"
     context_object_name = "company_info"
     model = Company
+    paginate_by = 15  # Número de elementos por página por defecto
+
+    def get_template_names(self):
+        """
+        Obtiene la plantilla a utilizar basada en el ID de la compañía del usuario.
+
+        Returns:
+            list: Lista de nombres de plantilla.
+        """
+        user = self.request.user
+        if user.company_id:
+            company_id = user.company_id
+            if not Company.objects.filter(provider_id=company_id).exists():
+                return ["whitelabel/companies/cliente_final_main.html"]
+        return [self.template_name]
 
     def get_paginate_by(self, queryset):
         """
-        Obtiene el número de elementos a mostrar por página.
-
-        Args:
-            queryset (QuerySet): El conjunto de datos de la consulta.
-
-        Returns:
-            int: El número de elementos a mostrar por página.
+        Obtiene el número de elementos por página desde los parámetros GET o usa el valor por defecto.
         """
-        paginate_by = self.request.POST.get('paginate_by', None)  # Obtener paginate_by de los parámetros POST
-
-        if paginate_by is None:
-            session_filters = self.request.session.get(
-                f"filters_sorted_company_{self.request.user.id}", {}
-            )
-            paginate_by = session_filters.get("paginate_by", 15)
-            # Convertir a entero si es una lista
-            try:
-                paginate_by = int(
-                    paginate_by[0]
-                )  # Convertir el primer elemento de la lista a entero
-            except (TypeError, ValueError):
-                paginate_by = int(paginate_by) if paginate_by else 15
-            # Añadir paginate_by a self.request.GET para asegurar que esté presente
-            self.request.POST = self.request.POST.copy()
-            self.request.POST['paginate_by'] = paginate_by
-        return int(self.request.POST['paginate_by'])
+        paginate_by = self.request.GET.get('paginate_by', self.paginate_by)
+        try:
+            return int(paginate_by)
+        except (ValueError, TypeError):
+            return self.paginate_by
 
     def get_queryset(self):
         """
-        Obtiene el conjunto de datos de los planes de datos reales de la compañía asociada al
-        usuario que realiza la solicitud.
-
-        Returns:
-            List[dict]: Lista de planes de datos ordenada por 'Company' en forma descendente.
+        Obtiene el queryset de compañías, con filtros de búsqueda y ordenamiento basados en parámetros GET.
         """
-        user = self.request.user
-        company = user.company
-        params = self.request.GET if self.request.method == 'GET' else self.request.POST
-        query = params.get("query", "").lower()
-        search = params.get("q", query).lower()
-        if 'order_by' not in params and 'paginate_by' not in params and 'page' not in params:
-            # Limpiar los filtros de la sesión
-            if f"filters_sorted_company_{user.id}" in self.request.session:
-                del self.request.session[f"filters_sorted_company_{user.id}"]
-                self.request.session.modified = True
-        # Recuperar filtros almacenados en la sesión
-        session_filters = self.request.session.get(f'filters_sorted_company_{user.id}', {})
-        order_by = params.get('order_by', session_filters.get('order_by', ['company_name'])[0])
-        direction = params.get('direction', session_filters.get('direction',['asc'])[0])
-        # Actualizar los filtros con los parámetros actuales de la solicitud GET
-        session_filters.update(params)
-        # Actualizar los filtros de la sesión con los nuevos parámetros
-        self.request.session[
-            f"filters_sorted_company_{user.id}"
-        ] = session_filters
-        self.request.session.modified = True
-        # Obtener los planes de datos a través de la función fetch_all_dataplan.
-        queryset = fetch_all_company(company, user, search)
+        user=self.request.user
+        queryset = General_Filters.get_filtered_companies(user)
 
-        # Función para convertir los valores a minúsculas y extraer números cuando sea necesario
-        def sort_key(x):
-            value = x.get(order_by)
-            if order_by == "provider_id":
-                if value is None:
-                    return (0, "")  # Prioridad 0 para valores nulos
-                if value == "":
-                    return (4, "")  # Prioridad 4 para valores vacíos
-                if isinstance(value, str):
-                    # Verificar si comienza con números, letras o caracteres especiales
-                    if value[0].isdigit():
-                        return (1, extract_number(value))  # Prioridad 1 para números
-                    elif value[0].isalpha():
-                        return (2, value.lower())  # Prioridad 2 para letras
-                    else:
-                        return (
-                            3,
-                            value.lower(),
-                        )  # Prioridad 3 para caracteres especiales
-            else:
-                if value is None or value == "":
-                    return (4, "")  # Prioridad 4 para valores nulos o vacíos
-                if isinstance(value, str):
-                    # Verificar si comienza con números, letras o caracteres especiales
-                    if value[0].isdigit():
-                        return (1, extract_number(value))  # Prioridad 1 para números
-                    elif value[0].isalpha():
-                        return (2, value.lower())  # Prioridad 2 para letras
-                    else:
-                        return (
-                            3,
-                            value.lower(),
-                        )  # Prioridad 3 para caracteres especiales
-            return (5, value)  # Asegurar que todos los retornos sean tuplas
+        # Parámetros de búsqueda
+        search_query = self.request.GET.get('search', '').lower()
 
-        # Determinar si es orden descendente
-        reverse = direction == "desc"
+        # Traducción y filtrado de campos booleanos y tipo de cliente
+        active_terms = _("Active").lower()
+        inactive_terms = _("Inactive").lower()
+        distributor_terms = _("Distributor").lower()
+        final_client_terms = _("Final client").lower()
 
-        try:
-            sorted_queryset = sorted(queryset, key=sort_key, reverse=reverse)
-        except KeyError:
-            # Ordenamiento por defecto si la clave no existe
-            sorted_queryset = sorted(
-                queryset, key=lambda x: x["company_name"].lower(), reverse=reverse
-            )
+        filters = Q()  # Crea un objeto Q vacío
+        if search_query:
+            # Convertir la consulta de búsqueda a minúsculas
+            search_query_lower = search_query.lower()
+            # Filtrar los campos de texto
+            filters |= Q(company_name__icontains=search_query) | \
+                      Q(nit__icontains=search_query) | \
+                      Q(legal_representative__icontains=search_query) 
+            # Filtrar el campo booleano
+            if search_query_lower in active_terms:
+                filters |= Q(actived=True)
+            elif search_query_lower in inactive_terms:
+                filters |= Q(actived=False)
+            # Filtrar por tipo de cliente
+            if search_query_lower in distributor_terms:
+                filters |= Q(provider__isnull=True)  # Distribuidor no tiene proveedor
+            elif search_query_lower in final_client_terms:
+                filters |= Q(provider__isnull=False)  # Cliente final tiene proveedor
+        queryset = queryset.filter(filters)
 
-        return sorted_queryset
+        # Parámetros de ordenamiento
+        order_by = self.request.GET.get('order_by', 'company_name')
+        direction = self.request.GET.get('direction', 'asc')
+
+        # Validación de campos de ordenamiento
+        valid_order_by = ['nit', 'company_name', 'legal_representative', 'provider', 'actived']
+        if order_by not in valid_order_by:
+            order_by = 'company_name'
+
+        if direction == 'desc':
+            order_by = f'-{order_by}'
+
+        return queryset.order_by(order_by)
 
     def get_context_data(self, **kwargs):
         """
-        Obtiene el contexto de datos adicionales para la plantilla.
-
-        Args:
-            **kwargs: Argumentos clave adicionales.
-
-        Returns:
-            dict: El contexto de datos adicionales para la plantilla.
+        Agrega información adicional al contexto, como la paginación y el estado de ordenamiento.
         """
         context = super().get_context_data(**kwargs)
-        companies = context[
-            self.context_object_name
-        ]  # Usa el objeto ya definido en el contexto
-        paginate_by = self.get_paginate_by(None)
-        context["paginate_by"] = paginate_by
-        # Calcula start_number más eficientemente
-        page_number = context.get("page_obj").number if context.get("page_obj") else 1
-        context["start_number"] = (page_number - 1) * self.get_paginate_by(None)
 
-        # Optimización del cálculo para mostrar el botón de mapa.
-        for company in companies:
-            company_id = company["id"]
-            provider_id = company.get(
-                "provider_id"
-            )  # Asegúrate de que el campo exista en el diccionario
-            # if provider_id is None:
-            # Filtrar los mapas de la compañía.
-            company_maps = CompanyTypeMap.objects.filter(company_id=company_id)
-            total_maps = company_maps.count()
-            # Determinar si se debe mostrar el botón del mapa.
-            has_only_map1 = (
-                total_maps == 1 and company_maps.filter(map_type__id=1).exists()
-            )
-            company["show_map_button"] = not has_only_map1
-            # else:
-            #     company["show_map_button"] = False
-
-        session_filters = self.request.session.get(f'filters_sorted_company_{self.request.user.id}', {})
-        # Obtener el ordenamiento desde la solicitud actual
-        order_by = self.request.GET.get('order_by') or self.request.POST.get('order_by') or session_filters.get('order_by', ['company_name'])[0]
-        direction = self.request.GET.get('direction') or self.request.POST.get('direction') or session_filters.get('direction', ['asc'])[0]
-        context['order_by'] = order_by
-        context['direction'] = direction
-        return context
-    
-    @method_decorator(csrf_protect)
-    def post(self, request, *args, **kwargs):
-        # Obtén el número de página desde la solicitud POST
-        page_number = request.POST.get('page', 1)
-        # Modifica la consulta para aplicar la paginación
-        self.object_list = self.get_queryset()
-        paginator = Paginator(self.object_list, self.get_paginate_by(None))
+        # Obtener compañías de la página actual
+        companies = context[self.context_object_name]
+        paginator = context['paginator']
+        page_number = self.request.GET.get('page', 1)
         page_obj = paginator.get_page(page_number)
-        context = self.get_context_data(object_list=page_obj.object_list, page_obj=page_obj)
-        return self.render_to_response(context)
+
+        # Agregar el botón de mapa a las compañías
+        company_ids = companies.values_list('id', flat=True)
+        maps = CompanyTypeMap.objects.filter(company_id__in=company_ids)
+
+        # Crear un diccionario donde cada company_id tiene una lista de map_type_id
+        map_dict = {}
+        for m in maps:
+            if m.company_id not in map_dict:
+                map_dict[m.company_id] = []
+            map_dict[m.company_id].append(m.map_type_id)
+
+        for company in companies:
+            company_maps = map_dict.get(company.id, [])
+            total_maps = len(company_maps)
+            has_only_map1 = total_maps == 1 and 1 in company_maps
+            company.show_map_button = not has_only_map1
+
+        context.update({
+            'page_obj': page_obj,
+            'paginate_by': self.get_paginate_by(self.get_queryset()),
+            'paginate_options': [15, 25, 50, 100],
+            'order_by': self.request.GET.get('order_by', 'company_name'),
+            'direction': self.request.GET.get('direction', 'asc'),
+        })
+
+        return context
 
 
 class CreateDistributionCompanyView(
@@ -255,6 +190,17 @@ class CreateDistributionCompanyView(
     CreateAuditLogAsyncMixin,
     generic.CreateView,
 ):
+    """
+    Vista para crear una nueva compañía distribuidora. Utiliza permisos y registro de auditoría.
+
+    Atributos:
+        model (Model): El modelo asociado con la vista, en este caso `Company`.
+        template_name (str): Nombre de la plantilla que se utiliza para renderizar la vista.
+        permission_required (str): Permiso requerido para acceder a la vista.
+        login_url (str): URL a la cual redirigir si el usuario no está autenticado.
+        form_class (Form): El formulario asociado a la creación de la compañía.
+        success_url (str): URL a la cual redirigir después de una creación exitosa.
+    """
     model = Company
     template_name = "whitelabel/companies/add_company.html"
     permission_required = "whitelabel.add_company"
@@ -263,104 +209,91 @@ class CreateDistributionCompanyView(
     success_url = "companies:companies"
 
     def get_success_url(self):
+        """
+        Devuelve la URL de éxito para la redirección después de crear la compañía.
+
+        Returns:
+            str: La URL de redirección después de una creación exitosa.
+        """
         return reverse("companies:companies")
 
     def get_context_data(self, **kwargs):
+        """
+        Añade al contexto información adicional para renderizar la plantilla,
+        incluyendo mapas, módulos y la personalización del tema para la compañía.
+
+        Args:
+            **kwargs: Argumentos adicionales para el contexto.
+
+        Returns:
+            dict: Contexto actualizado con información adicional como mapas, módulos y temas.
+        """
         context = super().get_context_data(**kwargs)
         user = self.request.user
-        context["type_maps"] = CompanyTypeMap.objects.filter(company_id=user.company_id)
-        context["modules"] = Module.objects.filter(
-            company__id=self.request.user.company_id
-        )
-        button_color = self.request.user.company.theme_set.all().first().button_color
-        context["button_color"] = button_color
+        company_id = user.company_id
+
+        # Obtener los mapas asociados a la compañía del usuario
+        context["type_maps"] = CompanyTypeMap.objects.filter(company_id=company_id)
+        
+        # Obtener los módulos asociados a la compañía del usuario
+        context["modules"] = Module.objects.filter(company__id=company_id)
+
+        # Obtener el color del botón desde el tema asociado a la compañía
+        theme = user.company.theme_set.first()
+        context["button_color"] = theme.button_color if theme else "#000000"
+
+        # Pasar el ID de la compañía al contexto
+        context["company_id"] = company_id
         return context
 
     def form_valid(self, form):
+        """
+        Procesa el formulario cuando es válido. Activa la compañía por defecto, asigna
+        valores al campo de creación y modificación, y maneja la redirección basada en 
+        los mapas disponibles.
+
+        Args:
+            form (Form): El formulario validado.
+
+        Returns:
+            HttpResponse: Redirección a la URL de éxito o a la vista de `KeyMapView`.
+        """
+        # Activar la compañía por defecto
         form.instance.actived = True
         company = form.save(commit=False)
+
+        # Asignar el usuario actual como creador y modificador
         company.modified_by = self.request.user
         company.created_by = self.request.user
-        company.provider_id = None
+        company.provider_id = None  # Es una distribuidora, por lo que no tiene proveedor
+
+        # Guardar la compañía en la base de datos
         company.save()
+
+        # Guardar las relaciones ManyToMany
         form.save_m2m()
-        # Llama al método form_valid de la clase padre para registrar la acción en el log de auditoría
+
+        # Llamar al método de la clase base para el registro en el log de auditoría
         response = super().form_valid(form)
 
-        if self.request.user.company_id == 1:
+        # Si el ID de la compañía del usuario es 1, crear un tema por defecto si no existe
+        if self.request.user.company_id == 1 and not Theme.objects.filter(company_id=company.id).exists():
             Theme.objects.create(company_id=company.id)
 
-        maps = MapType.objects.filter(companytypemap__company=company)
+        # Comprobar si la compañía tiene solo "OpenStreetMap"
+        has_openstreetmap_only = MapType.objects.filter(
+            companytypemap__company=company, name="OpenStreetMap"
+        ).exists()
 
-        if maps.count() == 1 and maps.first().name == "OpenStreetMap":
+        if has_openstreetmap_only:
+            # Redirigir directamente a la URL de éxito si solo existe "OpenStreetMap"
             page_update = HttpResponse("")
             page_update["HX-Redirect"] = self.get_success_url()
             return page_update
         else:
+            # Redirigir a la vista `KeyMapView` si hay otros mapas disponibles
             return redirect("companies:KeyMapView", pk=company.id)
 
-
-class CreateCustomerAzCompanyView(
-    PermissionRequiredMixin,
-    LoginRequiredMixin,
-    CreateAuditLogAsyncMixin,
-    generic.CreateView,
-):
-    model = Company
-    template_name = "whitelabel/companies/add_company.html"
-    permission_required = "whitelabel.add_company"
-    login_url = "login"
-    form_class = DistributionCompanyForm
-    success_url = "companies:companies"
-
-    def get_success_url(self):
-        # Asegúrate de que el nombre de la URL sea correcto y esté definido en tus archivos de URL.
-        return reverse("companies:companies")
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs[
-            "provider_id"
-        ] = self.request.user.company_id  # Asume que el usuario tiene un company_id
-        return kwargs
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        user = self.request.user
-        # Aquí puedes agregar cualquier dato adicional que necesites en tu template
-        context["type_maps"] = CompanyTypeMap.objects.filter(company_id=user.company_id)
-        context["modules"] = Module.objects.filter(
-            company__id=self.request.user.company_id
-        )
-        button_color = self.request.user.company.theme_set.all().first().button_color
-        context["button_color"] = button_color
-        return context
-
-    def form_valid(self, form):
-        form.instance.provider_id = self.request.user.company_id
-        form.instance.actived = True
-        company = form.save(commit=False)
-        # Asigna la instancia del usuario al campo 'modified_by' y 'created_by'
-        company.modified_by = self.request.user
-        company.created_by = self.request.user
-        company.save()
-        form.save_m2m()
-
-        maps = MapType.objects.filter(companytypemap__company=company)
-
-        if maps.count() == 1 and maps.first().name == "OpenStreetMap":
-            # Llama al método form_valid de la clase padre para registrar la acción en el log de auditoría
-            response = super().form_valid(form)
-
-            # Prepara una respuesta con redirección usando HTMX
-            page_update = HttpResponse("")
-            page_update["HX-Redirect"] = self.get_success_url()
-            return page_update
-        else:
-            return redirect("companies:KeyMapView", pk=company.id)
-
-    def form_invalid(self, form):
-        return render(self.request, self.template_name, {"form": form})
 
 
 class CreateCustomerCompanyView(
@@ -369,164 +302,117 @@ class CreateCustomerCompanyView(
     CreateAuditLogAsyncMixin,
     generic.CreateView,
 ):
+    """
+    Vista para crear una nueva compañía cliente. Utiliza permisos, autenticación y
+    registro de auditoría.
+
+    Atributos:
+        model (Model): El modelo asociado con la vista, en este caso `Company`.
+        template_name (str): Nombre de la plantilla utilizada para renderizar la vista.
+        permission_required (str): Permiso necesario para acceder a esta vista.
+        form_class (Form): El formulario utilizado para crear la compañía cliente.
+        success_url (str): La URL de redirección tras una creación exitosa.
+    """
     model = Company
     template_name = "whitelabel/companies/add_company.html"
     permission_required = "whitelabel.add_company"
     form_class = CompanyCustomerForm
-    success_url = reverse_lazy(
-        "companies:companies"
-    )  # Asegúrate de que la URL sea correcta
+    success_url = reverse_lazy("companies:companies")
 
     def get_success_url(self):
-        # Asegúrate de que el nombre de la URL sea correcto y esté definido en tus archivos de URL.
+        """
+        Devuelve la URL de éxito para redirigir tras la creación de la compañía.
+
+        Returns:
+            str: La URL de redirección tras una creación exitosa.
+        """
         return reverse("companies:companies")
 
     def get_form_kwargs(self):
+        """
+        Pasa el `provider_id` de la compañía del usuario actual como argumento adicional al formulario.
+
+        Returns:
+            dict: Argumentos adicionales para inicializar el formulario.
+        """
         kwargs = super().get_form_kwargs()
-        kwargs[
-            "provider_id"
-        ] = self.request.user.company_id  # Asume que el usuario tiene un company_id
+        provider_id = self.request.user.company_id  # El ID de la compañía del usuario actual
+        kwargs["provider_id"] = provider_id
         return kwargs
 
     def get_context_data(self, **kwargs):
+        """
+        Agrega datos adicionales al contexto de la plantilla, como mapas, módulos
+        y el color del botón del tema personalizado.
+
+        Args:
+            **kwargs: Argumentos adicionales para el contexto.
+
+        Returns:
+            dict: Contexto actualizado con la información adicional.
+        """
         context = super().get_context_data(**kwargs)
-        user = self.request.user
-        # Aquí puedes agregar cualquier dato adicional que necesites en tu template
-        context["type_maps"] = CompanyTypeMap.objects.filter(company_id=user.company_id)
-        context["modules"] = Module.objects.filter(
-            company__id=self.request.user.company_id
-        )
-        button_color = self.request.user.company.theme_set.all().first().button_color
-        context["button_color"] = button_color
+        company_id = self.request.user.company_id
+
+        # Añadir mapas y módulos relacionados a la compañía del usuario
+        context["type_maps"] = CompanyTypeMap.objects.filter(company_id=company_id)
+        context["modules"] = Module.objects.filter(company_id=company_id)
+
+        # Obtener el tema personalizado para la compañía del usuario actual
+        theme = self.request.user.company.theme_set.first()
+        if theme:
+            context["button_color"] = theme.button_color  # Asignar el color del botón
+
+        # Añadir el ID de la compañía al contexto
+        context.update({
+            'company_id': company_id
+        })
         return context
 
     def form_valid(self, form):
-        with transaction.atomic():
-            self.object = form.save(commit=False)
-            self.object.actived = True
-            self.object.provider_id = self.request.user.company_id
-            self.object.seller = self.request.user.company.seller
-            self.object.consultant = self.request.user.company.consultant
-            self.object.save()
+        """
+        Guarda la nueva compañía y maneja la redirección dependiendo de los mapas
+        asociados a la compañía.
 
-            # Manejar relaciones ManyToMany aquí
-            type_map_ids = self.request.POST.getlist("type_map")
-            for type_map_id in type_map_ids:
-                CompanyTypeMap.objects.create(
-                    company=self.object, map_type_id=type_map_id
-                )
+        Args:
+            form (Form): El formulario validado para crear la compañía.
 
-            modules_ids = self.request.POST.getlist("modules")
-            for module_id in modules_ids:
-                Module.objects.create(
-                    company=self.object, group_id=module_id
-                )  # Asegúrate de que `group_id` sea correcto
+        Returns:
+            HttpResponse: Redirección a la URL de éxito o a la vista de KeyMapView.
+        """
+        with transaction.atomic():  # Ejecutar el proceso en una transacción atómica
+            # Guardar la nueva compañía sin hacer commit
+            company = form.save(commit=False)
+            company.actived = True  # Activar la compañía por defecto
+            company.provider_id = self.request.user.company_id  # Asignar proveedor
+            company.modified_by = self.request.user  # Asignar el modificador
+            company.created_by = self.request.user  # Asignar el creador
 
-            # Llama al método form_valid de la clase padre para registrar la acción en el log de auditoría
+            # Si el usuario no es parte de la compañía principal (ID 1), asignar vendedor y consultor
+            if self.request.user.company_id != 1:
+                company.seller = self.request.user.company.seller
+                company.consultant = self.request.user.company.consultant
+
+            # Guardar la compañía en la base de datos
+            company.save()
+            form.save_m2m()  # Guardar las relaciones ManyToMany
+
+            # Registrar en el log de auditoría llamando al form_valid de la clase base
             response = super().form_valid(form)
 
-            # Prepara una respuesta con redirección usando HTMX
-            page_update = HttpResponse("")
-            page_update["HX-Redirect"] = self.get_success_url()
-            return page_update
+            # Verificar si la compañía tiene solo "OpenStreetMap"
+            has_openstreetmap_only = MapType.objects.filter(
+                companytypemap__company=company, name="OpenStreetMap"
+            ).exists()
 
-
-class KeyMapView(LoginRequiredMixin, UpdateAuditLogAsyncMixin, generic.TemplateView):
-    template_name = "whitelabel/companies/keymap.html"
-
-    def get_success_url(self):
-        return reverse("companies:companies")
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        company_id = self.kwargs.get("pk")
-        company = get_object_or_404(Company, id=company_id)
-        maps = CompanyTypeMap.objects.filter(company_id=company.id).exclude(
-            map_type_id=1
-        )
-        forms = [
-            KeyMapForm(instance=map_instance, prefix=str(map_instance.id))
-            for map_instance in maps
-        ]
-        context.update({"forms": forms, "company": company})
-        return context
-
-    def post(self, request, *args, **kwargs):
-        company_id = self.kwargs.get("pk")
-        company = get_object_or_404(Company, id=company_id)
-        maps = CompanyTypeMap.objects.filter(company_id=company.id).exclude(
-            map_type_id=1
-        )
-        forms = [
-            KeyMapForm(request.POST, instance=map_instance, prefix=str(map_instance.id))
-            for map_instance in maps
-        ]
-        all_valid = True
-        self.obj_before = [
-            map_instance for map_instance in maps
-        ]  # Guardamos el estado anterior
-
-        if all_valid:
-            self.obj_after = []
-            for form in forms:
-                company_map = form.save(commit=False)
-                key_map = form.cleaned_data["key_map"]
-                if key_map:
-                    # Encriptar la clave antes de guardarla
-                    company_map.key_map = company_map.encrypt_key(key_map)
-                company_map.save()
-                self.obj_after.append(company_map)  # Guardamos el estado posterior
-
-            # Registrar la acción en el log de auditoría
-            async_to_sync(self.log_action)()
-
-            page_update = HttpResponse("")
-            page_update["HX-Redirect"] = self.get_success_url()
-            return page_update
-        else:
-            context = {"forms": forms, "company": company}
-            return render(request, self.template_name, context)
-
-
-class UpdateCompanyLogoView(
-    LoginRequiredMixin, UpdateAuditLogAsyncMixin, generic.UpdateView
-):
-    """
-    UpdateCompanyLogoView es un generic.edit.UpdateView que usa el modelo Company,
-    los campos enumerados,
-    CompanyForm y el template_name_suffix para actualizar una empresa.
-    """
-
-    model = Company
-    template_name = "whitelabel/companies/company_update_logo.html"
-    form_class = CompanyLogoForm
-
-    def get_success_url(self):
-        # Asegúrate de que el nombre de la URL sea correcto y esté definido en tus archivos de URL.
-        return reverse("companies:companies")
-
-    def form_valid(self, form):
-        """
-        Llamado cuando se envía el formulario y es válido.
-        Actualiza el logo de la empresa y responde con un código HTTP 204 y un header "HX-Trigger:
-        reload-page".
-        """
-        # Asigna la instancia del usuario al campo 'modified_by'
-        form.instance.modified_by = self.request.user
-        form.save()
-        # Llama al método form_valid de la clase padre para registrar la acción en el log de auditoría
-        response = super().form_valid(form)
-        pague = HttpResponse("")  # O puedes enviar algún contenido si es necesario.
-        pague["HX-Redirect"] = self.get_success_url()
-        return pague
-
-    def form_invalid(self, form):
-        """
-        Llamado cuando se envía el formulario y es inválido.
-        Muestra de nuevo el formulario con los errores.
-        """
-        return render(self.request, self.template_name, {"form": form})
-
+            if has_openstreetmap_only:
+                # Si solo tiene "OpenStreetMap", redirigir directamente a la URL de éxito
+                page_update = HttpResponse("")
+                page_update["HX-Redirect"] = self.get_success_url()
+                return page_update
+            else:
+                # Si hay otros mapas disponibles, redirigir a la vista `KeyMapView`
+                return redirect("companies:KeyMapView", pk=company.pk)
 
 class UpdateDistributionCompanyView(
     PermissionRequiredMixin,
@@ -541,60 +427,96 @@ class UpdateDistributionCompanyView(
     """
 
     model = Company
-    template_name = "whitelabel/companies/company_update.html"
+    template_name = "whitelabel/companies/update_company.html"
     permission_required = "whitelabel.change_company"
+    login_url = "login"
     form_class = DistributionCompanyForm
 
     def get_success_url(self):
-        # Asegúrate de que el nombre de la URL sea correcto y esté definido en tus archivos de URL.
+        """
+        Devuelve la URL de éxito para la redirección después de crear la compañía.
+
+        Returns:
+            str: La URL de redirección después de una creación exitosa.
+        """
         return reverse("companies:companies")
 
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs[
-            "provider_id"
-        ] = self.request.user.company_id  # Asume que el usuario tiene un company_id
-        return kwargs
-
     def get_context_data(self, **kwargs):
+        """
+        Añade al contexto información adicional para renderizar la plantilla,
+        incluyendo mapas, módulos y la personalización del tema para la compañía.
+
+        Args:
+            **kwargs: Argumentos adicionales para el contexto.
+
+        Returns:
+            dict: Contexto actualizado con información adicional como mapas, módulos y temas.
+        """
         context = super().get_context_data(**kwargs)
         user = self.request.user
-        # Aquí puedes agregar cualquier dato adicional que necesites en tu template
-        context["type_maps"] = CompanyTypeMap.objects.filter(company_id=user.company_id)
-        context["modules"] = Module.objects.filter(
-            company__id=self.request.user.company_id
-        )
-        button_color = self.request.user.company.theme_set.all().first().button_color
-        context["button_color"] = button_color
+        company_id = user.company_id
+
+        # Obtener los mapas asociados a la compañía del usuario
+        context["type_maps"] = CompanyTypeMap.objects.filter(company_id=company_id)
+        
+        # Obtener los módulos asociados a la compañía del usuario
+        context["modules"] = Module.objects.filter(company__id=company_id)
+
+        # Obtener el color del botón desde el tema asociado a la compañía
+        theme = user.company.theme_set.first()
+        context["button_color"] = theme.button_color if theme else "#000000"
+
+        # Pasar el ID de la compañía al contexto
+        context["company_id"] = company_id
         return context
 
     def form_valid(self, form):
         """
-        Llamado cuando se envía el formulario y es válido.
-        Actualiza el logo de la empresa y responde con un código HTTP 204 y un header "HX-Trigger:
-        reload-page".
-        """
-        # Manejar relaciones ManyToMany aquí
-        self.object.companytypemap_set.all().delete()
-        type_map_ids = self.request.POST.getlist("type_map")
-        for type_map_id in type_map_ids:
-            CompanyTypeMap.objects.create(company=self.object, map_type_id=type_map_id)
-        self.object.module_set.all().delete()
-        modules_ids = self.request.POST.getlist("modules")
-        for module_id in modules_ids:
-            Module.objects.create(
-                company=self.object, group_id=module_id
-            )  # Asegúrate de que `group_id` sea correcto
-        # Asigna la instancia del usuario al campo 'modified_by'
-        form.instance.modified_by = self.request.user
-        form.save()
-        # Llama al método form_valid de la clase padre para registrar la acción en el log de auditoría
-        response = super().form_valid(form)
-        # Prepara una respuesta con redirección usando HTMX
-        page_update = HttpResponse("")
-        page_update["HX-Redirect"] = self.get_success_url()
-        return page_update
+        Procesa el formulario cuando es válido. Activa la compañía por defecto, asigna
+        valores al campo de creación y modificación, y maneja la redirección basada en 
+        los mapas disponibles.
 
+        Args:
+            form (Form): El formulario validado.
+
+        Returns:
+            HttpResponse: Redirección a la URL de éxito o a la vista de `KeyMapView`.
+        """
+        # Activar la compañía por defecto
+        form.instance.actived = True
+        company = form.save(commit=False)
+
+        # Asignar el usuario actual como creador y modificador
+        company.modified_by = self.request.user
+        company.created_by = self.request.user
+        company.provider_id = None  # Es una distribuidora, por lo que no tiene proveedor
+
+        # Guardar la compañía en la base de datos
+        company.save()
+
+        # Guardar las relaciones ManyToMany
+        form.save_m2m()
+
+        # Llamar al método de la clase base para el registro en el log de auditoría
+        response = super().form_valid(form)
+
+        # Si el ID de la compañía del usuario es 1, crear un tema por defecto si no existe
+        if self.request.user.company_id == 1 and not Theme.objects.filter(company_id=company.id).exists():
+            Theme.objects.create(company_id=company.id)
+
+        # Comprobar si la compañía tiene solo "OpenStreetMap"
+        has_openstreetmap_only = MapType.objects.filter(
+            companytypemap__company=company, name="OpenStreetMap"
+        ).exists()
+
+        if has_openstreetmap_only:
+            # Redirigir directamente a la URL de éxito si solo existe "OpenStreetMap"
+            page_update = HttpResponse("")
+            page_update["HX-Redirect"] = self.get_success_url()
+            return page_update
+        else:
+            # Redirigir a la vista `KeyMapView` si hay otros mapas disponibles
+            return redirect("companies:KeyMapView", pk=company.id)
 
 class UpdateCustomerCompanyView(
     PermissionRequiredMixin,
@@ -609,95 +531,625 @@ class UpdateCustomerCompanyView(
     """
 
     model = Company
-    template_name = "whitelabel/companies/company_update.html"
+    template_name = "whitelabel/companies/update_company.html"
     permission_required = "whitelabel.change_company"
     form_class = CompanyCustomerForm
     success_url = reverse_lazy("companies:companies")
 
     def get_success_url(self):
-        # Asegúrate de que el nombre de la URL sea correcto y esté definido en tus archivos de URL.
+        """
+        Devuelve la URL de éxito para redirigir tras la creación de la compañía.
+
+        Returns:
+            str: La URL de redirección tras una creación exitosa.
+        """
         return reverse("companies:companies")
 
     def get_form_kwargs(self):
+        """
+        Pasa el `provider_id` de la compañía del usuario actual como argumento adicional al formulario.
+
+        Returns:
+            dict: Argumentos adicionales para inicializar el formulario.
+        """
         kwargs = super().get_form_kwargs()
-        kwargs[
-            "provider_id"
-        ] = self.request.user.company_id  # Asume que el usuario tiene un company_id
+        provider_id = self.request.user.company_id  # El ID de la compañía del usuario actual
+        kwargs["provider_id"] = provider_id
         return kwargs
 
     def get_context_data(self, **kwargs):
+        """
+        Agrega datos adicionales al contexto de la plantilla, como mapas, módulos
+        y el color del botón del tema personalizado.
+
+        Args:
+            **kwargs: Argumentos adicionales para el contexto.
+
+        Returns:
+            dict: Contexto actualizado con la información adicional.
+        """
         context = super().get_context_data(**kwargs)
-        user = self.request.user
-        # Aquí puedes agregar cualquier dato adicional que necesites en tu template
-        context["type_maps"] = CompanyTypeMap.objects.filter(company_id=user.company_id)
-        context["modules"] = Module.objects.filter(
-            company__id=self.request.user.company_id
-        )
-        button_color = self.request.user.company.theme_set.all().first().button_color
-        context["button_color"] = button_color
+        company_id = self.request.user.company_id
+
+        # Añadir mapas y módulos relacionados a la compañía del usuario
+        context["type_maps"] = CompanyTypeMap.objects.filter(company_id=company_id)
+        context["modules"] = Module.objects.filter(company_id=company_id)
+
+        # Obtener el tema personalizado para la compañía del usuario actual
+        theme = self.request.user.company.theme_set.first()
+        if theme:
+            context["button_color"] = theme.button_color  # Asignar el color del botón
+
+        # Añadir el ID de la compañía al contexto
+        context.update({
+            'company_id': company_id
+        })
         return context
 
     def form_valid(self, form):
-        # Manejar relaciones ManyToMany aquí
-        self.object.companytypemap_set.all().delete()
-        type_map_ids = self.request.POST.getlist("type_map")
-        for type_map_id in type_map_ids:
-            CompanyTypeMap.objects.create(company=self.object, map_type_id=type_map_id)
-        self.object.module_set.all().delete()
-        modules_ids = self.request.POST.getlist("modules")
-        for module_id in modules_ids:
-            Module.objects.create(
-                company=self.object, group_id=module_id
-            )  # Asegúrate de que `group_id` sea correcto
-        form.instance.modified_by = self.request.user
-        form.save()
-        # Llama al método form_valid de la clase padre para registrar la acción en el log de auditoría
-        response = super().form_valid(form)
-        # Prepara una respuesta con redirección usando HTMX
-        page_update = HttpResponse("")
-        page_update["HX-Redirect"] = self.get_success_url()
-        return page_update
+        """
+        Guarda la nueva compañía y maneja la redirección dependiendo de los mapas
+        asociados a la compañía.
+
+        Args:
+            form (Form): El formulario validado para crear la compañía.
+
+        Returns:
+            HttpResponse: Redirección a la URL de éxito o a la vista de KeyMapView.
+        """
+        with transaction.atomic():  # Ejecutar el proceso en una transacción atómica
+            # Guardar la nueva compañía sin hacer commit
+            company = form.save(commit=False)
+            company.actived = True  # Activar la compañía por defecto
+            company.provider_id = self.request.user.company_id  # Asignar proveedor
+            company.modified_by = self.request.user  # Asignar el modificador
+            company.created_by = self.request.user  # Asignar el creador
+
+            # Si el usuario no es parte de la compañía principal (ID 1), asignar vendedor y consultor
+            if self.request.user.company_id != 1:
+                company.seller = self.request.user.company.seller
+                company.consultant = self.request.user.company.consultant
+
+            # Guardar la compañía en la base de datos
+            company.save()
+            form.save_m2m()  # Guardar las relaciones ManyToMany
+
+            # Registrar en el log de auditoría llamando al form_valid de la clase base
+            response = super().form_valid(form)
+
+            # Verificar si la compañía tiene solo "OpenStreetMap"
+            has_openstreetmap_only = MapType.objects.filter(
+                companytypemap__company=company, name="OpenStreetMap"
+            ).exists()
+
+            if has_openstreetmap_only:
+                # Si solo tiene "OpenStreetMap", redirigir directamente a la URL de éxito
+                page_update = HttpResponse("")
+                page_update["HX-Redirect"] = self.get_success_url()
+                return page_update
+            else:
+                # Si hay otros mapas disponibles, redirigir a la vista `KeyMapView`
+                return redirect("companies:KeyMapView", pk=company.pk)
 
 
 class DeleteCompanyView(
     PermissionRequiredMixin,
     LoginRequiredMixin,
-    DeleteAuditLogAsyncMixin,
-    generic.UpdateView,
+    generic.DeleteView,
 ):
     """
-    DeleteCompanyView es un generic.edit.UpdateView que usa el modelo Company,
-    los campos enumerados,
-    CompanyForm y el template_name_suffix para actualizar una empresa.
-    """
+    Vista para eliminar una compañía. Requiere permisos y autenticación.
 
+    Atributos:
+        model (Model): El modelo que será eliminado, en este caso `Company`.
+        template_name (str): Plantilla utilizada para confirmar la eliminación.
+        permission_required (str): Permiso necesario para acceder a la vista.
+        success_url (str): URL de redirección tras la eliminación exitosa.
+    """
     model = Company
-    template_name = "whitelabel/companies/company_delete.html"
+    template_name = "whitelabel/companies/delete_company.html"
     permission_required = "whitelabel.delete_company"
-    form_class = CompanyDeleteForm
     success_url = reverse_lazy("companies:companies")
 
     def get_success_url(self):
-        # Asegúrate de que el nombre de la URL sea correcto y esté definido en tus archivos de URL.
+        """
+        Devuelve la URL de éxito para redirigir tras la eliminación de la compañía.
+
+        Returns:
+            str: La URL de redirección tras la eliminación exitosa.
+        """
         return reverse("companies:companies")
 
     def form_valid(self, form):
         """
-        Llamado cuando se envía el formulario y es válido.
-        Actualiza el logo de la empresa y responde con un código HTTP 204 y un header "HX-Trigger:
-        reload-page".
+        Marca la respuesta como 204 (sin contenido) y agrega un encabezado HX-Redirect
+        para redirigir tras la eliminación.
+
+        Args:
+            form (Form): El formulario de confirmación de eliminación.
+
+        Returns:
+            HttpResponse: La respuesta HTTP con el código 204 y encabezado HX-Redirect.
         """
-        company = form.save(commit=False)
-        company.visible = False
-        company.actived = False
-        form.save()
+        response = super().form_valid(form)
+        response.status_code = 204  # Indica que la operación fue exitosa pero no hay contenido que devolver
+        response['HX-Redirect'] = self.get_success_url()  # Redirige usando HTMX tras la eliminación
+        return response
+
+    def get_context_data(self, **kwargs):
+        """
+        Agrega al contexto los objetos relacionados que serán eliminados junto con la compañía.
+
+        Args:
+            **kwargs: Argumentos adicionales para el contexto.
+
+        Returns:
+            dict: Contexto actualizado con los objetos relacionados a la compañía.
+        """
+        context = super().get_context_data(**kwargs)
+        company = self.get_object()  # Obtiene la compañía que se eliminará
+
+        try:
+            # Inicializa un recolector de objetos relacionados a eliminar
+            collector = NestedObjects(using=DEFAULT_DB_ALIAS)
+            collector.collect([company])  # Recolecta todos los objetos relacionados
+
+            # Creamos un diccionario donde se almacenarán los objetos relacionados por modelo
+            related_objects = {}
+
+            # Recorremos los modelos y sus objetos relacionados
+            for model, objects in collector.model_objs.items():
+                model_name = model._meta.verbose_name_plural  # Nombre plural del modelo
+                related_objects[model_name] = objects  # Asigna los objetos relacionados al diccionario
+
+            # Agregamos los objetos relacionados al contexto para mostrarlos en la plantilla
+            context['related_objects'] = related_objects
+
+        except Exception as e:
+            # En caso de error, mostrar el mensaje en la consola para depuración
+            print(f"Error al obtener objetos relacionados: {e}")
+
+        return context
+
+
+class KeyMapView(LoginRequiredMixin, UpdateAuditLogAsyncMixin, generic.TemplateView):
+    """
+    Vista para actualizar las claves de los mapas de una compañía. 
+    Requiere autenticación.
+    """
+    template_name = "whitelabel/companies/Key_maps_company.html"
+
+    def get_success_url(self):
+        """
+        Devuelve la URL de éxito tras la actualización de los mapas.
+
+        Returns:
+            str: La URL a la que redirigir tras la actualización.
+        """
+        return reverse("companies:companies")
+
+    def get_context_data(self, **kwargs):
+        """
+        Agrega los formularios para actualizar las claves de los mapas al contexto.
+
+        Args:
+            **kwargs: Argumentos adicionales de contexto.
+
+        Returns:
+            dict: Contexto actualizado con los formularios y la compañía.
+        """
+        context = super().get_context_data(**kwargs)
+        company_id = self.kwargs.get("pk")
+        company = get_object_or_404(Company, id=company_id)
+
+        # Excluir los mapas con map_type_id=1 (p. ej., "OpenStreetMap")
+        maps = CompanyTypeMap.objects.filter(company_id=company.id).exclude(map_type_id=1)
+
+        # Crear un formulario para cada mapa, usando el prefijo del ID para diferenciarlos
+        forms = [
+            KeyMapForm(instance=map_instance, prefix=str(map_instance.id))
+            for map_instance in maps
+        ]
+
+        # Actualizar el contexto con los formularios y la compañía
+        context.update({"forms": forms, "company": company})
+        return context
+
+    def post(self, request, *args, **kwargs):
+        """
+        Maneja la lógica para actualizar las claves de los mapas.
+
+        Args:
+            request (HttpRequest): La solicitud HTTP.
+            *args: Argumentos posicionales.
+            **kwargs: Argumentos de palabra clave.
+
+        Returns:
+            HttpResponse: Respuesta con la redirección o renderizado en caso de error.
+        """
+        company_id = self.kwargs.get("pk")
+        company = get_object_or_404(Company, id=company_id)
+
+        # Filtrar los mapas de la compañía excluyendo map_type_id=1
+        maps = CompanyTypeMap.objects.filter(company_id=company.id).exclude(map_type_id=1)
+
+        # Cargar los formularios con los datos del POST
+        forms = [
+            KeyMapForm(request.POST, instance=map_instance, prefix=str(map_instance.id))
+            for map_instance in maps
+        ]
+
+        # Verificar si todos los formularios son válidos
+        all_valid = all([form.is_valid() for form in forms])
+
+        if all_valid:
+            # Guardar el estado anterior de los mapas para el registro de auditoría
+            self.obj_before = list(maps)  
+            self.obj_after = []  # Lista para almacenar el estado posterior de los objetos
+
+            for form in forms:
+                company_map = form.save(commit=False)  # Guardar sin hacer commit aún
+                key_map = form.cleaned_data.get("key_map")
+
+                if key_map:
+                    # Encriptar la clave del mapa antes de guardarla
+                    company_map.key_map = company_map.encrypt_key(key_map)
+
+                company_map.save()  # Guardar el mapa actualizado en la base de datos
+                self.obj_after.append(company_map)  # Agregar a la lista para la auditoría
+
+            # Registrar la acción en el log de auditoría
+            async_to_sync(self.log_action)()
+
+            # Si todo es válido, redirigir usando HTMX
+            page_update = HttpResponse("")
+            page_update["HX-Redirect"] = self.get_success_url()
+            return page_update
+        else:
+            # Si algún formulario no es válido, volver a renderizar la página con los errores
+            context = {"forms": forms, "company": company}
+            return render(request, self.template_name, context)
+
+class UpdateCompanyLogoView(
+    LoginRequiredMixin, UpdateAuditLogAsyncMixin, generic.UpdateView
+):
+    """
+    Vista para actualizar el logotipo de una empresa. 
+
+    Permite a los usuarios autenticados actualizar el logotipo de la empresa a la que tienen acceso.
+    """
+    model = Company
+    template_name = "whitelabel/companies/logo_company.html"
+    form_class = CompanyLogoForm
+
+    def get_success_url(self):
+        """
+        Devuelve la URL a la que redirigir tras una actualización exitosa.
+
+        Returns:
+            str: La URL de redirección después de actualizar el logotipo.
+        """
+        return reverse("companies:companies")
+
+    def form_valid(self, form):
+        """
+        Llamado cuando el formulario es válido.
+        Actualiza el logotipo de la empresa y maneja la redirección usando HTMX.
+
+        Args:
+            form (CompanyLogoForm): El formulario con los datos válidos.
+
+        Returns:
+            HttpResponse: Respuesta con redirección HTMX.
+        """
+        # Asigna el usuario actual al campo 'modified_by' antes de guardar el formulario
+        form.instance.modified_by = self.request.user
+        form.save()  # Guarda los cambios en el logotipo
+
         # Llama al método form_valid de la clase padre para registrar la acción en el log de auditoría
         response = super().form_valid(form)
 
-        # Prepara una respuesta con redirección usando HTMX
+        # Respuesta HTMX para redirigir después de una actualización exitosa
         page_update = HttpResponse("")
         page_update["HX-Redirect"] = self.get_success_url()
         return page_update
+
+    def form_invalid(self, form):
+        """
+        Llamado cuando el formulario es inválido.
+        Renderiza nuevamente la página con el formulario que contiene errores.
+
+        Args:
+            form (CompanyLogoForm): El formulario con errores.
+
+        Returns:
+            HttpResponse: Respuesta con el formulario inválido renderizado.
+        """
+        return render(self.request, self.template_name, {"form": form})
+
+class ListProcessAddView(
+    PermissionRequiredMixin,
+    LoginRequiredMixin,
+    CreateAuditLogAsyncMixin,
+    generic.CreateView,
+    generic.ListView,
+):
+    """
+    Vista que permite listar y crear procesos en una misma página.
+    Requiere autenticación y permisos para añadir procesos.
+    """
+    template_name = "whitelabel/process/main_process.html"
+    permission_required = "whitelabel.add_company"
+    form_class = ProcessForm
+    model = Process
+    paginate_by = 10  # Valor por defecto para la paginación
+
+    def get_success_url(self):
+        """
+        Redirige a la página de listado de procesos tras una creación exitosa.
+
+        Returns:
+            str: URL a la que redirigir después de crear el proceso.
+        """
+        return reverse("companies:process")
+
+    def get_paginate_by(self, queryset):
+        """
+        Permite que el valor de paginación sea dinámico, basado en el parámetro GET.
+
+        Args:
+            queryset (QuerySet): Consulta de procesos.
+
+        Returns:
+            int: Número de objetos por página.
+        """
+        paginate_by = self.request.GET.get("paginate_by", self.paginate_by)
+        try:
+            return int(paginate_by)
+        except (ValueError, TypeError):
+            return self.paginate_by
+
+    def get_queryset(self):
+        """
+        Obtiene los procesos filtrados para la compañía del usuario.
+
+        Returns:
+            QuerySet: Procesos visibles de la compañía ordenados por tipo de proceso.
+        """
+        user = self.request.user
+        return Process.objects.filter(company=user.company, visible=True).order_by("process_type")
+
+    def get_context_data(self, **kwargs):
+        """
+        Añade datos adicionales al contexto, como la paginación, el primer proceso y el color del tema.
+
+        Args:
+            kwargs: Argumentos adicionales para el contexto.
+
+        Returns:
+            dict: Contexto actualizado para la plantilla.
+        """
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        first_process = Process.objects.filter(company=user.company, visible=True).order_by("id").first()
+        companies = get_user_companies(user)
+
+        # Modificar el campo 'company' en el formulario según el rol del usuario
+        if user.company_id == 1:
+            context["form"].fields["company"].choices = companies
+        else:
+            context["form"].fields["company"].queryset = companies
+
+        # Configurar la paginación
+        queryset = self.get_queryset()
+        paginator = Paginator(queryset, self.get_paginate_by(queryset))
+        page = self.request.GET.get("page")
+        context["page_obj"] = paginator.get_page(page)
+        context["object_list"] = context["page_obj"].object_list
+
+        # Calcular el número de inicio de los objetos en la página actual
+        page_number = context["page_obj"].number if context["page_obj"] else 1
+        context["start_number"] = (page_number - 1) * self.get_paginate_by(queryset)
+
+        # Añadir el color del botón basado en el tema de la compañía
+        theme = user.company.theme_set.first()
+        context["button_color"] = theme.button_color if theme else "#000000"
+
+        # Añadir el ID del primer proceso si existe
+        if first_process:
+            context["process_admin"] = first_process.id
+
+        return context
+
+    def form_valid(self, form):
+        """
+        Llamado cuando el formulario de creación es válido.
+        Asigna al usuario actual como creador y modificador del proceso.
+
+        Args:
+            form (ProcessForm): Formulario válido con los datos del proceso.
+
+        Returns:
+            HttpResponse: Redirección después de la creación exitosa del proceso.
+        """
+        form.instance.modified_by = self.request.user
+        form.instance.created_by = self.request.user
+        form.save()
+        return redirect(self.get_success_url())
+
+
+class UpdateProcessView(
+    PermissionRequiredMixin,
+    LoginRequiredMixin,
+    UpdateAuditLogAsyncMixin,
+    generic.UpdateView,
+):
+    """
+    Vista de actualización de proceso.
+
+    Esta vista permite actualizar un proceso existente en el sistema.
+    Requiere permisos de cambio de proceso y autenticación de inicio de sesión.
+    Utiliza el formulario ProcessForm para validar y guardar los datos del proceso.
+    Después de una actualización exitosa, redirige a la lista de procesos.
+    """
+
+    template_name = "whitelabel/process/update_process.html"
+    permission_required = "whitelabel.change_company"
+    form_class = ProcessForm
+    model = Process
+
+    def get_success_url(self):
+        """
+        Define la URL de redirección después de la actualización exitosa.
+
+        Returns:
+            str: URL de redirección a la lista de procesos.
+        """
+        return reverse("companies:process")
+
+    def get_context_data(self, **kwargs):
+        """
+        Retorna el contexto de datos para renderizar la vista.
+
+        Args:
+            **kwargs: Argumentos clave adicionales.
+
+        Returns:
+            dict: Contexto de datos para renderizar la vista.
+        """
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        companies = get_user_companies(user)
+
+        # Modificar el campo de empresa en el formulario según la compañía del usuario
+        if user.company_id == 1:
+            context["form"].fields["company"].choices = companies
+        else:
+            context["form"].fields["company"].queryset = companies
+
+        # Añadir el color del botón al contexto si existe
+        theme = user.company.theme_set.first()
+        context["button_color"] = theme.button_color if theme else "#000000"
+        
+        return context
+
+    def form_valid(self, form):
+        """
+        Guarda los datos del formulario y retorna una respuesta HTTP.
+
+        Args:
+            form (Form): Formulario con los datos del proceso.
+
+        Returns:
+            HttpResponse: Redirige a la URL de éxito tras guardar los datos correctamente.
+        """
+        # Solo actualizamos `modified_by` cuando se modifica
+        form.instance.modified_by = self.request.user
+        
+        # Guardar el formulario y redirigir
+        response = super().form_valid(form)
+        return redirect(self.get_success_url())
+
+    def form_invalid(self, form):
+        """
+        Maneja los casos en que el formulario es inválido.
+
+        Args:
+            form (Form): Formulario inválido con errores de validación.
+
+        Returns:
+            HttpResponse: Respuesta HTTP renderizando el formulario nuevamente con errores.
+        """
+        return self.render_to_response(self.get_context_data(form=form))
+
+
+
+
+class DeleteProcessView(
+    PermissionRequiredMixin,
+    LoginRequiredMixin,
+    DeleteAuditLogAsyncMixin,
+    generic.DeleteView,
+):
+    """
+    Vista de clase para eliminar un proceso.
+
+    Esta vista se utiliza para eliminar un proceso existente en la aplicación.
+    Requiere permisos de eliminación y autenticación del usuario.
+
+    Atributos:
+        model (Model): El modelo de datos asociado a la vista.
+        template_name (str): El nombre de la plantilla HTML utilizada para renderizar la vista.
+        permission_required (str): El permiso requerido para acceder a la vista.
+        fields (list): La lista de campos del modelo que se mostrarán en el formulario.
+
+    Métodos:
+        form_valid(form): Método que se ejecuta cuando el formulario es válido.
+            Actualiza el campo 'visible' del proceso a False y guarda los cambios.
+            Retorna una respuesta HTTP con el código de estado 204 y el encabezado "HX-Trigger: ListprocessChanged".
+    """
+
+    model = Process
+    template_name = "whitelabel/process/delete_process.html"
+    permission_required = "whitelabel.delete_company"
+
+    def get_success_url(self):
+        """
+        Define la URL de redirección después de la actualización exitosa.
+
+        Returns:
+            str: URL de redirección a la lista de procesos.
+        """
+        return reverse("companies:process")
+
+    def form_valid(self, form):
+        """
+        Marca la respuesta como 204 (sin contenido) y agrega un encabezado HX-Redirect
+        para redirigir tras la eliminación.
+
+        Args:
+            form (Form): El formulario de confirmación de eliminación.
+
+        Returns:
+            HttpResponse: La respuesta HTTP con el código 204 y encabezado HX-Redirect.
+        """
+        response = super().form_valid(form)
+        return redirect(self.get_success_url())
+
+    def get_context_data(self, **kwargs):
+        """
+        Agrega al contexto los objetos relacionados que serán eliminados junto con la compañía.
+
+        Args:
+            **kwargs: Argumentos adicionales para el contexto.
+
+        Returns:
+            dict: Contexto actualizado con los objetos relacionados a la compañía.
+        """
+        context = super().get_context_data(**kwargs)
+        company = self.get_object()  # Obtiene la compañía que se eliminará
+
+        try:
+            # Inicializa un recolector de objetos relacionados a eliminar
+            collector = NestedObjects(using=DEFAULT_DB_ALIAS)
+            collector.collect([company])  # Recolecta todos los objetos relacionados
+
+            # Creamos un diccionario donde se almacenarán los objetos relacionados por modelo
+            related_objects = {}
+
+            # Recorremos los modelos y sus objetos relacionados
+            for model, objects in collector.model_objs.items():
+                model_name = model._meta.verbose_name_plural  # Nombre plural del modelo
+                related_objects[model_name] = objects  # Asigna los objetos relacionados al diccionario
+
+            # Agregamos los objetos relacionados al contexto para mostrarlos en la plantilla
+            context['related_objects'] = related_objects
+
+        except Exception as e:
+            # En caso de error, mostrar el mensaje en la consola para depuración
+            print(f"Error al obtener objetos relacionados: {e}")
+
+        return context
 
 
 class ThemeView(PermissionRequiredMixin, LoginRequiredMixin, UpdateAuditLogAsyncMixin, generic.UpdateView):
@@ -1089,195 +1541,6 @@ class UpdateModuleView(PermissionRequiredMixin, LoginRequiredMixin, generic.Upda
             print("log_action no está definido en la clase.")
         return super().form_valid(form)
 
-
-class ListProcessAddView(
-    PermissionRequiredMixin,
-    LoginRequiredMixin,
-    CreateAuditLogAsyncMixin,
-    generic.CreateView,
-    generic.ListView,
-):
-    template_name = "whitelabel/process/main_process.html"
-    permission_required = "whitelabel.add_company"
-    form_class = ProcessForm
-    model = Process
-    paginate_by = 10  # Establece un valor por defecto para la paginación
-
-    def get_success_url(self):
-        return reverse("companies:process")
-
-    def get_paginate_by(self, queryset):
-        paginate_by = self.request.GET.get("paginate_by", self.paginate_by)
-        try:
-            return int(paginate_by)
-        except (ValueError, TypeError):
-            return self.paginate_by
-
-    def get_queryset(self):
-        user = self.request.user
-        return Process.objects.filter(company=user.company, visible=True).order_by(
-            "process_type"
-        )
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        user = self.request.user
-        first_process = (
-            Process.objects.filter(company=user.company, visible=True)
-            .order_by("id")
-            .first()
-        )
-        companies = get_user_companies(user)
-        if user.company_id == 1:
-            context["form"].fields["company"].choices = companies
-        else:
-            context["form"].fields["company"].queryset = companies
-
-        paginator = Paginator(self.get_queryset(), self.get_paginate_by(None))
-        page = self.request.GET.get("page")
-        context["page_obj"] = paginator.get_page(page)
-        context["object_list"] = context["page_obj"].object_list
-
-        page_number = context["page_obj"].number if context["page_obj"] else 1
-        context["start_number"] = (page_number - 1) * self.get_paginate_by(None)
-        button_color = self.request.user.company.theme_set.all().first().button_color
-        context["button_color"] = button_color
-        
-        context["process_admin"] = first_process.id
-        return context
-
-    def form_valid(self, form):
-        form.instance.modified_by = self.request.user
-        form.instance.created_by = self.request.user
-        form.save()
-        return redirect(self.get_success_url())
-
-
-class UpdateProcessView(
-    PermissionRequiredMixin,
-    LoginRequiredMixin,
-    UpdateAuditLogAsyncMixin,
-    generic.UpdateView,
-):
-    """
-    Vista de actualización de proceso.
-
-    Esta vista permite actualizar un proceso existente en el sistema.
-    Requiere permisos de cambio de proceso y autenticación de inicio de sesión.
-    Utiliza el formulario ProcessForm para validar y guardar los datos del proceso.
-    Después de una actualización exitosa, redirige a la lista de procesos.
-
-    Atributos:
-        template_name (str): Nombre de la plantilla HTML para renderizar la vista.
-        permission_required (str): Permiso requerido para acceder a la vista.
-        form_class (Form): Clase del formulario utilizado para validar los datos del proceso.
-        model (Model): Modelo del proceso que se va a actualizar.
-        success_url (str): URL a la que se redirige después de una actualización exitosa.
-
-    Métodos:
-        get_context_data(**kwargs): Retorna el contexto de datos para renderizar la vista.
-        form_valid(form): Guarda los datos del formulario y retorna una respuesta HTTP.
-
-    """
-
-    template_name = "whitelabel/process/update_process.html"
-    permission_required = "whitelabel.change_company"
-    form_class = ProcessForm
-    model = Process
-
-    def get_success_url(self):
-        return reverse("companies:process")
-
-    def get_context_data(self, **kwargs):
-        """
-        Retorna el contexto de datos para renderizar la vista.
-
-        Args:
-            **kwargs: Argumentos clave adicionales.
-
-        Returns:
-            dict: Contexto de datos para renderizar la vista.
-
-        """
-        context = super().get_context_data(**kwargs)
-        companies = get_user_companies(self.request.user)
-        if self.request.user.company_id == 1:
-            context["form"].fields["company"].choices = companies
-        else:
-            context["form"].fields["company"].queryset = companies
-        button_color = self.request.user.company.theme_set.all().first().button_color
-        context["button_color"] = button_color
-        return context
-
-    def form_valid(self, form):
-        """
-        Guarda los datos del formulario y retorna una respuesta HTTP.
-
-        Args:
-            form (Form): Formulario con los datos del proceso.
-
-        Returns:
-            HttpResponse: Respuesta HTTP con estado 204 (Sin contenido) y encabezados adicionales.
-
-        """
-
-        form.instance.modified_by = self.request.user
-        form.instance.created_by = self.request.user
-        response = super().form_valid(form)
-        return redirect(self.get_success_url())
-
-
-class DeleteProcessView(
-    PermissionRequiredMixin,
-    LoginRequiredMixin,
-    DeleteAuditLogAsyncMixin,
-    generic.UpdateView,
-):
-    """
-    Vista de clase para eliminar un proceso.
-
-    Esta vista se utiliza para eliminar un proceso existente en la aplicación.
-    Requiere permisos de eliminación y autenticación del usuario.
-
-    Atributos:
-        model (Model): El modelo de datos asociado a la vista.
-        template_name (str): El nombre de la plantilla HTML utilizada para renderizar la vista.
-        permission_required (str): El permiso requerido para acceder a la vista.
-        fields (list): La lista de campos del modelo que se mostrarán en el formulario.
-
-    Métodos:
-        form_valid(form): Método que se ejecuta cuando el formulario es válido.
-            Actualiza el campo 'visible' del proceso a False y guarda los cambios.
-            Retorna una respuesta HTTP con el código de estado 204 y el encabezado "HX-Trigger: ListprocessChanged".
-    """
-
-    model = Process
-    template_name = "whitelabel/process/delete_process.html"
-    permission_required = "whitelabel.delete_company"
-    fields = ["visible"]
-
-    def get_success_url(self):
-        return reverse("companies:process")
-
-    def form_valid(self, form):
-        """
-        Método que se ejecuta cuando el formulario es válido.
-
-        Actualiza el campo 'visible' del proceso a False y guarda los cambios.
-        Retorna una respuesta HTTP con el código de estado 204 y el encabezado "HX-Trigger:
-        ListprocessChanged".
-
-        Parámetros:
-            form (Form): El formulario válido.
-
-        Retorna:
-            HttpResponse: La respuesta HTTP con el código de estado 204 y el encabezado "HX-Trigger
-            : ListprocessChanged".
-        """
-        form.instance.visible = False
-        # Llama al método form_valid de la clase padre para registrar la acción en el log de auditoría
-        response = super().form_valid(form)
-        return redirect(self.get_success_url())
 
 
 class ListTicketTemplate(LoginRequiredMixin, PermissionRequiredMixin, ListView):

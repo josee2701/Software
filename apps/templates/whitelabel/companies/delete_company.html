@@ -11,7 +11,7 @@
             <form hx-post="{{ request.path }}" hx-target="#modal-content">
               {% csrf_token %}
               <p>
-                {% trans "Are you sure you want to delete the Process" %} "{{ object }}"?
+                {% trans "Are you sure you want to delete the Company" %} "{{ object }}"?
               </p>
               {% if related_objects %}
               

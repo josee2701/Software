@@ -1,5 +1,6 @@
 import json
 from datetime import datetime
+
 from django.contrib import messages
 from django.contrib.auth.mixins import (LoginRequiredMixin,
                                         PermissionRequiredMixin)
@@ -22,10 +23,11 @@ from apps.realtime.forms import (DataPlanForm, DeviceForm, SimcardForm,
 from apps.realtime.models import (DataPlan, Device, FamilyModelUEC,
                                   Manufacture, SimCard, Vehicle, VehicleGroup)
 from apps.whitelabel.models import Company
+from config.filtro import General_Filters
 from config.pagination import get_paginate_by
 
-from .apis import (extract_number, get_user_companies, get_user_vehicles, sort_key_commands_datetime,
-                   sort_key)
+from .apis import (extract_number, get_user_companies, get_user_vehicles,
+                   sort_key, sort_key_commands_datetime)
 from .forms import (ConfigurationReport, DataPlanForm, DeviceForm,
                     GeozonesForm, SendingCommandsFrom, SimcardForm,
                     VehicleForm, VehicleGroupForm)
@@ -40,7 +42,7 @@ from .sql import (ListDeviceByCompany, ListVehicleByUserAndCompany,
 
 
 class ListDataPlanTemplate(
-    PermissionRequiredMixin, LoginRequiredMixin, ListView
+    PermissionRequiredMixin, LoginRequiredMixin, generic.ListView
 ):
     """
     Vista como clase que renderiza el template HTML que contiene la lista de planes de datos.
@@ -60,69 +62,17 @@ class ListDataPlanTemplate(
         Returns:
             int: El número de elementos a mostrar por página.
         """
-        paginate_by = self.request.POST.get('paginate_by', None)  # Obtener paginate_by de los parámetros POST
-
-        if paginate_by is None:
-            session_filters = self.request.session.get(
-                f"filters_sorted_dataplan_{self.request.user.id}", {}
-            )
-            paginate_by = session_filters.get("paginate_by", 15)
-            # Convertir a entero si es una lista
-            try:
-                paginate_by = int(
-                    paginate_by[0]
-                )  # Convertir el primer elemento de la lista a entero
-            except (TypeError, ValueError):
-                paginate_by = int(paginate_by) if paginate_by else 15
-            # Añadir paginate_by a self.request.GET para asegurar que esté presente
-            self.request.POST = self.request.POST.copy()
-            self.request.POST['paginate_by'] = paginate_by
-        return int(self.request.POST['paginate_by'])
+        return get_paginate_by(self.request)
 
     def get_queryset(self):
         """
-        Obtiene el conjunto de datos de los planes de datos reales de la compañía asociada al
-        usuario que realiza la solicitud.
+        Obtiene el conjunto de datos de los comandos de envío filtrados y ordenados.
 
         Returns:
-            List[dict]: Lista de planes de datos ordenada por 'Company' en forma descendente.
+            QuerySet: El conjunto de datos de los comandos de envío filtrados y ordenados.
         """
         user = self.request.user
-        company = user.company
-        params = self.request.GET if self.request.method == 'GET' else self.request.POST
-        query = params.get("query", "").lower()
-        search = params.get("q", query).lower()
-        if 'order_by' not in params and 'paginate_by' not in params and 'page' not in params:
-            # Limpiar los filtros de la sesión
-            if f"filters_sorted_dataplan_{user.id}" in self.request.session:
-                del self.request.session[f"filters_sorted_dataplan_{user.id}"]
-                self.request.session.modified = True
-        # Recuperar filtros almacenados en la sesión
-        session_filters = self.request.session.get(f'filters_sorted_dataplan_{user.id}', {})
-        order_by = params.get('order_by', session_filters.get('order_by', ['Company'])[0])
-        direction = params.get('direction', session_filters.get('direction',['asc'])[0])
-        # Actualizar los filtros con los parámetros actuales de la solicitud GET
-        session_filters.update(params)
-
-        # Actualizar los filtros de la sesión con los nuevos parámetros
-        self.request.session[
-            f"filters_sorted_dataplan_{user.id}"
-        ] = session_filters
-        self.request.session.modified = True
-        # Obtener los planes de datos a través de la función fetch_all_dataplan.
-        queryset = fetch_all_dataplan(company, user, search)
-        # Función para convertir los valores a minúsculas y extraer números cuando sea necesario
-        key_function = sort_key(order_by)
-        reverse = direction == 'desc'
-        try:
-            sorted_queryset = sorted(queryset, key=key_function, reverse=reverse)
-        except KeyError:
-            # Ordenamiento por defecto si la clave no existe
-            sorted_queryset = sorted(
-                queryset, key=lambda x: x["Company"].lower(), reverse=reverse
-            )
-
-        return sorted_queryset
+        return General_Filters.get_filtered_data(DataPlan, user).order_by("company")
 
     def get_context_data(self, **kwargs):
         """
@@ -135,29 +85,10 @@ class ListDataPlanTemplate(
             dict: El contexto de datos para renderizar la vista.
         """
         context = super().get_context_data(**kwargs)
-        paginate_by = self.get_paginate_by(None)
-        context["paginate_by"] = paginate_by
         # Simplificación directa para calcular start_number
         page_number = context.get("page_obj").number if context.get("page_obj") else 1
         context["start_number"] = (page_number - 1) * self.get_paginate_by(None)
-        session_filters = self.request.session.get(f'filters_sorted_dataplan_{self.request.user.id}', {})
-        # Obtener el ordenamiento desde la solicitud actual
-        order_by = self.request.GET.get('order_by') or self.request.POST.get('order_by') or session_filters.get('order_by', ['Company'])[0]
-        direction = self.request.GET.get('direction') or self.request.POST.get('direction') or session_filters.get('direction', ['asc'])[0]
-        context['order_by'] = order_by
-        context['direction'] = direction
         return context
-    
-    @method_decorator(csrf_protect)
-    def post(self, request, *args, **kwargs):
-        # Obtén el número de página desde la solicitud POST
-        page_number = request.POST.get('page', 1)
-        # Modifica la consulta para aplicar la paginación
-        self.object_list = self.get_queryset()
-        paginator = Paginator(self.object_list, self.get_paginate_by(None))
-        page_obj = paginator.get_page(page_number)
-        context = self.get_context_data(object_list=page_obj.object_list, page_obj=page_obj)
-        return self.render_to_response(context)
 
 
 class AddDataPlanView(
@@ -1920,6 +1851,11 @@ class ListGeozonesTemplate(
         context = self.get_context_data(object_list=page_obj.object_list, page_obj=page_obj)
         return self.render_to_response(context)
 
+import os
+
+import environ
+
+
 class AddGeozonesView(PermissionRequiredMixin, LoginRequiredMixin, CreateAuditLogAsyncMixin, generic.CreateView):
     """ """
 
@@ -1940,6 +1876,7 @@ class AddGeozonesView(PermissionRequiredMixin, LoginRequiredMixin, CreateAuditLo
 
         button_color = self.request.user.company.theme_set.all().first().button_color
         context["button_color"] = button_color
+        context["key"] = os.environ.get('GOOGLE_MAPS_API_KEY')
         return context
 
     def get_success_url(self):

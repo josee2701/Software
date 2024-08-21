@@ -6,29 +6,15 @@ https://docs.djangoproject.com/en/4.0/ref/urls/
 
 from django.urls import path
 
-from apps.whitelabel.apis import (
-    SearchCompany,
-    SearchModule,
-    SearchTicketsView,
-    SearchTicketsViewOpen,
-    list_proces_by_company,
-    ExportDataCompany,
-    ExportDataTicketsOpen,
-    ExportDataTicketsHistoric,
-    ExportDataModule,
-)
+from apps.whitelabel.apis import (ExportDataModule, ExportDataTicketsHistoric,
+                                  ExportDataTicketsOpen, SearchModule,
+                                  SearchTicketsView, SearchTicketsViewOpen,
+                                  list_proces_by_company)
 
 from . import views
-from .views import (
-    ClosedTicketsView,
-    CommentTicketView,
-    CreateTicketView,
-    DeleteProcessView,
-    ListProcessAddView,
-    ListTicketTemplate,
-    UpdateProcessView,
-    ViewTicketView,
-)
+from .views import (ClosedTicketsView, CommentTicketView, CreateTicketView,
+                    DeleteProcessView, ListProcessAddView, ListTicketTemplate,
+                    UpdateProcessView, ViewTicketView)
 
 # Creación de un patrón de URL para las vistas de creación de la empresa.
 app_name = "companies"
@@ -40,11 +26,6 @@ urlpatterns = [
         "createDistributionCompany/",
         views.CreateDistributionCompanyView.as_view(),
         name="createDistributionCompany",
-    ),
-    path(
-        "createCustomerAzCompany/",
-        views.CreateCustomerAzCompanyView.as_view(),
-        name="createCustomerAzCompany",
     ),
     path(
         "createCustomerCompany/",
@@ -105,9 +86,7 @@ urlpatterns = [
     ),
     # API para traer info de tickets abiertos + search
     path("tickets/tickets-user", SearchTicketsViewOpen.as_view(), name="tickets_user"),
-    path("company/company-user", SearchCompany.as_view(), name="company_user"),
     path("module/module-user", SearchModule.as_view(), name="module_user"),
-    path("company/export-company", ExportDataCompany.as_view(), name="export_company"),
     path("tickets/export-tickets-open", ExportDataTicketsOpen.as_view(), name="export_tickets_open"),
     path("tickets/export-tickets-historic", ExportDataTicketsHistoric.as_view(), name="export_tickets_historic"),
     path("module/module-export", ExportDataModule.as_view(), name="module_export"),

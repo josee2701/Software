@@ -28,7 +28,7 @@ from django.utils.translation import gettext_lazy as _
 from apps.realtime.models import Vehicle, VehicleGroup
 from apps.whitelabel.models import Company
 
-User = get_user_model()
+from .models import User
 
 
 class MyCheckboxSelectMultiple(forms.CheckboxSelectMultiple):
@@ -47,56 +47,6 @@ class MyInlineSelectMultiple(forms.CheckboxSelectMultiple):
         return rendered.replace('class="', 'class="form-check-input ')
 
 
-class IndexForm_(forms.ModelForm):
-    """
-    Formulario usado para la validación del correo electrónico en la página de inicio `index`
-    de la aplicación.
-    """
-
-    class Meta:
-        """Define el campo email del modelo User como único a renderizar en el formulario."""
-
-        model = User
-        fields = ["email"]
-        widgets = {
-            "email": forms.EmailInput(
-                attrs={
-                    "class": "form-control",
-                    "placeholder": _("user@email.com"),
-                    "autofocus": True,
-                    "autocomplete": "off",
-                }
-            ),
-        }
-
-    def clean_email(self):
-        """
-        Si la dirección de correo electrónico ingresada en el formulario no se encuentra en la base
-        de datos, genera un error de validación.
-        :return: La dirección de correo electrónico que se ingresó en el formulario.
-        """
-        form_email = self.cleaned_data["email"]
-
-        try:
-            # Verificar si el correo electrónico está registrado y activo
-            user = User.objects.get(email=form_email)
-            if not user.is_active:
-                # Si el usuario no está activo, lanzar una excepción con un mensaje de advertencia
-                msg = _("The email %(email)s is registered but not active.") % {
-                    "email": form_email
-                }
-                raise forms.ValidationError(msg)
-        except User.DoesNotExist:
-            # Si el correo electrónico no está registrado en la aplicación, lanzar una excepción
-            # con un mensaje de error
-            msg = _("The email %(email)s is not registered in the application.") % {
-                "email": form_email
-            }
-            raise forms.ValidationError(msg)
-
-        return form_email
-
-
 class LoginForm_(forms.ModelForm):
     """
     Formulario usado para la autentificación del usuario (una vez se ha verificado que el correo a
@@ -107,7 +57,7 @@ class LoginForm_(forms.ModelForm):
         """Define el campo password del modelo User como único a renderizar en el formulario."""
 
         model = User
-        fields = ["password"]
+        fields = ["password","email"]
         widgets = {
             "password": forms.PasswordInput(
                 attrs={
@@ -118,7 +68,42 @@ class LoginForm_(forms.ModelForm):
                     "autocomplete": "off",
                 }
             ),
+            "email": forms.EmailInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": _("user@email.com"),
+                    "autofocus": True,
+                    "autocomplete": "off",
+                }
+            ),
         }
+        
+        def clean_email(self):
+            """
+            Si la dirección de correo electrónico ingresada en el formulario no se encuentra en la base
+            de datos, genera un error de validación.
+            :return: La dirección de correo electrónico que se ingresó en el formulario.
+            """
+            form_email = self.cleaned_data["email"]
+
+            try:
+                # Verificar si el correo electrónico está registrado y activo
+                user = User.objects.get(email=form_email)
+                if not user.is_active:
+                    # Si el usuario no está activo, lanzar una excepción con un mensaje de advertencia
+                    msg = _("The email %(email)s is registered but not active.") % {
+                        "email": form_email
+                    }
+                    raise forms.ValidationError(msg)
+            except User.DoesNotExist:
+                # Si el correo electrónico no está registrado en la aplicación, lanzar una excepción
+                # con un mensaje de error
+                msg = _("The email %(email)s is not registered in the application.") % {
+                    "email": form_email
+                }
+                raise forms.ValidationError(msg)
+
+            return form_email
 
 
 class SetPasswordForm_(SetPasswordForm):

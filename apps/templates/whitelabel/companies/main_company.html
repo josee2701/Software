@@ -1,0 +1,245 @@
+{% extends "layouts/base.html" %}
+{% load i18n static %}
+{% block title %} {% trans "Companies" %} {% endblock %}
+{% block content %}
+<div class="container-fluid py-4 custom-padding-container">
+  <div class="row">
+    <div class="col-12">
+      <div class="card my-4 custom-padding-card-my-4">
+        <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
+          <div class="row bg-gradient-primary shadow-primary border-radius-lg pt-4">
+            <div class="col">
+              <h5 class="text-white text-capitalize ps-3">{% trans 'Companies' %}</h5>
+            </div>
+            <div class="col d-flex justify-content-end">
+              {% if perms.whitelabel.change_company  %}
+                <button class="btn btn-success" type="button" hx-get="{% url 'companies:updateCompanyLogo' user.company.id %}" hx-target="#modal .modal-content">
+                  <i class="fa-solid fa-pencil"></i> {% trans "Edit Logo" %}
+                </button>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        <div class="card-body custom-padding-body">
+          <div class="row align-items-center mb-3">
+            <div class="col-12 d-flex flex-column flex-md-row align-items-center justify-content-between">
+              <div class="d-flex flex-wrap align-items-center mb-2 mb-md-0">
+                <form method="GET" action="{% url 'companies:companies' %}" class="d-flex align-items-center">
+                  <label class="me-2">{% trans "Show" %}</label>
+                  <select name="paginate_by" onchange="this.form.submit()" class="form-select form-select-sm me-2">
+                    <option value="15" {% if paginate_by == 15 %} selected {% endif %}>15</option>
+                    <option value="25" {% if paginate_by == 25 %} selected {% endif %}>25</option>
+                    <option value="50" {% if paginate_by == 50 %} selected {% endif %}>50</option>
+                    <option value="100" {% if paginate_by == 100 %} selected {% endif %}>100</option>
+                  </select>
+                  <label>{% trans "results" %}</label>
+                  <input type="hidden" name="page" value="{{ page_obj.number }}">
+                  <input type="hidden" name="order_by" value="{{ order_by }}">
+                  <input type="hidden" name="direction" value="{{ direction }}">
+                  <input type="hidden" name="search" value="{{ request.GET.search }}">
+                </form>
+              </div>
+              <div class="d-flex justify-content-end align-items-center flex-wrap">
+                {% if perms.whitelabel.add_company %}
+                {% if user.company.id == 1 %}
+                <button type="button" hx-get="{% url 'companies:createDistributionCompany' %}" class="btn btn-primary mx-2" hx-target="#modal .modal-content">
+                  <i class="fa-solid fa-plus"></i> {% trans "Add Distributor" %}
+                </button>
+                {% endif %}
+                  <a hx-get="{% url 'companies:createCustomerCompany' %}" class="btn btn-primary mx-0.5" hx-target="#modal .modal-content">{% trans "Add final customer" %}</a>
+                  <a hx-get="{% url 'companies:process' %}" class="btn btn-primary mx-2" hx-target="#modal .modal-content">{% trans "Lists Process" %}</a>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table class="table align-items-center mb-0 table-sm">
+              <thead>
+                <tr>
+                  <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"></th>
+                  <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                    <a href="?order_by=nit&direction={% if order_by == 'nit' and direction == 'asc' %}desc{% else %}asc{% endif %}&paginate_by={{ paginate_by }}&page={{ page_obj.number }}&search={{ request.GET.search }}">
+                      {% trans "Nit" %}
+                      <span class="sort-indicator">
+                        <span class="sort-arrow sort-arrow-up {% if order_by == 'nit' and direction == 'asc' %}active{% else %}inactive{% endif %}">↑</span>
+                        <span class="sort-arrow sort-arrow-down {% if order_by == 'nit' and direction == 'desc' %}active{% else %}inactive{% endif %}">↓</span>
+                      </span>
+                    </a>
+                  </th>
+                  <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                    <a href="?order_by=company_name&direction={% if order_by == 'company_name' and direction == 'asc' %}desc{% else %}asc{% endif %}&paginate_by={{ paginate_by }}&page={{ page_obj.number }}&search={{ request.GET.search }}">
+                      {% trans "Company" %}
+                      <span class="sort-indicator">
+                        <span class="sort-arrow sort-arrow-up {% if order_by == 'company_name' and direction == 'asc' %}active{% else %}inactive{% endif %}">↑</span>
+                        <span class="sort-arrow sort-arrow-down {% if order_by == 'company_name' and direction == 'desc' %}active{% else %}inactive{% endif %}">↓</span>
+                      </span>
+                    </a>
+                  </th>
+                  <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                    <a href="?order_by=legal_representative&direction={% if order_by == 'legal_representative' and direction == 'asc' %}desc{% else %}asc{% endif %}&paginate_by={{ paginate_by }}&page={{ page_obj.number }}&search={{ request.GET.search }}">
+                      {% trans "Legal Representative" %}
+                      <span class="sort-indicator">
+                        <span class="sort-arrow sort-arrow-up {% if order_by == 'legal_representative' and direction == 'asc' %}active{% else %}inactive{% endif %}">↑</span>
+                        <span class="sort-arrow sort-arrow-down {% if order_by == 'legal_representative' and direction == 'desc' %}active{% else %}inactive{% endif %}">↓</span>
+                      </span>
+                    </a>
+                  </th>
+                  {% if user.company.id == 1 %}
+                  <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                    <a href="?order_by=provider_id&direction={% if order_by == 'provider_id' and direction == 'asc' %}desc{% else %}asc{% endif %}&paginate_by={{ paginate_by }}&page={{ page_obj.number }}&search={{ request.GET.search }}">
+                      {% trans "Type" %}
+                      <span class="sort-indicator">
+                        <span class="sort-arrow sort-arrow-up {% if order_by == 'provider_id' and direction == 'asc' %}active{% else %}inactive{% endif %}">↑</span>
+                        <span class="sort-arrow sort-arrow-down {% if order_by == 'provider_id' and direction == 'desc' %}active{% else %}inactive{% endif %}">↓</span>
+                      </span>
+                    </a>
+                  </th>
+                  {% endif %}
+                  <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                    <a href="?order_by=actived&direction={% if order_by == 'actived' and direction == 'asc' %}desc{% else %}asc{% endif %}&paginate_by={{ paginate_by }}&page={{ page_obj.number }}&search={{ request.GET.search }}">
+                      {% trans "Status" %}
+                      <span class="sort-indicator">
+                        <span class="sort-arrow sort-arrow-up {% if order_by == 'actived' and direction == 'asc' %}active{% else %}inactive{% endif %}">↑</span>
+                        <span class="sort-arrow sort-arrow-down {% if order_by == 'actived' and direction == 'desc' %}active{% else %}inactive{% endif %}">↓</span>
+                      </span>
+                    </a>
+                  </th>
+                </tr>
+              </thead>
+              <tbody id="company-tbody">
+                {% for item in company_info %}
+                  <tr id="{{ item.id }}">
+                    <td class="text-center">
+                      {% if perms.whitelabel.change_company %}
+                      {% if item.provider_id is None %}
+                        <button type="button" hx-get="{% url 'companies:updateDistributionCompany' item.pk %}" class="btn btn-primary btn-sm" hx-target="#modal .modal-content">
+                          <i class="fa-solid fa-pencil"></i>
+                        </button>
+                        {% else %}
+                        <button type="button" hx-get="{% url 'companies:UpdateCustomerCompanyView' item.pk %}" class="btn btn-primary btn-sm" hx-target="#modal .modal-content">
+                          <i class="fa-solid fa-pencil"></i>
+                        </button>
+                        {% endif %}
+                      {% endif %}
+                      {% if perms.whitelabel.delete_company and item.id != 1 %}
+                        <button type="button" hx-get="{% url 'companies:deleteCompany' item.id %}" class="btn btn-danger btn-sm ml-2" hx-target="#modal .modal-content">
+                          <i class="fa-solid fa-trash"></i>
+                        </button>
+                      {% endif %}
+                      {% if perms.whitelabel.delete_company and item.id == 1 %}
+                        <button type="button" class="btn btn-danger btn-sm ml-2" style="visibility: hidden;"></button>
+                      {% endif %}
+                      {% if perms.whitelabel.change_company and item.show_map_button %}
+                        <button type="button" hx-get="{% url 'companies:KeyMapView' item.id %}" class="btn btn-primary btn-sm" hx-target="#modal .modal-content">
+                            <i class="fa-solid fa-map"></i>
+                        </button>
+                      {% else %}
+                          <button type="button" style="visibility: hidden; width: 39px; height: 30px; display: inline-block;" class="btn btn-danger btn-sm ml-2"></button>
+                      {% endif %}
+                    </td>
+                    <td class="align-middle text-center text-sm">
+                      <span class="font-weight-normal mb-0">{{ item.nit }}</span>
+                    </td>
+                    <td class="align-middle text-center text-sm">
+                      <span class="font-weight-normal mb-0">{{ item.company_name }}</span>
+                    </td>
+                    <td class="align-middle text-center text-sm">
+                      <span class="font-weight-normal mb-0">{{ item.legal_representative }}</span>
+                    </td>
+                    {% if user.company.id == 1 %}
+                    <td class="align-middle text-center text-sm p-2">
+                        {% if item.provider_id is None %}
+                          {% trans "Distributor" %}
+                        {% else %}
+                          {% trans "Final client" %}
+                        {% endif %}
+                    </td>
+                    {% endif %}
+                    {% if item.actived %}
+                        <td class="align-middle text-center text-sm">
+                            <span class="text-secondary mb-0">{% trans "Active" %}</span>
+                        </td>
+                    {% else %}
+                        <td class="align-middle text-center text-sm">
+                            <span class="text-secondary mb-0">{% trans "Inactive" %}</span>
+                        </td>
+                    {% endif %}
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <form id="pagination-form" method="get">
+            <input type="hidden" name="paginate_by" value="{{ paginate_by }}">
+            <input type="hidden" name="page" id="page-input" value="{{ page_obj.number }}">
+            <input type="hidden" name="order_by" value="{{ order_by }}">
+            <input type="hidden" name="direction" value="{{ direction }}">
+            <input type="hidden" name="search" value="{{ request.GET.search }}">
+          </form>
+          <div class="row mt-2 custom-row">
+            <div class="col-6 d-flex justify-content-start align-items-center">
+              <div class="pagination-info">
+                {% trans 'Displaying' %} {{ page_obj.start_index }} {% trans 'to' %} {{ page_obj.end_index }} {% trans 'of' %} {{ page_obj.paginator.count }} {% trans 'items.' %}
+              </div>
+            </div>
+            <div class="col-6 d-flex justify-content-end">
+              <nav aria-label="Page navigation" id="pagination-container">
+                <ul class="pagination">
+                  {% if page_obj.has_previous %}
+                    <li class="page-item">
+                      <a class="page-link" href="?page=1&paginate_by={{ paginate_by }}&order_by={{ order_by }}&direction={{ direction }}&search={{ request.GET.search }}" aria-label="{% trans 'First page' %}">
+                        {% trans 'Home' %}
+                      </a>
+                    </li>
+                    <li class="page-item">
+                      <a class="page-link" href="?page={{ page_obj.previous_page_number }}&paginate_by={{ paginate_by }}&order_by={{ order_by }}&direction={{ direction }}&search={{ request.GET.search }}" aria-label="{% trans 'Previous page' %}">
+                        &laquo;
+                      </a>
+                    </li>
+                  {% endif %}
+                  {% for num in page_obj.paginator.page_range %}
+                    {% if num > page_obj.number|add:"-4" and num < page_obj.number|add:"4" %}
+                      <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                        <a class="page-link" href="?page={{ num }}&paginate_by={{ paginate_by }}&order_by={{ order_by }}&direction={{ direction }}&search={{ request.GET.search }}">
+                          {{ num }}
+                        </a>
+                      </li>
+                    {% endif %}
+                  {% endfor %}
+                  {% if page_obj.has_next %}
+                    <li class="page-item">
+                      <a class="page-link" href="?page={{ page_obj.next_page_number }}&paginate_by={{ paginate_by }}&order_by={{ order_by }}&direction={{ direction }}&search={{ request.GET.search }}" aria-label="{% trans 'Next page' %}">
+                        &raquo;
+                      </a>
+                    </li>
+                    <li class="page-item">
+                      <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}&paginate_by={{ paginate_by }}&order_by={{ order_by }}&direction={{ direction }}&search={{ request.GET.search }}" aria-label="{% trans 'Last page' %}">
+                        {% trans 'End' %}
+                      </a>
+                    </li>
+                  {% endif %}
+                </ul>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% block extra_head %}
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="{% static 'assets/css/style_main_list.css' %}" />
+  <link rel="stylesheet" href="{% static 'assets/css/report/report_today.css' %}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.3/xlsx.full.min.js"></script>
+{% endblock %}
+{% block extra_js %}
+  <script>
+    function setPageAndSubmit(page) {
+      document.getElementById('page-input').value = page;
+      document.getElementById('pagination-form').submit();
+    }
+  </script>
+{% endblock %}
+{% endblock %}

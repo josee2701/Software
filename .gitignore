@@ -2,8 +2,6 @@
 __pycache__/
 *.py[cod]
 
-# migrations
-[0-9]*.py
 
 # tests and coverage
 *.pytest_cache
@@ -44,8 +42,8 @@ conda-requirements.txt
 # Sphinx docfiles
 docs/
 
-# Internationalization & Localization
-locale/
+# Ignore compiled translation files
+locale/**/*.mo
 
 # Doc files
 docs/build/

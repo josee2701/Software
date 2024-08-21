@@ -377,5 +377,5 @@ class Advanced_Analytical(models.Model):
         return f"{self.user} --> {self.report}"
 
     class Meta:
-        db_table = 'PowerBI"."advanced_analytical'
+        db_table = '[PowerBI].[advanced_analytical]'
         managed = False

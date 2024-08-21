@@ -322,6 +322,9 @@ class Company(models.Model):
         related_name="created_companies",
         null=True,
     )
+    class Meta:
+        verbose_name = _("Company")
+        verbose_name_plural = _("Companies")
 
     def __str__(self):
         """
